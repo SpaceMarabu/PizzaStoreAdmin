@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "340178925189",
+    "firebase_url": "https://pizzastore-b379f-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "pizzastore-b379f",
+    "storage_bucket": "pizzastore-b379f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:340178925189:android:6db07ddce1c8ee45569bec",
+        "android_client_info": {
+          "package_name": "com.example.pizzastore"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2HtIIG7e9GrYceyPeM5_8WLoUjRlz5IY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:340178925189:android:69ff42216465d3bb569bec",
+        "android_client_info": {
+          "package_name": "com.example.pizzastoreadmin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2HtIIG7e9GrYceyPeM5_8WLoUjRlz5IY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
