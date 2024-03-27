@@ -5,6 +5,7 @@ import com.example.pizzastore.domain.repository.PizzaStoreRepository
 import com.example.pizzastoreadmin.domain.entity.City
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
+import com.google.firebase.FirebaseApp
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -60,24 +61,37 @@ class PizzaStoreRepositoryImpl @Inject constructor(
         return listCitiesFlow
     }
 
-    override suspend fun addOrEditCityUseCase(city: City) {
-        val cityId = city.id.toString()
-            dRef.child(cityId)
-                .push()
-                .setValue(city)
-                .addOnSuccessListener(OnSuccessListener<Void?> {
-                    dRef.child(cityId)
-                        .push()
-                        .setValue(city)
-                        .addOnSuccessListener(OnSuccessListener<Void?> {  })
-                        .addOnFailureListener(OnFailureListener { e -> Log.d("ERROR", "добавить поток, куда полетят ошибки") })
-                })
-                .addOnFailureListener(OnFailureListener { e -> Log.d("ERROR", "добавить поток, куда полетят ошибки") })
-    }
-
-    override suspend fun deleteCityUseCase(city: City) {
+    override fun addOrEditCityUseCase(city: City) {
         val cityId = city.id.toString()
         dRef.child(cityId)
-            .removeValue()
+            .push()
+            .setValue(city)
+            .addOnSuccessListener(OnSuccessListener<Void?> {
+                dRef.child(cityId)
+                    .push()
+                    .setValue(city)
+                    .addOnSuccessListener(OnSuccessListener<Void?> { })
+                    .addOnFailureListener(OnFailureListener { e ->
+                        Log.d(
+                            "ERROR",
+                            "добавить поток, куда полетят ошибки"
+                        )
+                    })
+            })
+            .addOnFailureListener(OnFailureListener { e ->
+                Log.d(
+                    "ERROR",
+                    "добавить поток, куда полетят ошибки"
+                )
+            })
+    }
+
+    override fun deleteCitiesUseCase(cities: List<City>) {
+        cities.forEach {city ->
+            val cityId = city.id.toString()
+            Log.d("TEST_TEST", "$cityId Delete")
+//            dRef.child(cityId)
+//                .removeValue()
+        }
     }
 }

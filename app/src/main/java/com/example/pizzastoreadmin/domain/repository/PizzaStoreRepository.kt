@@ -7,9 +7,9 @@ interface PizzaStoreRepository {
 
     fun getCitiesUseCase(): Flow<List<City>>
 
-    suspend fun addOrEditCityUseCase(city: City)
+    fun addOrEditCityUseCase(city: City)
 
 //    suspend fun editCityUseCase(city: City)
 
-    suspend fun deleteCityUseCase(city: City)
+    fun deleteCitiesUseCase(cities: List<City>)
 }

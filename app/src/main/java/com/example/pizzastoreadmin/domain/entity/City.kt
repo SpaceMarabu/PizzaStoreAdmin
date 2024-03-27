@@ -10,6 +10,5 @@ import kotlinx.parcelize.Parcelize
 data class City(
     val id: Int = -1,
     val name: String = "Москва",
-    val deliveryType: DeliveryType = DeliveryType.TAKE_OUT,
     val points: List<Point> = listOf()
 ) : Parcelable
