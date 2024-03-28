@@ -2,6 +2,7 @@ package com.example.pizzastoreadmin.presentation.city
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.pizzastore.domain.entity.Point
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.domain.usecases.AddOrEditCItyUseCase
 import com.example.pizzastoreadmin.domain.usecases.DeleteCityUseCase
@@ -39,6 +40,11 @@ class CityScreenViewModel @Inject constructor(
         }
     }
 
+    fun getNewPoint(cities: List<Point>): Point {
+        var maxId = 0
+        cities.forEach {point ->  if (point.id   > maxId) maxId = point.id }
+        return Point(id = maxId + 1)
+    }
 
 
     private fun addOrEditCity(city: City) {

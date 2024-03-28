@@ -12,6 +12,6 @@ sealed class CityScreenState() {
     ): CityScreenState()
 
     data class OneCity(
-        val city: City
+        val city: City? = null
     ): CityScreenState()
 }
