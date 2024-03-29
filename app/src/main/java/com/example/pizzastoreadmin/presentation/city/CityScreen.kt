@@ -9,13 +9,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
 import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.TextFieldDefaults
@@ -34,11 +37,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pizzastore.R
 import com.example.pizzastore.di.getApplicationComponent
 import com.example.pizzastore.domain.entity.Point
 import com.example.pizzastoreadmin.domain.entity.City
@@ -182,67 +189,87 @@ fun OneCityScreen(
     city: City?,
     viewModel: CityScreenViewModel
 ) {
-    val listPoints: MutableState<List<Point>> = remember {
-        mutableStateOf(city?.points ?: listOf())
-    }
-    var pointInputsIsNotEmpty by remember {
-        mutableStateOf(true)
-    }
+    val listPoints = viewModel.listPoints.collectAsState()
+    val needCallback = viewModel.needCallback.collectAsState()
+
+    viewModel.initListPoints(city?.points ?: listOf())
+
     Scaffold {
         LazyColumn {
             item {
-                TextFieldCity(label = city?.name ?: "Город")
-                DividerList()
+                TextFieldCity(
+                    label = "Город",
+                    textIn = city?.name,
+                    needCallback = needCallback.value
+                ) {
+
+                }
             }
-            items(items = listPoints.value, key = { it.id }) {
-                Text(
+            itemsIndexed(items = listPoints.value) {index, pointFromList ->
+                Row(
                     modifier = Modifier
+                        .fillMaxWidth()
                         .padding(
                             top = 8.dp,
                             start = 16.dp
                         ),
-                    text = "${it.id}.",
-                    fontSize = 16.sp
-                )
-                CallbackableTextFieldCity(label = "Адрес Пиццерии") { text ->
-                    it
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "${pointFromList.id}.",
+                        fontSize = 20.sp
+                    )
+                    Icon(
+                        modifier = Modifier
+                            .padding(end = 16.dp)
+                            .size(35.dp)
+                            .clickable {
+                                viewModel.deletePoint(index)
+//                                viewModel.needCallback()
+                            },
+                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_cross),
+                        contentDescription = null
+                    )
                 }
-                CallbackableTextFieldCity(label = "Геометка пиццерии") { isGeopointInputed ->
-//                    pointInputsIsNotEmpty = pointInputsIsNotEmpty && isGeopointInputed
+                TextFieldCity(
+                    label = "Адрес Пиццерии",
+                    textIn = pointFromList.address,
+                    needCallback = needCallback.value
+                ) { text ->
+                    viewModel.editPoint(index = index, address = text)
+                }
+                TextFieldCity(
+                    label = "Геометка пиццерии",
+                    textIn = pointFromList.coords,
+                    needCallback = needCallback.value
+                ) { text ->
+                    viewModel.editPoint(index = index, coords = text)
                 }
             }
             item {
-                val listPointValue = listPoints.value
-                if (
-                    listPointValue.isEmpty() ||
-                    (listPointValue.last().address.isNotBlank()
-                            && listPointValue.last().coords.isNotBlank())
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                start = 8.dp,
-                                end = 8.dp,
-                                top = 32.dp
-                            )
-                            .height(40.dp)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(Color.Black)
-                            .clickable {
-                                listPoints.value =
-                                    listPoints.value + viewModel.getNewPoint(listPoints.value)
-                            },
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Добавить точку",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = 8.dp,
+                            end = 8.dp,
+                            top = 32.dp
                         )
-                    }
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color.Black)
+                        .clickable {
+                            viewModel.getNewPoint()
+                        },
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Добавить точку",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
         }
@@ -261,27 +288,17 @@ fun DividerList() {
 }
 //</editor-fold>
 
-//<editor-fold desc="Текст филд без колбека">
+
 @Composable
 fun TextFieldCity(
     label: String,
-    modifier: Modifier = Modifier
-) {
-    CallbackableTextFieldCity(
-        label = label,
-        modifier = modifier
-    ) {}
-}
-//</editor-fold>
-
-@Composable
-fun CallbackableTextFieldCity(
-    label: String,
+    textIn: String? = "",
     modifier: Modifier = Modifier,
-    onInputIsNotEmpty: (String) -> Unit
+    needCallback: Boolean,
+    textResult: (String) -> Unit
 ) {
 
-    var text by remember { mutableStateOf("") }
+    var text by remember(textIn) { mutableStateOf(textIn ?: "") }
 
     OutlinedTextField(
         modifier = modifier
@@ -289,11 +306,13 @@ fun CallbackableTextFieldCity(
             .padding(
                 start = 8.dp,
                 end = 8.dp
-            ),
+            )
+//            .onFocusChanged { if (!it.hasFocus && text.isNotBlank()) textResult(text) }
+            ,
         label = { androidx.compose.material.Text(text = label) },
         value = text ?: "",
         onValueChange = {
-            onInputIsNotEmpty(text)
+            if (needCallback) textResult(text)
             text = it
         },
         colors = TextFieldDefaults.outlinedTextFieldColors(
