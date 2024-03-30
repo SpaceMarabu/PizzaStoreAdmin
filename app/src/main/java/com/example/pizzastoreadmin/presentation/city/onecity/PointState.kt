@@ -15,4 +15,6 @@ sealed class PointState() {
     data class Delete(
         val index: Int
     ) : PointState()
+
+    object NewPoint : PointState()
 }

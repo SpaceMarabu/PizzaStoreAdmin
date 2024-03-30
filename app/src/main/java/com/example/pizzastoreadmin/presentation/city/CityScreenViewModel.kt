@@ -7,10 +7,13 @@ import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.domain.usecases.AddOrEditCItyUseCase
 import com.example.pizzastoreadmin.domain.usecases.DeleteCityUseCase
 import com.example.pizzastoreadmin.domain.usecases.GetAllCitiesUseCase
+import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreenState
 import com.example.pizzastoreadmin.presentation.city.onecity.PointState
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
@@ -25,7 +28,7 @@ class CityScreenViewModel @Inject constructor(
     private val _state = MutableStateFlow<CityScreenState>(CityScreenState.Initial)
     val state = _state.asStateFlow()
 
-    private val _listPoints = MutableStateFlow<List<Point>>(listOf())
+    private val _listPoints = MutableStateFlow(OneCityScreenState.ListPoints())
     val listPoints = _listPoints.asStateFlow()
 
     private val _needCallback = MutableStateFlow(false)
@@ -39,7 +42,6 @@ class CityScreenViewModel @Inject constructor(
         loadCities()
         changePointsList()
     }
-
 
     private fun loadCities() {
         _state.value = CityScreenState.Loading
@@ -56,18 +58,20 @@ class CityScreenViewModel @Inject constructor(
     private fun changePointsList() {
         viewModelScope.launch {
             pointsChanges.collect {
-                val currentListPoints = getCurrentListPoints().toMutableList()
+                val currentListPoints = getCurrentListPoints().points.toMutableList()
                 var resultPoints: List<Point> = listOf()
                 when (it) {
                     is PointState.ChangeAddress -> {
+                        _needCallback.emit(false)
                         currentListPoints[it.index] =
                             currentListPoints[it.index].copy(address = it.address)
                         resultPoints = currentListPoints
                     }
 
                     is PointState.ChangeGeopoint -> {
+                        _needCallback.emit(false)
                         currentListPoints[it.index] =
-                            currentListPoints[it.index].copy(address = it.coords)
+                            currentListPoints[it.index].copy(coords = it.coords)
                         resultPoints = currentListPoints
                     }
 
@@ -79,8 +83,15 @@ class CityScreenViewModel @Inject constructor(
                             }
                         }
                     }
+
+                    PointState.NewPoint -> {
+                        var maxId = 0
+                        currentListPoints.forEach { point -> if (point.id > maxId) maxId = point.id }
+                        resultPoints = currentListPoints + Point(id = maxId + 1)
+                    }
                 }
-                _listPoints.emit(resultPoints)
+                _listPoints.emit(OneCityScreenState.ListPoints(resultPoints))
+
             }
         }
     }
@@ -93,45 +104,28 @@ class CityScreenViewModel @Inject constructor(
 
     fun initListPoints(points: List<Point>) {
         viewModelScope.launch {
-            _listPoints.emit(points)
+            _listPoints.emit(OneCityScreenState.ListPoints(points))
         }
     }
 
-    fun needCallback() {
+    private fun needCallback() {
         viewModelScope.launch {
             _needCallback.emit(true)
-            delay(1000)
-            _needCallback.emit(false)
         }
     }
 
     private fun getCurrentListPoints() = _listPoints.value
 
-    private fun emitListPoints(value: List<Point>) {
-        viewModelScope.launch {
-            _listPoints.emit(value)
-        }
-    }
-
     fun getNewPoint() {
-        var maxId = 0
-        val currentListPoints = getCurrentListPoints()
-        currentListPoints.forEach { point -> if (point.id > maxId) maxId = point.id }
-        emitListPoints(currentListPoints + Point(id = maxId + 1))
+        emitChange(PointState.NewPoint)
     }
 
     fun deletePoint(index: Int) {
-        emitChange(PointState.Delete(index))
         needCallback()
-//        var resultList: List<Point> = listOf()
-//        var id = 1
-//        val currentListPoints = getCurrentListPoints()
-//        currentListPoints.forEach {
-//            if (it.id != point.id) {
-//                resultList = resultList + it.copy(id = id++)
-//            }
-//        }
-//        emitListPoints(resultList)
+        viewModelScope.launch {
+//            delay(1000)
+            emitChange(PointState.Delete(index))
+        }
     }
 
     fun editPoint(

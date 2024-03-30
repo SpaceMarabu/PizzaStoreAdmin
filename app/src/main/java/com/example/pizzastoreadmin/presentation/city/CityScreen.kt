@@ -1,5 +1,6 @@
 package com.example.pizzastoreadmin.presentation.city
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,8 +28,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,7 +38,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pizzastore.R
 import com.example.pizzastore.di.getApplicationComponent
-import com.example.pizzastore.domain.entity.Point
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 
@@ -191,21 +190,27 @@ fun OneCityScreen(
 ) {
     val listPoints = viewModel.listPoints.collectAsState()
     val needCallback = viewModel.needCallback.collectAsState()
+    Log.d("TEST_TEST", needCallback.value.toString())
 
-    viewModel.initListPoints(city?.points ?: listOf())
+    var isScreenInited by remember {
+        mutableStateOf(false)
+    }
+    if (!isScreenInited) {
+        isScreenInited = true
+        viewModel.initListPoints(city?.points ?: listOf())
+    }
 
     Scaffold {
         LazyColumn {
             item {
                 TextFieldCity(
                     label = "Город",
-                    textIn = city?.name,
-                    needCallback = needCallback.value
+                    textIn = city?.name
                 ) {
 
                 }
             }
-            itemsIndexed(items = listPoints.value) {index, pointFromList ->
+            itemsIndexed(items = listPoints.value.points) {index, pointFromList ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -225,7 +230,6 @@ fun OneCityScreen(
                             .size(35.dp)
                             .clickable {
                                 viewModel.deletePoint(index)
-//                                viewModel.needCallback()
                             },
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_cross),
                         contentDescription = null
@@ -233,15 +237,13 @@ fun OneCityScreen(
                 }
                 TextFieldCity(
                     label = "Адрес Пиццерии",
-                    textIn = pointFromList.address,
-                    needCallback = needCallback.value
+                    textIn = pointFromList.address
                 ) { text ->
                     viewModel.editPoint(index = index, address = text)
                 }
                 TextFieldCity(
                     label = "Геометка пиццерии",
-                    textIn = pointFromList.coords,
-                    needCallback = needCallback.value
+                    textIn = pointFromList.coords
                 ) { text ->
                     viewModel.editPoint(index = index, coords = text)
                 }
@@ -294,11 +296,19 @@ fun TextFieldCity(
     label: String,
     textIn: String? = "",
     modifier: Modifier = Modifier,
-    needCallback: Boolean,
     textResult: (String) -> Unit
 ) {
 
+    val component = getApplicationComponent()
+    val viewModel: CityScreenViewModel = viewModel(factory = component.getViewModelFactory())
+    val needCallback = viewModel.needCallback.collectAsState()
+
+
     var text by remember(textIn) { mutableStateOf(textIn ?: "") }
+
+    if (needCallback.value) {
+        textResult(text)
+    }
 
     OutlinedTextField(
         modifier = modifier
@@ -310,9 +320,8 @@ fun TextFieldCity(
 //            .onFocusChanged { if (!it.hasFocus && text.isNotBlank()) textResult(text) }
             ,
         label = { androidx.compose.material.Text(text = label) },
-        value = text ?: "",
+        value = text,
         onValueChange = {
-            if (needCallback) textResult(text)
             text = it
         },
         colors = TextFieldDefaults.outlinedTextFieldColors(
