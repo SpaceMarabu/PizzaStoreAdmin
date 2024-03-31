@@ -1,11 +1,16 @@
 package com.example.pizzastoreadmin.presentation.city
 
+import android.util.DisplayMetrics
 import android.util.Log
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,13 +45,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pizzastore.R
 import com.example.pizzastore.di.getApplicationComponent
+import com.example.pizzastore.domain.entity.Point
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 
@@ -182,15 +190,13 @@ fun CityRow(
 //</editor-fold>
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun OneCityScreen(
     city: City?,
     viewModel: CityScreenViewModel
 ) {
     val listPoints = viewModel.listPoints.collectAsState()
-    val needCallback = viewModel.needCallback.collectAsState()
-    Log.d("TEST_TEST", needCallback.value.toString())
 
     var isScreenInited by remember {
         mutableStateOf(false)
@@ -200,7 +206,7 @@ fun OneCityScreen(
         viewModel.initListPoints(city?.points ?: listOf())
     }
 
-    Scaffold {
+    Scaffold { paddingValues ->
         LazyColumn {
             item {
                 TextFieldCity(
@@ -210,71 +216,117 @@ fun OneCityScreen(
 
                 }
             }
-            itemsIndexed(items = listPoints.value.points) {index, pointFromList ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            top = 8.dp,
-                            start = 16.dp
-                        ),
-                    horizontalArrangement = Arrangement.SpaceBetween
+            items(
+                items = listPoints.value.points,
+                key = { item: Point -> item.id }) { pointFromList ->
+
+                val index = listPoints.value.points.indexOf(pointFromList)
+
+                Column(
+                    modifier = Modifier.animateItemPlacement(animationSpec = tween(durationMillis = 500))
                 ) {
-                    Text(
-                        text = "${pointFromList.id}.",
-                        fontSize = 20.sp
-                    )
-                    Icon(
+                    Row(
                         modifier = Modifier
-                            .padding(end = 16.dp)
-                            .size(35.dp)
-                            .clickable {
-                                viewModel.deletePoint(index)
-                            },
-                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_cross),
-                        contentDescription = null
-                    )
-                }
-                TextFieldCity(
-                    label = "Адрес Пиццерии",
-                    textIn = pointFromList.address
-                ) { text ->
-                    viewModel.editPoint(index = index, address = text)
-                }
-                TextFieldCity(
-                    label = "Геометка пиццерии",
-                    textIn = pointFromList.coords
-                ) { text ->
-                    viewModel.editPoint(index = index, coords = text)
+                            .fillMaxWidth()
+                            .padding(
+                                top = 8.dp,
+                                start = 16.dp
+                            ),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "${index + 1}.",
+                            fontSize = 20.sp
+                        )
+                        Icon(
+                            modifier = Modifier
+                                .padding(end = 16.dp)
+                                .size(35.dp)
+                                .clickable {
+                                    viewModel.deletePoint(index)
+                                },
+                            imageVector = ImageVector.vectorResource(id = R.drawable.ic_cross),
+                            contentDescription = null
+                        )
+                    }
+                    TextFieldCity(
+                        label = "Адрес Пиццерии",
+                        textIn = pointFromList.address
+                    ) { text ->
+                        viewModel.editPoint(index = index, address = text)
+                    }
+                    TextFieldCity(
+                        label = "Геометка пиццерии",
+                        textIn = pointFromList.coords
+                    ) { text ->
+                        viewModel.editPoint(index = index, coords = text)
+                        Log.d("TEST_TEST", "rec")
+                    }
                 }
             }
             item {
-                Row(
+                val displayMetrics: DisplayMetrics = LocalContext.current.resources.displayMetrics
+                val dpWidth = displayMetrics.widthPixels / displayMetrics.density
+                val halfScreenDp = (dpWidth / 2).dp
+                val paddingBetweenButtons = 16.dp
+                val paddingStartEnd = 8.dp
+
+                Row (
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(
-                            start = 8.dp,
-                            end = 8.dp,
-                            top = 32.dp
-                        )
-                        .height(40.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color.Black)
-                        .clickable {
-                            viewModel.getNewPoint()
-                        },
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(start = paddingStartEnd, top = 32.dp, end = paddingStartEnd),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = "Добавить точку",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+
+                    ButtonWithText(
+                        modifier = Modifier
+                            .padding(end = paddingBetweenButtons / 2),
+                        width = halfScreenDp - (paddingBetweenButtons / 2) - paddingStartEnd,
+                        text = "Добавить точку"
+                    ) {
+                        viewModel.getNewPoint()
+                    }
+                    ButtonWithText(
+                        modifier = Modifier
+                        .padding(start = paddingBetweenButtons),
+                        width = halfScreenDp - (paddingBetweenButtons / 2) - paddingStartEnd,
+                        text = "Готово"
+                    ) {
+
+                    }
                 }
+
             }
         }
+    }
+}
+
+@Composable
+fun ButtonWithText(
+    modifier: Modifier = Modifier,
+    text: String,
+    width: Dp,
+    color: Color = Color.Black,
+    onButtonClicked: () -> Unit
+) {
+    Row(
+        modifier = modifier
+            .width(width)
+            .height(40.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(color)
+            .clickable {
+                onButtonClicked()
+            },
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = text,
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 
@@ -318,7 +370,7 @@ fun TextFieldCity(
                 end = 8.dp
             )
 //            .onFocusChanged { if (!it.hasFocus && text.isNotBlank()) textResult(text) }
-            ,
+        ,
         label = { androidx.compose.material.Text(text = label) },
         value = text,
         onValueChange = {

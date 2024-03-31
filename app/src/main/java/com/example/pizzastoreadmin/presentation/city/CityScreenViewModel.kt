@@ -7,8 +7,13 @@ import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.domain.usecases.AddOrEditCItyUseCase
 import com.example.pizzastoreadmin.domain.usecases.DeleteCityUseCase
 import com.example.pizzastoreadmin.domain.usecases.GetAllCitiesUseCase
+import com.example.pizzastoreadmin.presentation.city.onecity.EditState
+import com.example.pizzastoreadmin.presentation.city.onecity.EditType
 import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreenState
 import com.example.pizzastoreadmin.presentation.city.onecity.PointState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -16,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -38,6 +44,8 @@ class CityScreenViewModel @Inject constructor(
         extraBufferCapacity = 50
     )
 
+    private val resultEditFlow = MutableStateFlow(HashMap<Int, EditState>())
+
     init {
         loadCities()
         changePointsList()
@@ -59,45 +67,83 @@ class CityScreenViewModel @Inject constructor(
         viewModelScope.launch {
             pointsChanges.collect {
                 val currentListPoints = getCurrentListPoints().points.toMutableList()
-                var resultPoints: List<Point> = listOf()
-                when (it) {
+                val resultPoints: List<Point> = when (it) {
                     is PointState.ChangeAddress -> {
                         _needCallback.emit(false)
                         currentListPoints[it.index] =
                             currentListPoints[it.index].copy(address = it.address)
-                        resultPoints = currentListPoints
+                        //присвоение листу resultPoints
+                        currentListPoints
                     }
 
                     is PointState.ChangeGeopoint -> {
                         _needCallback.emit(false)
                         currentListPoints[it.index] =
                             currentListPoints[it.index].copy(coords = it.coords)
-                        resultPoints = currentListPoints
+                        //присвоение листу resultPoints
+                        currentListPoints
                     }
 
                     is PointState.Delete -> {
-                        var id = 1
-                        currentListPoints.forEachIndexed {index, pointFromList ->
-                            if (it.index != index) {
-                                resultPoints = resultPoints + pointFromList.copy(id = id++)
+                        if (resultEditFlow.value.values.all { state -> !state.addressCollected && !state.geopointCollected }) {
+                            val scope = CoroutineScope(Dispatchers.Default)
+                            scope.launch coroutine@{
+                                delay(100)
+                                pointsChanges.emit(it)
+                                return@coroutine
                             }
+                            //присвоение листу resultPoints
+                            currentListPoints
+                        } else {
+                            var id = 1
+                            var tempListPoints: List<Point> = listOf()
+                            currentListPoints.forEachIndexed { index, pointFromList ->
+                                if (it.index != index) {
+                                    tempListPoints = tempListPoints + pointFromList
+                                }
+                            }
+                            //присвоение листу resultPoints
+                            tempListPoints
                         }
                     }
 
                     PointState.NewPoint -> {
                         var maxId = 0
-                        currentListPoints.forEach { point -> if (point.id > maxId) maxId = point.id }
-                        resultPoints = currentListPoints + Point(id = maxId + 1)
+                        currentListPoints.forEach { point ->
+                            if (point.id > maxId) maxId = point.id
+                        }
+                        //присвоение листу resultPoints
+                        currentListPoints + Point(id = maxId + 1)
                     }
                 }
                 _listPoints.emit(OneCityScreenState.ListPoints(resultPoints))
-
             }
         }
     }
 
+
+
     private fun emitChange(value: PointState) {
         viewModelScope.launch {
+            when (value) {
+                is PointState.ChangeAddress -> {
+                    val currentPointState = resultEditFlow.value[value.index]
+                    if (currentPointState != null) {
+                        resultEditFlow.value[value.index] =
+                            currentPointState.copy(addressCollected = true)
+                    }
+                }
+
+                is PointState.ChangeGeopoint -> {
+                    val currentPointState = resultEditFlow.value[value.index]
+                    if (currentPointState != null) {
+                        resultEditFlow.value[value.index] =
+                            currentPointState.copy(geopointCollected = true)
+                    }
+                }
+
+                else -> {}
+            }
             pointsChanges.emit(value)
         }
     }
@@ -110,6 +156,13 @@ class CityScreenViewModel @Inject constructor(
 
     private fun needCallback() {
         viewModelScope.launch {
+            //готовлю словарь для проверки, что все изменения полей прилетели
+            val sizeListPoints = _listPoints.value.points.size
+            val resultMap = HashMap<Int, EditState>()
+            for (i in 0 until sizeListPoints) {
+                resultMap[i] = EditState()
+            }
+            resultEditFlow.emit(resultMap)
             _needCallback.emit(true)
         }
     }
@@ -123,7 +176,6 @@ class CityScreenViewModel @Inject constructor(
     fun deletePoint(index: Int) {
         needCallback()
         viewModelScope.launch {
-//            delay(1000)
             emitChange(PointState.Delete(index))
         }
     }
@@ -138,19 +190,6 @@ class CityScreenViewModel @Inject constructor(
         } else if (coords != null) {
             emitChange(PointState.ChangeGeopoint(index, coords))
         }
-//        val currentListPoints = getCurrentListPoints()
-//        var resultList: List<Point> = listOf()
-//        currentListPoints.forEach {
-//            resultList = if (it.id == point.id) {
-//                val newPoint =
-//                    it.copy(address = address ?: it.address, coords = coords ?: it.coords)
-//                resultList + newPoint
-//            } else {
-//                resultList + it
-//            }
-//        }
-//        resultList
-//        emitListPoints(resultList)
     }
 
     private fun addOrEditCity(city: City) {
