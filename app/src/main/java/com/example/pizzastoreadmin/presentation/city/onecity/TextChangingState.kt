@@ -1,20 +1,20 @@
 package com.example.pizzastoreadmin.presentation.city.onecity
 
-sealed class PointState() {
+sealed class PointChangingState() {
 
     data class ChangeAddress(
         val index: Int,
         val address: String
-    ) : PointState()
+    ) : PointChangingState()
 
     data class ChangeGeopoint(
         val index: Int,
         val coords: String
-    ) : PointState()
+    ) : PointChangingState()
 
-    data class Delete(
+    data class DeletePoint(
         val index: Int
-    ) : PointState()
+    ) : PointChangingState()
 
-    object NewPoint : PointState()
+    object NewPoint : PointChangingState()
 }

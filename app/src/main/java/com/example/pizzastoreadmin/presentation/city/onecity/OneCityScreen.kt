@@ -1,13 +1,9 @@
-package com.example.pizzastoreadmin.presentation.city
+package com.example.pizzastoreadmin.presentation.city.onecity
 
 import android.util.DisplayMetrics
-import android.util.Log
-import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,22 +15,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
-import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,148 +45,48 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pizzastore.R
 import com.example.pizzastore.di.getApplicationComponent
-import com.example.pizzastore.domain.entity.Point
-import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
+import kotlinx.coroutines.flow.StateFlow
 
 @Composable
-fun CityScreen() {
+fun OneCityScreen(
+    onDoneClicked: () -> Unit
+) {
 
     val component = getApplicationComponent()
-    val viewModel: CityScreenViewModel = viewModel(factory = component.getViewModelFactory())
+    val viewModel: OneCityScreenViewModel = viewModel(factory = component.getViewModelFactory())
 
     val screenState = viewModel.state.collectAsState()
 
 
     when (screenState.value) {
 
-        is CityScreenState.Initial -> {}
+        is OneCityScreenState.Initial -> {}
 
-        is CityScreenState.ListCities -> {
-            val currentScreenState = screenState.value as CityScreenState.ListCities
-            ListCitiesScreen(
-                cities = currentScreenState.cities,
-                viewModel = viewModel
-            )
+        is OneCityScreenState.Content -> {
+            val currentScreenState = screenState.value as OneCityScreenState.Content
+            OneCityScreenContent(
+                viewModel = viewModel,
+                cityState = currentScreenState.city
+            ) {
+                onDoneClicked()
+            }
         }
 
-        is CityScreenState.OneCity -> {
-            val currentScreenState = screenState.value as CityScreenState.OneCity
-            OneCityScreen(
-                currentScreenState.city,
-                viewModel
-            )
-        }
-
-        CityScreenState.Loading -> {
+        OneCityScreenState.Loading -> {
             CircularLoading()
         }
     }
 }
 
-//<editor-fold desc="Экран со списком городов">
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ListCitiesScreen(
-    cities: List<City>,
-    viewModel: CityScreenViewModel
-) {
-    val citiesToDelete: MutableSet<City> = remember {
-        mutableSetOf()
-    }
-    var isCitiesToDeleteEmpty by remember {
-        mutableStateOf(true)
-    }
-
-    var isButtonClicked by remember {
-        mutableStateOf(false)
-    }
-    if (isButtonClicked) {
-        if (!isCitiesToDeleteEmpty) {
-            SideEffect {
-                viewModel.deleteCity(citiesToDelete.toList())
-            }
-        } else {
-            SideEffect {
-                viewModel.changeScreenState(CityScreenState.OneCity())
-            }
-        }
-        isButtonClicked = false
-    }
-
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                modifier = Modifier
-                    .width(100.dp)
-                    .border(
-                        border = BorderStroke(1.dp, Color.Black),
-                        shape = RoundedCornerShape(10.dp)
-                    ),
-                shape = RoundedCornerShape(10.dp),
-                onClick = {
-                    isButtonClicked = true
-                }) {
-                Text(
-                    text = if (isCitiesToDeleteEmpty) "ADD" else "DELETE",
-                    fontSize = 24.sp
-                )
-            }
-        }
-    ) {
-        LazyColumn {
-            items(items = cities, key = { it.id }) { city ->
-                CityRow(city = city) { isBoxChecked ->
-                    if (isBoxChecked) {
-                        citiesToDelete.add(city)
-                    } else {
-                        citiesToDelete.removeIf { it.id == city.id }
-                    }
-                    isCitiesToDeleteEmpty = citiesToDelete.size == 0
-                }
-                DividerList()
-            }
-        }
-    }
-
-}
-//</editor-fold>
-
-
-//<editor-fold desc="Строка с чекбоксом">
-@Composable
-fun CityRow(
-    city: City,
-    onCheckboxChanged: (Boolean) -> Unit
-) {
-    var isCheckedCity by remember {
-        mutableStateOf(false)
-    }
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Checkbox(
-            checked = isCheckedCity,
-            onCheckedChange = {
-                isCheckedCity = it
-                onCheckboxChanged(isCheckedCity)
-            }
-        )
-        Text(
-            text = city.name,
-            fontSize = 24.sp
-        )
-    }
-}
-//</editor-fold>
-
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun OneCityScreen(
-    city: City?,
-    viewModel: CityScreenViewModel
+fun OneCityScreenContent(
+    viewModel: OneCityScreenViewModel,
+    cityState: CityViewState,
+    onDoneClicked: () -> Unit
 ) {
+
     val listPoints = viewModel.listPoints.collectAsState()
 
     var isScreenInited by remember {
@@ -203,7 +94,7 @@ fun OneCityScreen(
     }
     if (!isScreenInited) {
         isScreenInited = true
-        viewModel.initListPoints(city?.points ?: listOf())
+        viewModel.initListPoints( cityState.city?.points?: listOf())
     }
 
     Scaffold { paddingValues ->
@@ -211,16 +102,19 @@ fun OneCityScreen(
             item {
                 TextFieldCity(
                     label = "Город",
-                    textIn = city?.name
+                    textIn = cityState.city?.name,
+                    needCallbackIn = viewModel.needCallbackCity,
+                    isError = false
                 ) {
-
+                    viewModel.editCityName(it)
                 }
             }
             items(
-                items = listPoints.value.points,
-                key = { item: Point -> item.id }) { pointFromList ->
+                items = listPoints.value,
+                key = { item: PointViewState -> item.point.id }) { pointViewState ->
 
-                val index = listPoints.value.points.indexOf(pointFromList)
+                val index = listPoints.value.indexOf(pointViewState)
+                val point = pointViewState.point
 
                 Column(
                     modifier = Modifier.animateItemPlacement(animationSpec = tween(durationMillis = 500))
@@ -251,16 +145,19 @@ fun OneCityScreen(
                     }
                     TextFieldCity(
                         label = "Адрес Пиццерии",
-                        textIn = pointFromList.address
+                        textIn = point.address,
+                        needCallbackIn = viewModel.needCallbackPoints,
+                        isError = !pointViewState.isAddressValid
                     ) { text ->
                         viewModel.editPoint(index = index, address = text)
                     }
                     TextFieldCity(
                         label = "Геометка пиццерии",
-                        textIn = pointFromList.coords
+                        textIn = point.coords,
+                        needCallbackIn = viewModel.needCallbackPoints,
+                        isError = !pointViewState.isGeopointValid
                     ) { text ->
                         viewModel.editPoint(index = index, coords = text)
-                        Log.d("TEST_TEST", "rec")
                     }
                 }
             }
@@ -292,7 +189,7 @@ fun OneCityScreen(
                         width = halfScreenDp - (paddingBetweenButtons / 2) - paddingStartEnd,
                         text = "Готово"
                     ) {
-
+                        onDoneClicked()
                     }
                 }
 
@@ -301,6 +198,7 @@ fun OneCityScreen(
     }
 }
 
+//<editor-fold desc="Кнопка">
 @Composable
 fun ButtonWithText(
     modifier: Modifier = Modifier,
@@ -329,6 +227,7 @@ fun ButtonWithText(
         )
     }
 }
+//</editor-fold>
 
 //<editor-fold desc="Разделитель">
 @Composable
@@ -343,20 +242,24 @@ fun DividerList() {
 //</editor-fold>
 
 
+//<editor-fold desc="Поле ввода текста">
 @Composable
 fun TextFieldCity(
     label: String,
     textIn: String? = "",
+    isError: Boolean,
+    needCallbackIn: StateFlow<Boolean>,
     modifier: Modifier = Modifier,
     textResult: (String) -> Unit
 ) {
 
-    val component = getApplicationComponent()
-    val viewModel: CityScreenViewModel = viewModel(factory = component.getViewModelFactory())
-    val needCallback = viewModel.needCallback.collectAsState()
+    val needCallback = needCallbackIn.collectAsState()
 
 
     var text by remember(textIn) { mutableStateOf(textIn ?: "") }
+    var errorState by remember(isError) {
+        mutableStateOf(isError)
+    }
 
     if (needCallback.value) {
         textResult(text)
@@ -371,9 +274,11 @@ fun TextFieldCity(
             )
 //            .onFocusChanged { if (!it.hasFocus && text.isNotBlank()) textResult(text) }
         ,
+        isError = errorState,
         label = { androidx.compose.material.Text(text = label) },
         value = text,
         onValueChange = {
+            errorState = false
             text = it
         },
         colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -388,3 +293,4 @@ fun TextFieldCity(
         shape = MaterialTheme.shapes.small.copy(CornerSize(10.dp))
     )
 }
+//</editor-fold>

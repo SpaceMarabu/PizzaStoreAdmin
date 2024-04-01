@@ -2,8 +2,9 @@ package com.example.pizzastoreadmin.di
 
 import androidx.lifecycle.ViewModel
 import com.example.pizzastore.di.ViewModelKey
-import com.example.pizzastoreadmin.presentation.city.CityScreenViewModel
 import com.example.pizzastore.presentation.start.StartScreenViewModel
+import com.example.pizzastoreadmin.presentation.city.cities.CitiesScreenViewModel
+import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreenViewModel
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
@@ -17,8 +18,13 @@ interface ViewModelModule {
     fun bindStartViewModel(viewModel: StartScreenViewModel): ViewModel
 
     @IntoMap
-    @ViewModelKey(CityScreenViewModel::class)
+    @ViewModelKey(CitiesScreenViewModel::class)
     @Binds
-    fun bindCityScreenViewModel(viewModel: CityScreenViewModel): ViewModel
+    fun bindCitiesScreenViewModel(viewModel: CitiesScreenViewModel): ViewModel
+
+    @IntoMap
+    @ViewModelKey(OneCityScreenViewModel::class)
+    @Binds
+    fun bindOneCityScreenViewModel(viewModel: OneCityScreenViewModel): ViewModel
 
 }

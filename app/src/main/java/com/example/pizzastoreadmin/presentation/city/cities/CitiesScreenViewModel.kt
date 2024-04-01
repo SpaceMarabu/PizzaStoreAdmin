@@ -1,4 +1,4 @@
-package com.example.pizzastoreadmin.presentation.city
+package com.example.pizzastoreadmin.presentation.city.cities
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,30 +8,24 @@ import com.example.pizzastoreadmin.domain.usecases.AddOrEditCItyUseCase
 import com.example.pizzastoreadmin.domain.usecases.DeleteCityUseCase
 import com.example.pizzastoreadmin.domain.usecases.GetAllCitiesUseCase
 import com.example.pizzastoreadmin.presentation.city.onecity.EditState
-import com.example.pizzastoreadmin.presentation.city.onecity.EditType
 import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreenState
-import com.example.pizzastoreadmin.presentation.city.onecity.PointState
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.BufferOverflow
+import com.example.pizzastoreadmin.presentation.city.onecity.TextChangingState
+import com.example.pizzastoreadmin.presentation.city.onecity.PointViewState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class CityScreenViewModel @Inject constructor(
+class CitiesScreenViewModel @Inject constructor(
     private val getCitiesUseCase: GetAllCitiesUseCase,
     private val addOrEditCityUseCase: AddOrEditCItyUseCase,
     private val deleteCityUseCase: DeleteCityUseCase
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<CityScreenState>(CityScreenState.Initial)
+    private val _state = MutableStateFlow<CitiesScreenState>(CitiesScreenState.Initial)
     val state = _state.asStateFlow()
 
     private val _listPoints = MutableStateFlow(OneCityScreenState.ListPoints())
@@ -40,7 +34,7 @@ class CityScreenViewModel @Inject constructor(
     private val _needCallback = MutableStateFlow(false)
     val needCallback = _needCallback.asStateFlow()
 
-    private val pointsChanges = MutableSharedFlow<PointState>(
+    private val pointsChanges = MutableSharedFlow<TextChangingState>(
         extraBufferCapacity = 50
     )
 
@@ -52,13 +46,13 @@ class CityScreenViewModel @Inject constructor(
     }
 
     private fun loadCities() {
-        _state.value = CityScreenState.Loading
+        _state.value = CitiesScreenState.Loading
         viewModelScope.launch {
             getCitiesUseCase
                 .getCitiesFlow()
                 .filter { it.isNotEmpty() }
                 .collect {
-                    _state.value = CityScreenState.ListCities(it)
+                    _state.value = CitiesScreenState.ListCities(it)
                 }
         }
     }
@@ -66,28 +60,50 @@ class CityScreenViewModel @Inject constructor(
     private fun changePointsList() {
         viewModelScope.launch {
             pointsChanges.collect {
+
                 val currentListPoints = getCurrentListPoints().points.toMutableList()
-                val resultPoints: List<Point> = when (it) {
-                    is PointState.ChangeAddress -> {
-                        _needCallback.emit(false)
-                        currentListPoints[it.index] =
-                            currentListPoints[it.index].copy(address = it.address)
+
+                val resultPoints: List<PointViewState> = when (it) {
+                    is TextChangingState.ChangeAddress -> {
+
+                        val currentPoint = currentListPoints[it.index].point
+                        val isAddressCorrect = it.address.isNotBlank()
+                        stopCallbackTextedit()
+                        currentListPoints[it.index] = currentListPoints[it.index]
+                            .copy(
+                                point = currentPoint.copy(address = it.address),
+                                isAddressValid = isAddressCorrect
+                            )
+
                         //присвоение листу resultPoints
                         currentListPoints
+
                     }
 
-                    is PointState.ChangeGeopoint -> {
-                        _needCallback.emit(false)
-                        currentListPoints[it.index] =
-                            currentListPoints[it.index].copy(coords = it.coords)
+                    is TextChangingState.ChangeGeopoint -> {
+
+                        val currentPoint = currentListPoints[it.index].point
+                        val isGeopointCorrect = it.coords.isNotBlank()
+                                && it.coords.matches(Regex("\\d+\\.\\d+\\,\\ ?\\d+\\.\\d+"))
+
+                        stopCallbackTextedit()
+                        currentListPoints[it.index] = currentListPoints[it.index]
+                            .copy(
+                                point = currentPoint.copy(coords = it.coords),
+                                isGeopointValid = isGeopointCorrect
+                            )
+
                         //присвоение листу resultPoints
                         currentListPoints
+
                     }
 
-                    is PointState.Delete -> {
-                        if (resultEditFlow.value.values.all { state -> !state.addressCollected && !state.geopointCollected }) {
-                            val scope = CoroutineScope(Dispatchers.Default)
-                            scope.launch coroutine@{
+                    is TextChangingState.DeletePoint -> {
+
+                        if (resultEditFlow.value.values.all {
+                                    state -> !state.addressCollected && !state.geopointCollected
+                        }) {
+                            viewModelScope.launch coroutine@ {
                                 delay(100)
                                 pointsChanges.emit(it)
                                 return@coroutine
@@ -96,24 +112,31 @@ class CityScreenViewModel @Inject constructor(
                             currentListPoints
                         } else {
                             var id = 1
-                            var tempListPoints: List<Point> = listOf()
+                            var tempListPoints: List<PointViewState> = listOf()
                             currentListPoints.forEachIndexed { index, pointFromList ->
                                 if (it.index != index) {
                                     tempListPoints = tempListPoints + pointFromList
                                 }
                             }
+
                             //присвоение листу resultPoints
                             tempListPoints
                         }
                     }
 
-                    PointState.NewPoint -> {
+                    TextChangingState.NewPoint -> {
+
                         var maxId = 0
-                        currentListPoints.forEach { point ->
-                            if (point.id > maxId) maxId = point.id
+                        currentListPoints.forEach { pointState ->
+                            if (pointState.point.id > maxId) maxId = pointState.point.id
                         }
+
                         //присвоение листу resultPoints
-                        currentListPoints + Point(id = maxId + 1)
+                        currentListPoints + PointViewState(
+                            point = Point(
+                                id = maxId + 1
+                            )
+                        )
                     }
                 }
                 _listPoints.emit(OneCityScreenState.ListPoints(resultPoints))
@@ -122,11 +145,10 @@ class CityScreenViewModel @Inject constructor(
     }
 
 
-
-    private fun emitChange(value: PointState) {
+    private fun emitChange(value: TextChangingState) {
         viewModelScope.launch {
             when (value) {
-                is PointState.ChangeAddress -> {
+                is TextChangingState.ChangeAddress -> {
                     val currentPointState = resultEditFlow.value[value.index]
                     if (currentPointState != null) {
                         resultEditFlow.value[value.index] =
@@ -134,7 +156,7 @@ class CityScreenViewModel @Inject constructor(
                     }
                 }
 
-                is PointState.ChangeGeopoint -> {
+                is TextChangingState.ChangeGeopoint -> {
                     val currentPointState = resultEditFlow.value[value.index]
                     if (currentPointState != null) {
                         resultEditFlow.value[value.index] =
@@ -150,11 +172,15 @@ class CityScreenViewModel @Inject constructor(
 
     fun initListPoints(points: List<Point>) {
         viewModelScope.launch {
-            _listPoints.emit(OneCityScreenState.ListPoints(points))
+            var listPointsState: List<PointViewState> = listOf()
+            points.forEach {
+                listPointsState = listPointsState + PointViewState(it)
+            }
+            _listPoints.emit(OneCityScreenState.ListPoints(listPointsState))
         }
     }
 
-    private fun needCallback() {
+    private fun needCallbackTextedit() {
         viewModelScope.launch {
             //готовлю словарь для проверки, что все изменения полей прилетели
             val sizeListPoints = _listPoints.value.points.size
@@ -167,16 +193,22 @@ class CityScreenViewModel @Inject constructor(
         }
     }
 
+    private fun stopCallbackTextedit() {
+        viewModelScope.launch {
+            _needCallback.emit(false)
+        }
+    }
+
     private fun getCurrentListPoints() = _listPoints.value
 
     fun getNewPoint() {
-        emitChange(PointState.NewPoint)
+        emitChange(TextChangingState.NewPoint)
     }
 
     fun deletePoint(index: Int) {
-        needCallback()
+        needCallbackTextedit()
         viewModelScope.launch {
-            emitChange(PointState.Delete(index))
+            emitChange(TextChangingState.DeletePoint(index))
         }
     }
 
@@ -186,9 +218,9 @@ class CityScreenViewModel @Inject constructor(
         coords: String? = null
     ) {
         if (address != null) {
-            emitChange(PointState.ChangeAddress(index, address))
+            emitChange(TextChangingState.ChangeAddress(index, address))
         } else if (coords != null) {
-            emitChange(PointState.ChangeGeopoint(index, coords))
+            emitChange(TextChangingState.ChangeGeopoint(index, coords))
         }
     }
 
@@ -200,7 +232,7 @@ class CityScreenViewModel @Inject constructor(
         deleteCityUseCase.deleteCity(cities)
     }
 
-    fun changeScreenState(state: CityScreenState) {
+    fun changeScreenState(state: CitiesScreenState) {
         viewModelScope.launch {
             _state.emit(state)
         }
