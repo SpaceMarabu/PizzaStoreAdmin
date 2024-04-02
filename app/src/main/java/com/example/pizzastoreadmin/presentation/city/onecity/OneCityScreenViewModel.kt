@@ -25,101 +25,90 @@ class OneCityScreenViewModel @Inject constructor(
     private val _cityState: MutableStateFlow<CityViewState> = MutableStateFlow(CityViewState())
     val cityState = _cityState.asStateFlow()
 
-    private val _needCallbackPoints = MutableStateFlow(false)
-    val needCallbackPoints = _needCallbackPoints.asStateFlow()
+    private val _needCallback = MutableStateFlow(false)
+    val needCallback = _needCallback.asStateFlow()
 
-    private val _needCallbackCity = MutableStateFlow(false)
-    val needCallbackCity = _needCallbackCity.asStateFlow()
+    private val _canLeaveScreen = MutableStateFlow(false)
+    val canLeaveScreen = _canLeaveScreen.asStateFlow()
 
-    private val pointsChanges = MutableSharedFlow<PointChangingState>(
+    private val _pointsChanges = MutableSharedFlow<ScreenChangingState>(
         extraBufferCapacity = 50
     )
 
-    private val resultEditPointFlow = MutableStateFlow(HashMap<Int, EditTextFields.EditPointState>())
-    private val resultEditCityFlow = MutableStateFlow(EditTextFields.EditCityState())
+    private val resultEditPointFlow =
+        MutableStateFlow(HashMap<Int, EditTextFieldsState.EditPointState>())
+    private val resultEditCityFlow = MutableStateFlow(EditTextFieldsState.EditCityState())
+    private val resultEditAll = MutableStateFlow(EditTextFieldsState.EditAllResultState())
 
     init {
-        changePointsList()
+        changeScreenState(OneCityScreenState.Content())
+        changeScreenContent()
     }
 
-    fun editCityName(cityName: String) {
+    private fun changeScreenContent() {
         viewModelScope.launch {
-            _cityState.emit(CityViewState(
-                city = City(name = cityName),
-                isCityNameIsCorrect = cityName.isNotBlank()
-            ))
-            resultEditCityFlow.emit(EditTextFields.EditCityState(true))
-        }
-    }
-
-    private fun changePointsList() {
-        viewModelScope.launch {
-            pointsChanges.collect {
+            _pointsChanges.collect {
 
                 val currentListPoints = getCurrentListPoints().toMutableList()
+                var resultPoints: List<PointViewState> = listOf()
+                val currentChangingState = it
 
-                val resultPoints: List<PointViewState> = when (it) {
-                    is PointChangingState.ChangeAddress -> {
+                when (currentChangingState) {
+                    is ScreenChangingState.ChangeAddress -> {
 
-                        val currentPoint = currentListPoints[it.index].point
-                        val isAddressCorrect = it.address.isNotBlank()
-                        stopCallbackPoints()
-                        currentListPoints[it.index] = currentListPoints[it.index]
+                        val currentPoint = currentListPoints[currentChangingState.index].point
+                        val isAddressCorrect = currentChangingState.address.isNotBlank()
+                        currentListPoints[currentChangingState.index] =
+                            currentListPoints[currentChangingState.index]
                             .copy(
-                                point = currentPoint.copy(address = it.address),
+                                point = currentPoint.copy(address = currentChangingState.address),
                                 isAddressValid = isAddressCorrect
                             )
 
                         //присвоение листу resultPoints
-                        currentListPoints
+                        resultPoints = currentListPoints
 
                     }
 
-                    is PointChangingState.ChangeGeopoint -> {
+                    is ScreenChangingState.ChangeGeopoint -> {
 
-                        val currentPoint = currentListPoints[it.index].point
-                        val isGeopointCorrect = it.coords.isNotBlank()
-                                && it.coords.matches(Regex("\\d+\\.\\d+\\,\\ ?\\d+\\.\\d+"))
+                        val currentPoint = currentListPoints[currentChangingState.index].point
+                        val regex = Regex("\\d+\\.\\d+\\,\\ ?\\d+\\.\\d+")
 
-                        stopCallbackPoints()
-                        currentListPoints[it.index] = currentListPoints[it.index]
+                        val isGeopointCorrect = currentChangingState.coords.isNotBlank()
+                                && currentChangingState.coords.matches(regex)
+
+                        currentListPoints[currentChangingState.index] =
+                            currentListPoints[currentChangingState.index]
                             .copy(
-                                point = currentPoint.copy(coords = it.coords),
+                                point = currentPoint.copy(coords = currentChangingState.coords),
                                 isGeopointValid = isGeopointCorrect
                             )
 
                         //присвоение листу resultPoints
-                        currentListPoints
+                        resultPoints = currentListPoints
 
                     }
 
-                    is PointChangingState.DeletePoint -> {
+                    is ScreenChangingState.DeletePoint -> {
 
-                        if (resultEditPointFlow.value.values.all {
-                                    state -> !state.addressCollected && !state.geopointCollected
-                        }) {
-                            viewModelScope.launch coroutine@ {
-                                delay(100)
-                                pointsChanges.emit(it)
-                                return@coroutine
-                            }
+                        if (checkAllPointsCollected() && checkCitynameCollected()) {
+                            emitChangeBackToFlow(currentChangingState)
+
                             //присвоение листу resultPoints
-                            currentListPoints
+                            resultPoints = currentListPoints
                         } else {
                             var id = 1
-                            var tempListPoints: List<PointViewState> = listOf()
                             currentListPoints.forEachIndexed { index, pointFromList ->
-                                if (it.index != index) {
-                                    tempListPoints = tempListPoints + pointFromList
+                                if (currentChangingState.index != index) {
+                                    //присвоение листу resultPoints
+                                    resultPoints = resultPoints + pointFromList
                                 }
                             }
-
-                            //присвоение листу resultPoints
-                            tempListPoints
                         }
                     }
 
-                    PointChangingState.NewPoint -> {
+                    ScreenChangingState.NewPoint -> {
 
                         var maxId = 0
                         currentListPoints.forEach { pointState ->
@@ -127,24 +116,98 @@ class OneCityScreenViewModel @Inject constructor(
                         }
 
                         //присвоение листу resultPoints
-                        currentListPoints + PointViewState(
+                        resultPoints = currentListPoints + PointViewState(
                             point = Point(
                                 id = maxId + 1
                             )
                         )
                     }
+
+                    is ScreenChangingState.ChangeCityName -> {
+                        if (checkAllPointsCollected()) {
+                            val collectedCityName = currentChangingState.cityName
+                            val isCityNameCorrect = collectedCityName.isNotBlank()
+                            val currentCityFromState = _cityState.value.city ?: City()
+                            var pointList = listOf<Point>()
+                            currentListPoints.forEach {pointViewState ->
+                                pointList = pointList + pointViewState.point
+                            }
+                            _cityState.emit(
+                                CityViewState(
+                                    city = currentCityFromState.copy(
+                                        name = collectedCityName,
+                                        points = pointList
+                                    ),
+                                    isCityNameIsCorrect = isCityNameCorrect
+                                )
+                            )
+                        } else {
+                            emitChangeBackToFlow(currentChangingState)
+                        }
+                        stopCallbackScreen()
+                    }
+
+                    ScreenChangingState.Return -> {
+                        if (checkCitynameCollected()) {
+                            _canLeaveScreen.emit(true)
+                        } else {
+                            emitChangeBackToFlow(currentChangingState)
+                        }
+                    }
                 }
+
                 _listPoints.emit(resultPoints)
             }
         }
     }
 
+    fun exitScreen() {
+        viewModelScope.launch {
+            resultEditCityFlow.collect {
+                needCallbackScreen()
+                _pointsChanges.emit(ScreenChangingState.Return)
+                _canLeaveScreen.emit(false)
+            }
+        }
+    }
+
+    private fun emitChangeBackToFlow(value: ScreenChangingState) {
+        viewModelScope.launch coroutine@{
+            delay(100)
+            _pointsChanges.emit(value)
+            return@coroutine
+        }
+    }
+
+    private fun checkCitynameCollected(): Boolean {
+        return resultEditCityFlow.value.cityCollected
+    }
+
+    private fun checkAllPointsCollected(): Boolean {
+        return (resultEditPointFlow.value.values.all { state ->
+            !state.addressCollected && !state.geopointCollected
+        })
+    }
+
+    //<editor-fold desc="editCityName">
+    fun editCityName(cityName: String) {
+        viewModelScope.launch {
+            _cityState.emit(
+                CityViewState(
+                    city = City(name = cityName),
+                    isCityNameIsCorrect = cityName.isNotBlank()
+                )
+            )
+            resultEditCityFlow.emit(EditTextFieldsState.EditCityState(true))
+        }
+    }
+    //</editor-fold>
 
     //<editor-fold desc="emitChangePoints">
-    private fun emitChangePoints(value: PointChangingState) {
+    private fun emitChangePoints(value: ScreenChangingState) {
         viewModelScope.launch {
             when (value) {
-                is PointChangingState.ChangeAddress -> {
+                is ScreenChangingState.ChangeAddress -> {
                     val currentPointState = resultEditPointFlow.value[value.index]
                     if (currentPointState != null) {
                         resultEditPointFlow.value[value.index] =
@@ -152,7 +215,7 @@ class OneCityScreenViewModel @Inject constructor(
                     }
                 }
 
-                is PointChangingState.ChangeGeopoint -> {
+                is ScreenChangingState.ChangeGeopoint -> {
                     val currentPointState = resultEditPointFlow.value[value.index]
                     if (currentPointState != null) {
                         resultEditPointFlow.value[value.index] =
@@ -162,7 +225,7 @@ class OneCityScreenViewModel @Inject constructor(
 
                 else -> {}
             }
-            pointsChanges.emit(value)
+            _pointsChanges.emit(value)
         }
     }
     //</editor-fold>
@@ -179,48 +242,37 @@ class OneCityScreenViewModel @Inject constructor(
     }
     //</editor-fold>
 
-    private fun needCallbackPoints() {
+    private fun needCallbackScreen() {
         viewModelScope.launch {
             //готовлю словарь для проверки, что все изменения полей прилетели
             val sizeListPoints = _listPoints.value.size
-            val resultMap = HashMap<Int, EditTextFields.EditPointState>()
+            val resultMap = HashMap<Int, EditTextFieldsState.EditPointState>()
             for (i in 0 until sizeListPoints) {
-                resultMap[i] = EditTextFields.EditPointState()
+                resultMap[i] = EditTextFieldsState.EditPointState()
             }
             resultEditPointFlow.emit(resultMap)
-            _needCallbackPoints.emit(true)
+            resultEditCityFlow.emit(EditTextFieldsState.EditCityState())
+            resultEditAll.emit(EditTextFieldsState.EditAllResultState())
+            _needCallback.emit(true)
         }
     }
 
-    private fun stopCallbackPoints() {
+    private fun stopCallbackScreen() {
         viewModelScope.launch {
-            _needCallbackPoints.emit(false)
-        }
-    }
-
-    private fun needCallbackCity() {
-        viewModelScope.launch {
-            resultEditCityFlow.emit(EditTextFields.EditCityState(false))
-            _needCallbackCity.emit(true)
-        }
-    }
-
-    private fun stopCallbackCity() {
-        viewModelScope.launch {
-            _needCallbackCity.emit(false)
+            _needCallback.emit(false)
         }
     }
 
     private fun getCurrentListPoints() = _listPoints.value
 
     fun getNewPoint() {
-        emitChangePoints(PointChangingState.NewPoint)
+        emitChangePoints(ScreenChangingState.NewPoint)
     }
 
     fun deletePoint(index: Int) {
-        needCallbackPoints()
+        needCallbackScreen()
         viewModelScope.launch {
-            emitChangePoints(PointChangingState.DeletePoint(index))
+            emitChangePoints(ScreenChangingState.DeletePoint(index))
         }
     }
 
@@ -230,9 +282,9 @@ class OneCityScreenViewModel @Inject constructor(
         coords: String? = null
     ) {
         if (address != null) {
-            emitChangePoints(PointChangingState.ChangeAddress(index, address))
+            emitChangePoints(ScreenChangingState.ChangeAddress(index, address))
         } else if (coords != null) {
-            emitChangePoints(PointChangingState.ChangeGeopoint(index, coords))
+            emitChangePoints(ScreenChangingState.ChangeGeopoint(index, coords))
         }
     }
 

@@ -1,20 +1,26 @@
 package com.example.pizzastoreadmin.presentation.city.onecity
 
-sealed class PointChangingState() {
+sealed class ScreenChangingState() {
+
+    data class ChangeCityName(
+        val cityName: String
+    ) : ScreenChangingState()
 
     data class ChangeAddress(
         val index: Int,
         val address: String
-    ) : PointChangingState()
+    ) : ScreenChangingState()
 
     data class ChangeGeopoint(
         val index: Int,
         val coords: String
-    ) : PointChangingState()
+    ) : ScreenChangingState()
 
     data class DeletePoint(
         val index: Int
-    ) : PointChangingState()
+    ) : ScreenChangingState()
 
-    object NewPoint : PointChangingState()
+    object NewPoint : ScreenChangingState()
+
+    object Return : ScreenChangingState()
 }

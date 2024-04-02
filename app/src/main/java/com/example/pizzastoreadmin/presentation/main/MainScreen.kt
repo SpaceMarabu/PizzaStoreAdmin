@@ -1,4 +1,4 @@
-package com.example.pizzastore.presentation.home
+package com.example.pizzastoreadmin.presentation.main
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
@@ -16,9 +16,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.pizzastore.navigation.AppNavGraph
 import com.example.pizzastore.navigation.NavigationItem
 import com.example.pizzastore.navigation.Screen
-import com.example.pizzastore.navigation.rememberNavigationState
+import com.example.pizzastoreadmin.navigation.rememberNavigationState
 import com.example.pizzastoreadmin.presentation.city.cities.CitiesScreen
-import com.example.pizzastoreadmin.presentation.city.cities.OneCityScreen
 import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreen
 
 
@@ -68,12 +67,12 @@ fun MainScreen() {
         AppNavGraph(
             navHostController = navigationState.navHostController,
             citiesScreenContent = {
-                CitiesScreen() {
+                CitiesScreen(paddingValues) {
                     navigationState.navigateTo(Screen.ROUTE_ONE_CITY)
                 }
             },
             oneCityScreenContent = {
-                OneCityScreen() {
+                OneCityScreen(paddingValues) {
                     navigationState.navigateTo(Screen.ROUTE_CITIES)
                 }
             }

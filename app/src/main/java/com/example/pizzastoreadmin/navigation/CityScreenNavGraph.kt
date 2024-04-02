@@ -11,7 +11,7 @@ fun NavGraphBuilder.cityScreenNavGraph(
 ) {
     navigation(
         startDestination = Screen.Cities.route,
-        route = Screen.Cities.route
+        route = Screen.City.route
     ) {
         composable(Screen.Cities.route) {
             citiesScreenContent()

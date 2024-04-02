@@ -1,12 +1,14 @@
 package com.example.pizzastoreadmin.presentation.city.onecity
 
 import android.util.DisplayMetrics
+import android.util.Log
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -50,6 +52,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun OneCityScreen(
+    paddingValues: PaddingValues,
     onDoneClicked: () -> Unit
 ) {
 
@@ -57,6 +60,10 @@ fun OneCityScreen(
     val viewModel: OneCityScreenViewModel = viewModel(factory = component.getViewModelFactory())
 
     val screenState = viewModel.state.collectAsState()
+    val canLeaveScreen = viewModel.canLeaveScreen.collectAsState()
+    if (canLeaveScreen.value) {
+        Log.d("TEST_TEST", "PORA")
+    }
 
 
     when (screenState.value) {
@@ -66,11 +73,9 @@ fun OneCityScreen(
         is OneCityScreenState.Content -> {
             val currentScreenState = screenState.value as OneCityScreenState.Content
             OneCityScreenContent(
-                viewModel = viewModel,
-                cityState = currentScreenState.city
-            ) {
-                onDoneClicked()
-            }
+                paddingValues = paddingValues,
+                viewModel = viewModel
+            )
         }
 
         OneCityScreenState.Loading -> {
@@ -82,28 +87,30 @@ fun OneCityScreen(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun OneCityScreenContent(
-    viewModel: OneCityScreenViewModel,
-    cityState: CityViewState,
-    onDoneClicked: () -> Unit
+    paddingValues: PaddingValues,
+    viewModel: OneCityScreenViewModel
 ) {
 
     val listPoints = viewModel.listPoints.collectAsState()
-
+    val cityState = viewModel.cityState.collectAsState()
     var isScreenInited by remember {
         mutableStateOf(false)
     }
     if (!isScreenInited) {
         isScreenInited = true
-        viewModel.initListPoints( cityState.city?.points?: listOf())
+        viewModel.initListPoints( cityState.value.city?.points?: listOf())
     }
 
-    Scaffold { paddingValues ->
+    Scaffold (
+        modifier = Modifier
+            .padding(bottom = paddingValues.calculateBottomPadding())
+    ) { _ ->
         LazyColumn {
             item {
                 TextFieldCity(
                     label = "Город",
-                    textIn = cityState.city?.name,
-                    needCallbackIn = viewModel.needCallbackCity,
+                    textIn = cityState.value.city?.name,
+                    needCallbackIn = viewModel.needCallback,
                     isError = false
                 ) {
                     viewModel.editCityName(it)
@@ -146,7 +153,7 @@ fun OneCityScreenContent(
                     TextFieldCity(
                         label = "Адрес Пиццерии",
                         textIn = point.address,
-                        needCallbackIn = viewModel.needCallbackPoints,
+                        needCallbackIn = viewModel.needCallback,
                         isError = !pointViewState.isAddressValid
                     ) { text ->
                         viewModel.editPoint(index = index, address = text)
@@ -154,7 +161,7 @@ fun OneCityScreenContent(
                     TextFieldCity(
                         label = "Геометка пиццерии",
                         textIn = point.coords,
-                        needCallbackIn = viewModel.needCallbackPoints,
+                        needCallbackIn = viewModel.needCallback,
                         isError = !pointViewState.isGeopointValid
                     ) { text ->
                         viewModel.editPoint(index = index, coords = text)
@@ -189,10 +196,9 @@ fun OneCityScreenContent(
                         width = halfScreenDp - (paddingBetweenButtons / 2) - paddingStartEnd,
                         text = "Готово"
                     ) {
-                        onDoneClicked()
+                        viewModel.exitScreen()
                     }
                 }
-
             }
         }
     }

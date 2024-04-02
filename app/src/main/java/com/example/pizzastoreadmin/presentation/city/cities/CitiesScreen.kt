@@ -2,6 +2,7 @@ package com.example.pizzastoreadmin.presentation.city.cities
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -33,6 +34,7 @@ import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 
 @Composable
 fun CitiesScreen(
+    paddingValues: PaddingValues,
     onAddOrCityClicked: () -> Unit
 ) {
 
@@ -50,7 +52,8 @@ fun CitiesScreen(
             val currentScreenState = screenState.value as CitiesScreenState.ListCities
             ListCitiesScreen(
                 cities = currentScreenState.cities,
-                viewModel = viewModel
+                viewModel = viewModel,
+                paddingValues = paddingValues
             ) {
                 onAddOrCityClicked()
             }
@@ -68,6 +71,7 @@ fun CitiesScreen(
 fun ListCitiesScreen(
     cities: List<City>,
     viewModel: CitiesScreenViewModel,
+    paddingValues: PaddingValues,
     onAddOrCityClicked: () -> Unit
 ) {
     val citiesToDelete: MutableSet<City> = remember {
@@ -92,6 +96,8 @@ fun ListCitiesScreen(
     }
 
     Scaffold(
+        modifier = Modifier
+            .padding(bottom = paddingValues.calculateBottomPadding()),
         floatingActionButton = {
             FloatingActionButton(
                 modifier = Modifier
