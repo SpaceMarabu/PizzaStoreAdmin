@@ -71,7 +71,6 @@ fun OneCityScreen(
         is OneCityScreenState.Initial -> {}
 
         is OneCityScreenState.Content -> {
-            val currentScreenState = screenState.value as OneCityScreenState.Content
             OneCityScreenContent(
                 paddingValues = paddingValues,
                 viewModel = viewModel
@@ -93,13 +92,13 @@ fun OneCityScreenContent(
 
     val listPoints = viewModel.listPoints.collectAsState()
     val cityState = viewModel.cityState.collectAsState()
-    var isScreenInited by remember {
-        mutableStateOf(false)
-    }
-    if (!isScreenInited) {
-        isScreenInited = true
-        viewModel.initListPoints( cityState.value.city?.points?: listOf())
-    }
+//    var isScreenInited by remember {
+//        mutableStateOf(false)
+//    }
+//    if (!isScreenInited) {
+//        isScreenInited = true
+//        viewModel.initListPoints( cityState.value.city?.points?: listOf())
+//    }
 
     Scaffold (
         modifier = Modifier
@@ -111,7 +110,7 @@ fun OneCityScreenContent(
                     label = "Город",
                     textIn = cityState.value.city?.name,
                     needCallbackIn = viewModel.needCallback,
-                    isError = false
+                    isError = cityState.value.isCityNameIsCorrect
                 ) {
                     viewModel.editCityName(it)
                 }

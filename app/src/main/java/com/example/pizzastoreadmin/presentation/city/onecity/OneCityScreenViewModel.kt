@@ -1,10 +1,13 @@
 package com.example.pizzastoreadmin.presentation.city.onecity
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pizzastore.domain.entity.Point
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.domain.usecases.AddOrEditCItyUseCase
+import com.example.pizzastoreadmin.domain.usecases.GetCurrentCityUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +16,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class OneCityScreenViewModel @Inject constructor(
-    private val addOrEditCityUseCase: AddOrEditCItyUseCase
+    private val addOrEditCityUseCase: AddOrEditCItyUseCase,
+    private val getCurrentCityUseCase: GetCurrentCityUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<OneCityScreenState>(OneCityScreenState.Initial)
@@ -31,7 +35,7 @@ class OneCityScreenViewModel @Inject constructor(
     private val _canLeaveScreen = MutableStateFlow(false)
     val canLeaveScreen = _canLeaveScreen.asStateFlow()
 
-    private val _pointsChanges = MutableSharedFlow<ScreenChangingState>(
+    private val _screenChanges = MutableSharedFlow<ScreenChangingState>(
         extraBufferCapacity = 50
     )
 
@@ -41,13 +45,23 @@ class OneCityScreenViewModel @Inject constructor(
     private val resultEditAll = MutableStateFlow(EditTextFieldsState.EditAllResultState())
 
     init {
+        getCurrentCity()
         changeScreenState(OneCityScreenState.Content())
         changeScreenContent()
     }
 
+    private fun getCurrentCity() {
+        viewModelScope.launch {
+            getCurrentCityUseCase.getCity().collect {
+                _cityState.value = CityViewState(city = it)
+                initListPoints(it?.points)
+            }
+        }
+    }
+
     private fun changeScreenContent() {
         viewModelScope.launch {
-            _pointsChanges.collect {
+            _screenChanges.collect {
 
                 val currentListPoints = getCurrentListPoints().toMutableList()
                 var resultPoints: List<PointViewState> = listOf()
@@ -60,10 +74,10 @@ class OneCityScreenViewModel @Inject constructor(
                         val isAddressCorrect = currentChangingState.address.isNotBlank()
                         currentListPoints[currentChangingState.index] =
                             currentListPoints[currentChangingState.index]
-                            .copy(
-                                point = currentPoint.copy(address = currentChangingState.address),
-                                isAddressValid = isAddressCorrect
-                            )
+                                .copy(
+                                    point = currentPoint.copy(address = currentChangingState.address),
+                                    isAddressValid = isAddressCorrect
+                                )
 
                         //присвоение листу resultPoints
                         resultPoints = currentListPoints
@@ -80,10 +94,10 @@ class OneCityScreenViewModel @Inject constructor(
 
                         currentListPoints[currentChangingState.index] =
                             currentListPoints[currentChangingState.index]
-                            .copy(
-                                point = currentPoint.copy(coords = currentChangingState.coords),
-                                isGeopointValid = isGeopointCorrect
-                            )
+                                .copy(
+                                    point = currentPoint.copy(coords = currentChangingState.coords),
+                                    isGeopointValid = isGeopointCorrect
+                                )
 
                         //присвоение листу resultPoints
                         resultPoints = currentListPoints
@@ -92,7 +106,7 @@ class OneCityScreenViewModel @Inject constructor(
 
                     is ScreenChangingState.DeletePoint -> {
 
-                        if (checkAllPointsCollected() && checkCitynameCollected()) {
+                        if (checkAllPointsCollected()) {
                             emitChangeBackToFlow(currentChangingState)
 
                             //присвоение листу resultPoints
@@ -129,7 +143,7 @@ class OneCityScreenViewModel @Inject constructor(
                             val isCityNameCorrect = collectedCityName.isNotBlank()
                             val currentCityFromState = _cityState.value.city ?: City()
                             var pointList = listOf<Point>()
-                            currentListPoints.forEach {pointViewState ->
+                            currentListPoints.forEach { pointViewState ->
                                 pointList = pointList + pointViewState.point
                             }
                             _cityState.emit(
@@ -141,21 +155,24 @@ class OneCityScreenViewModel @Inject constructor(
                                     isCityNameIsCorrect = isCityNameCorrect
                                 )
                             )
+                            resultEditCityFlow.emit(EditTextFieldsState.EditCityState(true))
                         } else {
                             emitChangeBackToFlow(currentChangingState)
                         }
+                        resultPoints = currentListPoints
                         stopCallbackScreen()
                     }
 
                     ScreenChangingState.Return -> {
                         if (checkCitynameCollected()) {
+                            Log.d("TEST_TEST", _cityState.value.toString())
                             _canLeaveScreen.emit(true)
                         } else {
                             emitChangeBackToFlow(currentChangingState)
                         }
+                        resultPoints = currentListPoints
                     }
                 }
-
                 _listPoints.emit(resultPoints)
             }
         }
@@ -163,18 +180,16 @@ class OneCityScreenViewModel @Inject constructor(
 
     fun exitScreen() {
         viewModelScope.launch {
-            resultEditCityFlow.collect {
-                needCallbackScreen()
-                _pointsChanges.emit(ScreenChangingState.Return)
-                _canLeaveScreen.emit(false)
-            }
+            needCallbackScreen()
+            _screenChanges.emit(ScreenChangingState.Return)
+            _canLeaveScreen.emit(false)
         }
     }
 
     private fun emitChangeBackToFlow(value: ScreenChangingState) {
         viewModelScope.launch coroutine@{
             delay(100)
-            _pointsChanges.emit(value)
+            _screenChanges.emit(value)
             return@coroutine
         }
     }
@@ -185,20 +200,14 @@ class OneCityScreenViewModel @Inject constructor(
 
     private fun checkAllPointsCollected(): Boolean {
         return (resultEditPointFlow.value.values.all { state ->
-            !state.addressCollected && !state.geopointCollected
+            state.addressCollected && state.geopointCollected
         })
     }
 
     //<editor-fold desc="editCityName">
     fun editCityName(cityName: String) {
         viewModelScope.launch {
-            _cityState.emit(
-                CityViewState(
-                    city = City(name = cityName),
-                    isCityNameIsCorrect = cityName.isNotBlank()
-                )
-            )
-            resultEditCityFlow.emit(EditTextFieldsState.EditCityState(true))
+            _screenChanges.emit(ScreenChangingState.ChangeCityName(cityName))
         }
     }
     //</editor-fold>
@@ -225,16 +234,16 @@ class OneCityScreenViewModel @Inject constructor(
 
                 else -> {}
             }
-            _pointsChanges.emit(value)
+            _screenChanges.emit(value)
         }
     }
     //</editor-fold>
 
     //<editor-fold desc="initListPoints">
-    fun initListPoints(points: List<Point>) {
+    private fun initListPoints(points: List<Point>?) {
         viewModelScope.launch {
             var listPointsState: List<PointViewState> = listOf()
-            points.forEach {
+            points?.forEach {
                 listPointsState = listPointsState + PointViewState(it)
             }
             _listPoints.emit(listPointsState)

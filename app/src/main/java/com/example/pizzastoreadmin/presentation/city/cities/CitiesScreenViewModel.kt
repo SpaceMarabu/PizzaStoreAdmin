@@ -6,6 +6,7 @@ import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.domain.usecases.AddOrEditCItyUseCase
 import com.example.pizzastoreadmin.domain.usecases.DeleteCityUseCase
 import com.example.pizzastoreadmin.domain.usecases.GetAllCitiesUseCase
+import com.example.pizzastoreadmin.domain.usecases.SetCurrentCityUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
@@ -15,7 +16,8 @@ import javax.inject.Inject
 class CitiesScreenViewModel @Inject constructor(
     private val getCitiesUseCase: GetAllCitiesUseCase,
     private val addOrEditCityUseCase: AddOrEditCItyUseCase,
-    private val deleteCityUseCase: DeleteCityUseCase
+    private val deleteCityUseCase: DeleteCityUseCase,
+    private val setCurrentCityUseCase: SetCurrentCityUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<CitiesScreenState>(CitiesScreenState.Initial)
@@ -35,6 +37,10 @@ class CitiesScreenViewModel @Inject constructor(
                     _state.value = CitiesScreenState.ListCities(it)
                 }
         }
+    }
+
+    fun setCurrentCity(city: City? = null) {
+        setCurrentCityUseCase.setCity(city)
     }
 
     private fun addOrEditCity(city: City) {

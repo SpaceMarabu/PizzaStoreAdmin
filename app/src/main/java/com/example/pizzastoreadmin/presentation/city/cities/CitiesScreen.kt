@@ -2,6 +2,7 @@ package com.example.pizzastoreadmin.presentation.city.cities
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -90,6 +91,9 @@ fun ListCitiesScreen(
                 viewModel.deleteCity(citiesToDelete.toList())
             }
         } else {
+            SideEffect {
+                viewModel.setCurrentCity()
+            }
             onAddOrCityClicked()
         }
         isButtonClicked = false
@@ -119,7 +123,13 @@ fun ListCitiesScreen(
     ) {
         LazyColumn {
             items(items = cities, key = { it.id }) { city ->
-                CityRow(city = city) { isBoxChecked ->
+                CityRow(
+                    city = city,
+                    onClick = {
+                        viewModel.setCurrentCity(city)
+                        onAddOrCityClicked()
+                    }
+                ) { isBoxChecked ->
                     if (isBoxChecked) {
                         citiesToDelete.add(city)
                     } else {
@@ -140,12 +150,17 @@ fun ListCitiesScreen(
 @Composable
 fun CityRow(
     city: City,
+    onClick: () -> Unit,
     onCheckboxChanged: (Boolean) -> Unit
 ) {
     var isCheckedCity by remember {
         mutableStateOf(false)
     }
     Row(
+        modifier = Modifier
+            .clickable {
+                onClick()
+            },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(

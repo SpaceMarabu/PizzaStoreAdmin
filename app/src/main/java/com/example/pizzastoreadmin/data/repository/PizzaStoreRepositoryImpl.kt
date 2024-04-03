@@ -12,6 +12,8 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
 
@@ -21,6 +23,8 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
     private val firebaseDatabase = FirebaseDatabase.getInstance()
     private val dRef = firebaseDatabase.getReference("cities")
+
+    private val currentCity: MutableStateFlow<City?>  = MutableStateFlow(City())
 
     private val listCitiesFlow = callbackFlow {
 
@@ -60,6 +64,12 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     override fun getCitiesUseCase(): Flow<List<City>> {
         return listCitiesFlow
     }
+
+    override fun setCurrentCityUseCase(city: City?) {
+        currentCity.value = city
+    }
+
+    override fun getCurrentCityUseCase() = currentCity.asStateFlow()
 
     override fun addOrEditCityUseCase(city: City) {
         val cityId = city.id.toString()
