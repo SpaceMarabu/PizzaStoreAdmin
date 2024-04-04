@@ -73,7 +73,7 @@ fun MainScreen() {
             },
             oneCityScreenContent = {
                 OneCityScreen(paddingValues) {
-                    navigationState.navigateTo(Screen.ROUTE_CITIES)
+                    navigationState.navigateWithDestroy(Screen.ROUTE_CITIES)
                 }
             }
         )

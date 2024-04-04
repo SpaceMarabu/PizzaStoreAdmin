@@ -1,5 +1,6 @@
-package com.example.pizzastore.domain.repository
+package com.example.pizzastoreadmin.domain.repository
 
+import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.City
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,11 +11,13 @@ interface PizzaStoreRepository {
 
     fun setCurrentCityUseCase(city: City? = null)
 
-    fun getCurrentCityUseCase(): StateFlow<City?>
+    fun getCurrentCityUseCase(): StateFlow<City>
 
     fun addOrEditCityUseCase(city: City)
 
 //    suspend fun editCityUseCase(city: City)
 
     fun deleteCitiesUseCase(cities: List<City>)
+
+    fun getDbResponse(): StateFlow<DBResponse>
 }

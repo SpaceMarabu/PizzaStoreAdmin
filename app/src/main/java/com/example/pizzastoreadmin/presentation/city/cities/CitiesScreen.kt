@@ -75,20 +75,22 @@ fun ListCitiesScreen(
     paddingValues: PaddingValues,
     onAddOrCityClicked: () -> Unit
 ) {
-    val citiesToDelete: MutableSet<City> = remember {
-        mutableSetOf()
-    }
-    var isCitiesToDeleteEmpty by remember {
-        mutableStateOf(true)
-    }
+    val stateHolder = remember {
+        mutableStateOf(CurrentStates(
+            citiesToDelete = mutableSetOf(),
+            isCitiesToDeleteEmpty = true,
+            isButtonClicked = false,
+            isItemClicked = false,
+            currentCity = null
+        ))
 
-    var isButtonClicked by remember {
-        mutableStateOf(false)
     }
-    if (isButtonClicked) {
-        if (!isCitiesToDeleteEmpty) {
+    val currentStateValue = stateHolder.value
+
+    if (currentStateValue.isButtonClicked) {
+        if (!currentStateValue.isCitiesToDeleteEmpty) {
             SideEffect {
-                viewModel.deleteCity(citiesToDelete.toList())
+                viewModel.deleteCity(currentStateValue.citiesToDelete.toList())
             }
         } else {
             SideEffect {
@@ -96,8 +98,16 @@ fun ListCitiesScreen(
             }
             onAddOrCityClicked()
         }
-        isButtonClicked = false
+        stateHolder.value = currentStateValue.copy(isButtonClicked = false)
     }
+    if (currentStateValue.isItemClicked) {
+        SideEffect {
+            viewModel.setCurrentCity(currentStateValue.currentCity)
+        }
+        onAddOrCityClicked()
+        stateHolder.value = currentStateValue.copy(isItemClicked = false)
+    }
+
 
     Scaffold(
         modifier = Modifier
@@ -112,10 +122,10 @@ fun ListCitiesScreen(
                     ),
                 shape = RoundedCornerShape(10.dp),
                 onClick = {
-                    isButtonClicked = true
+                    stateHolder.value = currentStateValue.copy(isButtonClicked = true)
                 }) {
                 Text(
-                    text = if (isCitiesToDeleteEmpty) "ADD" else "DELETE",
+                    text = if (currentStateValue.isCitiesToDeleteEmpty) "ADD" else "DELETE",
                     fontSize = 24.sp
                 )
             }
@@ -126,16 +136,23 @@ fun ListCitiesScreen(
                 CityRow(
                     city = city,
                     onClick = {
-                        viewModel.setCurrentCity(city)
-                        onAddOrCityClicked()
+                        stateHolder.value = currentStateValue
+                            .copy(
+                                isItemClicked = true,
+                                currentCity = city
+                            )
                     }
                 ) { isBoxChecked ->
                     if (isBoxChecked) {
-                        citiesToDelete.add(city)
+                        currentStateValue.citiesToDelete.add(city)
                     } else {
-                        citiesToDelete.removeIf { it.id == city.id }
+                        currentStateValue.citiesToDelete.removeIf { it.id == city.id }
                     }
-                    isCitiesToDeleteEmpty = citiesToDelete.size == 0
+                    stateHolder.value = currentStateValue
+                        .copy(
+                            citiesToDelete = currentStateValue.citiesToDelete,
+                            isCitiesToDeleteEmpty = currentStateValue.citiesToDelete.size == 0
+                        )
                 }
                 DividerList()
             }

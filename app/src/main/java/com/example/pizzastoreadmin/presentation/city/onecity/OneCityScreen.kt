@@ -1,7 +1,7 @@
 package com.example.pizzastoreadmin.presentation.city.onecity
 
 import android.util.DisplayMetrics
-import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -53,28 +53,26 @@ import kotlinx.coroutines.flow.StateFlow
 @Composable
 fun OneCityScreen(
     paddingValues: PaddingValues,
-    onDoneClicked: () -> Unit
+    onExitLet: () -> Unit
 ) {
 
     val component = getApplicationComponent()
     val viewModel: OneCityScreenViewModel = viewModel(factory = component.getViewModelFactory())
 
     val screenState = viewModel.state.collectAsState()
-    val canLeaveScreen = viewModel.canLeaveScreen.collectAsState()
-    if (canLeaveScreen.value) {
-        Log.d("TEST_TEST", "PORA")
-    }
 
 
     when (screenState.value) {
 
-        is OneCityScreenState.Initial -> {}
+        OneCityScreenState.Initial -> {}
 
         is OneCityScreenState.Content -> {
             OneCityScreenContent(
                 paddingValues = paddingValues,
                 viewModel = viewModel
-            )
+            ) {
+                onExitLet()
+            }
         }
 
         OneCityScreenState.Loading -> {
@@ -87,18 +85,29 @@ fun OneCityScreen(
 @Composable
 fun OneCityScreenContent(
     paddingValues: PaddingValues,
-    viewModel: OneCityScreenViewModel
+    viewModel: OneCityScreenViewModel,
+    onExitLet: () -> Unit
 ) {
 
     val listPoints = viewModel.listPoints.collectAsState()
     val cityState = viewModel.cityState.collectAsState()
-//    var isScreenInited by remember {
-//        mutableStateOf(false)
-//    }
-//    if (!isScreenInited) {
-//        isScreenInited = true
-//        viewModel.initListPoints( cityState.value.city?.points?: listOf())
-//    }
+
+    val shouldLeaveScreen = viewModel.shouldLeaveScreenState.collectAsState()
+
+    when (shouldLeaveScreen.value) {
+        is ShouldLeaveScreenState.Error -> {
+            val currentLeaveState = shouldLeaveScreen.value as ShouldLeaveScreenState.Error
+            Toast.makeText(
+                LocalContext.current,
+                currentLeaveState.description,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+        ShouldLeaveScreenState.Exit -> {
+            onExitLet()
+        }
+        ShouldLeaveScreenState.Processing -> {}
+    }
 
     Scaffold (
         modifier = Modifier
@@ -110,7 +119,7 @@ fun OneCityScreenContent(
                     label = "Город",
                     textIn = cityState.value.city?.name,
                     needCallbackIn = viewModel.needCallback,
-                    isError = cityState.value.isCityNameIsCorrect
+                    isError = !cityState.value.isCityNameIsCorrect
                 ) {
                     viewModel.editCityName(it)
                 }

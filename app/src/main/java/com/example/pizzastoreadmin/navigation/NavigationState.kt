@@ -12,7 +12,7 @@ class NavigationState(
 
     fun navigateTo(route: String) {
         navHostController.navigate(route) {
-            popUpTo(Screen.ROUTE_CITY) {
+            popUpTo(Screen.ROUTE_CITIES) {
                 saveState = true
             }
             launchSingleTop = true
@@ -21,8 +21,8 @@ class NavigationState(
     }
 
     fun navigateWithDestroy(route: String) {
-        navHostController.popBackStack()
         navHostController.navigate(route) {
+            popUpTo(Screen.ROUTE_CITIES)
             launchSingleTop = true
             restoreState = true
         }
