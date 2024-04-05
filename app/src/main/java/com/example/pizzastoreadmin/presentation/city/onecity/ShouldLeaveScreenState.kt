@@ -2,6 +2,7 @@ package com.example.pizzastoreadmin.presentation.city.onecity
 
 sealed class ShouldLeaveScreenState {
 
+
     object Processing : ShouldLeaveScreenState()
 
     object Exit : ShouldLeaveScreenState()

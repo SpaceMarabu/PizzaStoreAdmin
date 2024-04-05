@@ -31,7 +31,8 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
     private val currentCity: MutableStateFlow<City> = MutableStateFlow(City())
     private val maxCityIdFlow = MutableStateFlow(-1)
-    private val dbResponseFlow: MutableStateFlow<DBResponse> = MutableStateFlow(DBResponse.Processing)
+    private val dbResponseFlow: MutableStateFlow<DBResponse> =
+        MutableStateFlow(DBResponse.Processing)
 
     private val listCitiesFlow = callbackFlow {
 
@@ -111,13 +112,30 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     }
 
     override fun deleteCitiesUseCase(cities: List<City>) {
-        cities.forEach {city ->
-            val cityId = city.id.toString()
-            Log.d("TEST_TEST", "$cityId Delete")
-//            dRef.child(cityId)
-//                .removeValue()
+        var haveErrors = false
+        val scope = CoroutineScope(Dispatchers.IO)
+        scope.launch {
+            dbResponseFlow.emit(DBResponse.Processing)
+            cities.forEach { city ->
+                val cityId = city.id.toString()
+                dRef.child(cityId)
+                    .removeValue()
+                    .addOnFailureListener(OnFailureListener { _ ->
+                        haveErrors = true
+                    })
+            }
+            dbResponseFlow.emit(
+                if (haveErrors) {
+                    DBResponse.Error("Ошибка удаления")
+                } else {
+                    DBResponse.Complete
+                }
+            )
         }
     }
 
-    override fun getDbResponse() = dbResponseFlow.asStateFlow()
+    override fun getDbResponse(): StateFlow<DBResponse> {
+        dbResponseFlow.value = DBResponse.Processing
+        return dbResponseFlow.asStateFlow()
+    }
 }

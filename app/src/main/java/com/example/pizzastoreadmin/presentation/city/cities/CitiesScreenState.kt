@@ -7,7 +7,7 @@ sealed class CitiesScreenState() {
     object Initial : CitiesScreenState()
     object Loading : CitiesScreenState()
 
-    data class ListCities(
+    data class Content(
         val cities: List<City>
     ): CitiesScreenState()
 

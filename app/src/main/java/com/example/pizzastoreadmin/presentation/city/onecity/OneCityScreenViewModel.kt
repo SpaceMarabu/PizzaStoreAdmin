@@ -1,6 +1,5 @@
 package com.example.pizzastoreadmin.presentation.city.onecity
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pizzastore.domain.entity.Point
@@ -85,6 +84,7 @@ class OneCityScreenViewModel @Inject constructor(
     }
     //</editor-fold>
 
+    //<editor-fold desc="changeScreenContent">
     private fun changeScreenContent() {
         viewModelScope.launch {
             _screenChanges.collect {
@@ -206,6 +206,7 @@ class OneCityScreenViewModel @Inject constructor(
             }
         }
     }
+    //</editor-fold>
 
     //<editor-fold desc="exitScreen">
     fun exitScreen() {
@@ -349,7 +350,7 @@ class OneCityScreenViewModel @Inject constructor(
     }
     //</editor-fold>
 
-    fun changeScreenState(state: OneCityScreenState) {
+    private fun changeScreenState(state: OneCityScreenState) {
         viewModelScope.launch {
             _state.emit(state)
         }

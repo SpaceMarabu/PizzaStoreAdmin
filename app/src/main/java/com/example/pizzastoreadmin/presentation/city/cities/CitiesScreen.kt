@@ -1,5 +1,6 @@
 package com.example.pizzastoreadmin.presentation.city.cities
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -49,8 +51,8 @@ fun CitiesScreen(
 
         is CitiesScreenState.Initial -> {}
 
-        is CitiesScreenState.ListCities -> {
-            val currentScreenState = screenState.value as CitiesScreenState.ListCities
+        is CitiesScreenState.Content -> {
+            val currentScreenState = screenState.value as CitiesScreenState.Content
             ListCitiesScreen(
                 cities = currentScreenState.cities,
                 viewModel = viewModel,
@@ -66,6 +68,15 @@ fun CitiesScreen(
     }
 }
 
+@Composable
+fun ShowToast(text: String) {
+    Toast.makeText(
+        LocalContext.current,
+        text,
+        Toast.LENGTH_SHORT
+    ).show()
+}
+
 //<editor-fold desc="Экран со списком городов">
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,6 +86,9 @@ fun ListCitiesScreen(
     paddingValues: PaddingValues,
     onAddOrCityClicked: () -> Unit
 ) {
+
+    val warningState = viewModel.warningState.collectAsState()
+
     val stateHolder = remember {
         mutableStateOf(CurrentStates(
             citiesToDelete = mutableSetOf(),
@@ -106,6 +120,22 @@ fun ListCitiesScreen(
         }
         onAddOrCityClicked()
         stateHolder.value = currentStateValue.copy(isItemClicked = false)
+    }
+
+    when (val currentWarningStateValue = warningState.value) {
+        is WarningState.DeleteComplete -> {
+            ShowToast(text = currentWarningStateValue.description)
+            viewModel.warningCollected()
+            stateHolder.value = currentStateValue.copy(
+                citiesToDelete = mutableSetOf(),
+                isCitiesToDeleteEmpty = true
+            )
+        }
+        is WarningState.DeleteIncomplete -> {
+            ShowToast(text = currentWarningStateValue.description)
+            viewModel.warningCollected()
+        }
+        WarningState.Nothing -> {}
     }
 
 

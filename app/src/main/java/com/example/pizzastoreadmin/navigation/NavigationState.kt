@@ -12,11 +12,8 @@ class NavigationState(
 
     fun navigateTo(route: String) {
         navHostController.navigate(route) {
-            popUpTo(Screen.ROUTE_CITIES) {
-                saveState = true
-            }
+            popUpTo(Screen.ROUTE_CITIES)
             launchSingleTop = true
-            restoreState = true
         }
     }
 
@@ -24,7 +21,6 @@ class NavigationState(
         navHostController.navigate(route) {
             popUpTo(Screen.ROUTE_CITIES)
             launchSingleTop = true
-            restoreState = true
         }
     }
 }
