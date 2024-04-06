@@ -1,4 +1,4 @@
-package com.example.pizzastoreadmin.presentation.city.onecity
+package com.example.pizzastoreadmin.presentation.city.onecity.states
 
 sealed class OneCityScreenState {
 

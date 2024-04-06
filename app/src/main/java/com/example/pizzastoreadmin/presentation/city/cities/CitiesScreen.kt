@@ -33,6 +33,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pizzastore.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.City
+import com.example.pizzastoreadmin.presentation.city.cities.states.CitiesScreenState
+import com.example.pizzastoreadmin.presentation.city.cities.states.CurrentStates
+import com.example.pizzastoreadmin.presentation.city.cities.states.WarningState
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 
 @Composable
@@ -68,6 +71,7 @@ fun CitiesScreen(
     }
 }
 
+//<editor-fold desc="ShowToast">
 @Composable
 fun ShowToast(text: String) {
     Toast.makeText(
@@ -76,6 +80,7 @@ fun ShowToast(text: String) {
         Toast.LENGTH_SHORT
     ).show()
 }
+//</editor-fold>
 
 //<editor-fold desc="Экран со списком городов">
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,13 +95,15 @@ fun ListCitiesScreen(
     val warningState = viewModel.warningState.collectAsState()
 
     val stateHolder = remember {
-        mutableStateOf(CurrentStates(
+        mutableStateOf(
+            CurrentStates(
             citiesToDelete = mutableSetOf(),
             isCitiesToDeleteEmpty = true,
             isButtonClicked = false,
             isItemClicked = false,
             currentCity = null
-        ))
+        )
+        )
 
     }
     val currentStateValue = stateHolder.value
@@ -137,7 +144,6 @@ fun ListCitiesScreen(
         }
         WarningState.Nothing -> {}
     }
-
 
     Scaffold(
         modifier = Modifier

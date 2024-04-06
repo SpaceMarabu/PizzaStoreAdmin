@@ -1,15 +1,18 @@
 package com.example.pizzastoreadmin.data.repository
 
+import android.net.Uri
 import android.util.Log
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
 import com.example.pizzastoreadmin.domain.entity.City
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
+import com.google.firebase.Firebase
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -29,10 +32,33 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     private val firebaseDatabase = FirebaseDatabase.getInstance()
     private val dRef = firebaseDatabase.getReference("cities")
 
+    private val firebaseStorage = Firebase.storage("gs://pizzastore-b379f.appspot.com")
+    private val storageRef = firebaseStorage.reference.child("product")
+
     private val currentCity: MutableStateFlow<City> = MutableStateFlow(City())
     private val maxCityIdFlow = MutableStateFlow(-1)
     private val dbResponseFlow: MutableStateFlow<DBResponse> =
         MutableStateFlow(DBResponse.Processing)
+
+    init {
+        test()
+    }
+
+    private fun test() {
+        Log.d("TEST_FB", "qq")
+        storageRef.listAll()
+            .addOnSuccessListener { items ->
+                items.items.forEach { storRef ->
+                    storRef.downloadUrl.addOnSuccessListener( OnSuccessListener<Uri>() {
+                        Log.d("TEST_FB", it.toString())
+                    })
+                }
+            }
+            .addOnFailureListener {
+                // Uh-oh, an error occurred!
+                it
+            }
+    }
 
     private val listCitiesFlow = callbackFlow {
 

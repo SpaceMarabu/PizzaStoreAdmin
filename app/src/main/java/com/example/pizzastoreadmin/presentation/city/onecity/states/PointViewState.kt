@@ -1,4 +1,4 @@
-package com.example.pizzastoreadmin.presentation.city.onecity
+package com.example.pizzastoreadmin.presentation.city.onecity.states
 
 import android.os.Parcelable
 import com.example.pizzastore.domain.entity.Point

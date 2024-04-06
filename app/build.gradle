@@ -34,6 +34,11 @@ android {
             )
         }
     }
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE-FIREBASE.txt'
+        exclude 'META-INF/NOTICE'
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -60,6 +65,8 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.firebase:firebase-auth-ktx:22.3.0")
     implementation("com.google.firebase:firebase-database-ktx:20.3.0")
+    implementation('com.google.firebase:firebase-storage:20.3.0')
+
     implementation('com.google.gms:google-services:4.3.9')
 
     implementation("androidx.core:core-ktx:1.9.0")
@@ -84,14 +91,9 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest:$compose_version")
 
     implementation 'com.google.code.gson:gson:2.10'
-    implementation "androidx.room:room-runtime:2.4.1"
-    implementation "androidx.room:room-ktx:2.4.1"
-
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.3'
-
-    kapt("androidx.room:room-compiler:2.4.1")
 
     annotationProcessor "android.arch.persistence.room:compiler:1.1.1"
 

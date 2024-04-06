@@ -1,14 +1,14 @@
-package com.example.pizzastoreadmin.domain.usecases
+package com.example.pizzastoreadmin.domain.usecases.service
 
 import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
 import com.example.pizzastoreadmin.domain.entity.City
 import javax.inject.Inject
 
-class AddOrEditCItyUseCase  @Inject constructor(
+class SetCurrentCityUseCase  @Inject constructor(
     private val repository: PizzaStoreRepository
 ) {
 
-    fun addOrEditCity(city: City) {
-        repository.addOrEditCityUseCase(city)
+    fun setCity(city: City?) {
+        repository.setCurrentCityUseCase(city)
     }
 }

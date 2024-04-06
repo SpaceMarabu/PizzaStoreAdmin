@@ -1,4 +1,4 @@
-package com.example.pizzastoreadmin.domain.usecases
+package com.example.pizzastoreadmin.domain.usecases.service
 
 import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
 import com.example.pizzastoreadmin.domain.entity.City

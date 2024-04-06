@@ -1,4 +1,4 @@
-package com.example.pizzastoreadmin.domain.usecases
+package com.example.pizzastoreadmin.domain.usecases.service
 
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository

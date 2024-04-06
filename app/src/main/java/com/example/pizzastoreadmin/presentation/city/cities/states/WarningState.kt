@@ -1,4 +1,4 @@
-package com.example.pizzastoreadmin.presentation.city.cities
+package com.example.pizzastoreadmin.presentation.city.cities.states
 
 sealed class WarningState {
 
