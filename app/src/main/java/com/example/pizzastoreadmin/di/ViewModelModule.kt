@@ -5,6 +5,7 @@ import com.example.pizzastore.di.ViewModelKey
 import com.example.pizzastore.presentation.start.StartScreenViewModel
 import com.example.pizzastoreadmin.presentation.city.cities.CitiesScreenViewModel
 import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreenViewModel
+import com.example.pizzastoreadmin.presentation.images.OneImageScreenViewModel
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
@@ -26,5 +27,10 @@ interface ViewModelModule {
     @ViewModelKey(OneCityScreenViewModel::class)
     @Binds
     fun bindOneCityScreenViewModel(viewModel: OneCityScreenViewModel): ViewModel
+
+    @IntoMap
+    @ViewModelKey(OneImageScreenViewModel::class)
+    @Binds
+    fun bindOneImageScreenViewModel(viewModel: OneImageScreenViewModel): ViewModel
 
 }

@@ -13,7 +13,7 @@ import com.example.pizzastoreadmin.presentation.city.onecity.states.EditTextFiel
 import com.example.pizzastoreadmin.presentation.city.onecity.states.OneCityScreenState
 import com.example.pizzastoreadmin.presentation.city.onecity.states.PointViewState
 import com.example.pizzastoreadmin.presentation.city.onecity.states.ScreenChangingState
-import com.example.pizzastoreadmin.presentation.city.onecity.states.ShouldLeaveScreenState
+import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow

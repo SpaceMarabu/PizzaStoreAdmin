@@ -1,4 +1,4 @@
-package com.example.pizzastoreadmin.presentation.city.onecity.states
+package com.example.pizzastoreadmin.presentation.sharedstates
 
 sealed class ShouldLeaveScreenState {
 

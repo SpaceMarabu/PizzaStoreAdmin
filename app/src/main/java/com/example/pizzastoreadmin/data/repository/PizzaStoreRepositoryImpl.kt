@@ -1,10 +1,9 @@
 package com.example.pizzastoreadmin.data.repository
 
-import android.net.Uri
 import android.util.Log
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
-import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
 import com.example.pizzastoreadmin.domain.entity.City
+import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.Firebase
@@ -40,26 +39,53 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     private val dbResponseFlow: MutableStateFlow<DBResponse> =
         MutableStateFlow(DBResponse.Processing)
 
-    init {
-        test()
+    override fun putImageToStorage(name: String, imageByte: ByteArray) {
+        var counter = 1
+        var nameToPut = name
+        var needNextCheck = true
+        while (needNextCheck) {
+            if (checkAvailabilityName(nameToPut)) {
+                needNextCheck = false
+            } else {
+                nameToPut = "${nameToPut}${counter++}"
+            }
+        }
+        val scope = CoroutineScope(Dispatchers.IO)
+        scope.launch {
+            dbResponseFlow.value = DBResponse.Processing
+            storageRef.child(nameToPut)
+                .putBytes(imageByte)
+                .addOnSuccessListener {
+                    dbResponseFlow.value = DBResponse.Complete
+                }
+                .addOnFailureListener {
+                    dbResponseFlow.value = DBResponse.Error(it.toString())
+                }
+        }
     }
 
-    private fun test() {
-        Log.d("TEST_FB", "qq")
+    //<editor-fold desc="checkAvailabilityName">
+    private fun checkAvailabilityName(name: String): Boolean {
+        var isAvailable = true
+        val regexTemplate = Regex("\\..+")
         storageRef.listAll()
             .addOnSuccessListener { items ->
                 items.items.forEach { storRef ->
-                    storRef.downloadUrl.addOnSuccessListener( OnSuccessListener<Uri>() {
-                        Log.d("TEST_FB", it.toString())
-                    })
+                    val nameWithoutExtension = storRef.name.replace(regexTemplate, "")
+                    if (nameWithoutExtension == name) {
+                        isAvailable = false
+                        return@forEach
+                    }
                 }
             }
             .addOnFailureListener {
                 // Uh-oh, an error occurred!
-                it
             }
+        return isAvailable
     }
+    //</editor-fold>
 
+    //<editor-fold desc="listCitiesFlow">
     private val listCitiesFlow = callbackFlow {
 
         val postListener = object : ValueEventListener {
@@ -98,6 +124,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
             dRef.removeEventListener(postListener)
         }
     }
+    //</editor-fold>
 
     override fun getCitiesUseCase(): Flow<List<City>> {
         return listCitiesFlow
@@ -109,6 +136,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
     override fun getCurrentCityUseCase() = currentCity.asStateFlow()
 
+    //<editor-fold desc="addOrEditCityUseCase">
     override fun addOrEditCityUseCase(city: City) {
 
         var currentCity = city
@@ -136,7 +164,9 @@ class PizzaStoreRepositoryImpl @Inject constructor(
                 })
         }
     }
+    //</editor-fold>
 
+    //<editor-fold desc="deleteCitiesUseCase">
     override fun deleteCitiesUseCase(cities: List<City>) {
         var haveErrors = false
         val scope = CoroutineScope(Dispatchers.IO)
@@ -159,6 +189,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
             )
         }
     }
+    //</editor-fold>
 
     override fun getDbResponse(): StateFlow<DBResponse> {
         dbResponseFlow.value = DBResponse.Processing

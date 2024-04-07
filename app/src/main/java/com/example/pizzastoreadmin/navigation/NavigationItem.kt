@@ -11,6 +11,12 @@ sealed class NavigationItem(
     object Cities : NavigationItem(
         screen = Screen.Cities,
         titleResId = R.string.cities,
-        icon = R.drawable.ic_cross
+        icon = R.drawable.ic_city
+    )
+
+    object Admin : NavigationItem(
+        screen = Screen.Admin,
+        titleResId = R.string.admin,
+        icon = R.drawable.ic_admin
     )
 }

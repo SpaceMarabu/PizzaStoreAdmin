@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">PizzaStoreAdmin</string>
     <string name="cities">cities</string>
+    <string name="admin">admin</string>
 </resources>

@@ -20,6 +20,7 @@ import com.example.pizzastore.navigation.Screen
 import com.example.pizzastoreadmin.navigation.rememberNavigationState
 import com.example.pizzastoreadmin.presentation.city.cities.CitiesScreen
 import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreen
+import com.example.pizzastoreadmin.presentation.images.OneImageScreen
 
 
 @Composable
@@ -36,8 +37,7 @@ fun MainScreen() {
 
                 val items = listOf(
                     NavigationItem.Cities,
-                    NavigationItem.Cities,
-                    NavigationItem.Cities
+                    NavigationItem.Admin
                 )
                 val currentRoute = navBackStackEntry?.destination?.route
 
@@ -75,6 +75,11 @@ fun MainScreen() {
             oneCityScreenContent = {
                 OneCityScreen(paddingValues) {
                     navigationState.navigateTo(Screen.ROUTE_CITY)
+                }
+            },
+            adminScreenContent = {
+                OneImageScreen(paddingValues) {
+
                 }
             }
         )

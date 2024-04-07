@@ -1,6 +1,5 @@
 package com.example.pizzastoreadmin.presentation.city.onecity
 
-import android.util.DisplayMetrics
 import android.widget.Toast
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -49,8 +48,9 @@ import com.example.pizzastore.R
 import com.example.pizzastore.di.getApplicationComponent
 import com.example.pizzastoreadmin.presentation.city.onecity.states.OneCityScreenState
 import com.example.pizzastoreadmin.presentation.city.onecity.states.PointViewState
-import com.example.pizzastoreadmin.presentation.city.onecity.states.ShouldLeaveScreenState
+import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
+import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
 import kotlinx.coroutines.flow.StateFlow
 
 @Composable
@@ -180,9 +180,9 @@ fun OneCityScreenContent(
                 }
             }
             item {
-                val displayMetrics: DisplayMetrics = LocalContext.current.resources.displayMetrics
-                val dpWidth = displayMetrics.widthPixels / displayMetrics.density
-                val halfScreenDp = (dpWidth / 2).dp
+                val screenDp = getScreenWidthDp()
+                val halfScreenDp = screenDp / 2
+
                 val paddingBetweenButtons = 16.dp
                 val paddingStartEnd = 8.dp
 
@@ -272,7 +272,6 @@ fun TextFieldCity(
 
     val needCallback = needCallbackIn.collectAsState()
 
-
     var text by remember(textIn) { mutableStateOf(textIn ?: "") }
     var errorState by remember(isError) {
         mutableStateOf(isError)
@@ -289,10 +288,9 @@ fun TextFieldCity(
                 start = 8.dp,
                 end = 8.dp
             )
-//            .onFocusChanged { if (!it.hasFocus && text.isNotBlank()) textResult(text) }
         ,
         isError = errorState,
-        label = { androidx.compose.material.Text(text = label) },
+        label = { Text(text = label) },
         value = text,
         onValueChange = {
             errorState = false
