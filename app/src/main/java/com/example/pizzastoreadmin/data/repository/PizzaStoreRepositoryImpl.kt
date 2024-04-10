@@ -12,6 +12,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.storage
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -56,7 +57,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
                 if (isAvailableName) {
                     needNextCheck = false
                 } else {
-                    nameToPut = "${nameToPut}${counter++}"
+                    nameToPut = "${name}${counter++}"
                 }
             }
             dbResponseFlow.value = DBResponse.Processing
@@ -75,10 +76,10 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
     //<editor-fold desc="checkAvailabilityName">
     private suspend fun checkAvailabilityName(name: String, type: String) =
-        withContext(Dispatchers.Default) {
+        withContext(Dispatchers.IO) {
             var isAvailable = true
             val regexTemplate = Regex("\\..+")
-            launch {
+            val deferred = CompletableDeferred<Boolean>()
                 storageRef
                     .child(type)
                     .listAll()
@@ -91,10 +92,9 @@ class PizzaStoreRepositoryImpl @Inject constructor(
                                 return@forEach
                             }
                         }
+                        deferred.complete(isAvailable)
                     }
-                    .asDeferred()
-            }
-            return@withContext isAvailable
+            deferred.await()
         }
     //</editor-fold>
 
