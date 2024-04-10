@@ -20,7 +20,7 @@ interface PizzaStoreRepository {
 
     fun setCurrentCityUseCase(city: City? = null)
 
-    fun putImageToStorage(name: String, imageByte: ByteArray)
+    fun putImageToStorage(name: String, type: String, imageByte: ByteArray)
     //</editor-fold>
 
 }

@@ -9,7 +9,7 @@ class PutImageToStorageUseCase  @Inject constructor(
     private val repository: PizzaStoreRepository
 ) {
 
-    fun putImage(imageByte: ByteArray, name: String) {
-        return repository.putImageToStorage(name, imageByte)
+    fun putImage(name: String, type: String, imageByte: ByteArray) {
+        return repository.putImageToStorage(name, type, imageByte)
     }
 }

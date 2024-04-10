@@ -14,6 +14,7 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.storage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +23,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.asDeferred
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 
@@ -39,21 +43,26 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     private val dbResponseFlow: MutableStateFlow<DBResponse> =
         MutableStateFlow(DBResponse.Processing)
 
-    override fun putImageToStorage(name: String, imageByte: ByteArray) {
+    override fun putImageToStorage(name: String, type: String, imageByte: ByteArray) {
         var counter = 1
         var nameToPut = name
         var needNextCheck = true
-        while (needNextCheck) {
-            if (checkAvailabilityName(nameToPut)) {
-                needNextCheck = false
-            } else {
-                nameToPut = "${nameToPut}${counter++}"
-            }
-        }
         val scope = CoroutineScope(Dispatchers.IO)
+
         scope.launch {
+            while (needNextCheck) {
+                val isAvailableName = checkAvailabilityName(nameToPut, type)
+                Log.d("TEST_TEST", isAvailableName.toString())
+                if (isAvailableName) {
+                    needNextCheck = false
+                } else {
+                    nameToPut = "${nameToPut}${counter++}"
+                }
+            }
             dbResponseFlow.value = DBResponse.Processing
-            storageRef.child(nameToPut)
+            storageRef
+                .child(type)
+                .child(nameToPut)
                 .putBytes(imageByte)
                 .addOnSuccessListener {
                     dbResponseFlow.value = DBResponse.Complete
@@ -65,24 +74,28 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     }
 
     //<editor-fold desc="checkAvailabilityName">
-    private fun checkAvailabilityName(name: String): Boolean {
-        var isAvailable = true
-        val regexTemplate = Regex("\\..+")
-        storageRef.listAll()
-            .addOnSuccessListener { items ->
-                items.items.forEach { storRef ->
-                    val nameWithoutExtension = storRef.name.replace(regexTemplate, "")
-                    if (nameWithoutExtension == name) {
-                        isAvailable = false
-                        return@forEach
+    private suspend fun checkAvailabilityName(name: String, type: String) =
+        withContext(Dispatchers.Default) {
+            var isAvailable = true
+            val regexTemplate = Regex("\\..+")
+            launch {
+                storageRef
+                    .child(type)
+                    .listAll()
+                    .addOnSuccessListener { items ->
+                        items.items.forEach { storRef ->
+                            val nameWithoutExtension = storRef.name.replace(regexTemplate, "")
+                            Log.d("TEST_TEST", storRef.name)
+                            if (nameWithoutExtension == name) {
+                                isAvailable = false
+                                return@forEach
+                            }
+                        }
                     }
-                }
+                    .asDeferred()
             }
-            .addOnFailureListener {
-                // Uh-oh, an error occurred!
-            }
-        return isAvailable
-    }
+            return@withContext isAvailable
+        }
     //</editor-fold>
 
     //<editor-fold desc="listCitiesFlow">

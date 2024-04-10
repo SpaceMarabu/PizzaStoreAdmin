@@ -18,6 +18,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ExposedDropdownMenuBox
+import androidx.compose.material.ExposedDropdownMenuDefaults
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
@@ -40,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.pizzastore.di.getApplicationComponent
+import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
 
@@ -78,19 +83,37 @@ fun OneImageScreenContent(
     viewModel: OneImageScreenViewModel,
     paddingValues: PaddingValues
 ) {
-    var currentStates by remember {
+    var currentScreenContentStates by remember {
         mutableStateOf(
-            CurrentStates(
+            CurrentScreenContentStates(
                 imageUri = null,
                 pictureName = "",
-                isTextNotEmpty = true,
-                isErrorInTextField = false
+                isTextNotEmpty = true
             )
         )
     }
+
+    var dropDownMenuStates by remember {
+        mutableStateOf(
+            DropDownMenuStates(
+                isProductMenuExpanded = false,
+                selectedOptionText = PictureType.PIZZA.type
+            )
+        )
+    }
+
+    val optionsForDropDownMenu = listOf(
+        PictureType.PIZZA,
+        PictureType.ROLL,
+        PictureType.STARTER,
+        PictureType.DESSERT,
+        PictureType.DRINK,
+        PictureType.STORY
+    )
+
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            currentStates = currentStates.copy(imageUri = uri)
+            currentScreenContentStates = currentScreenContentStates.copy(imageUri = uri)
         }
     val context = LocalContext.current
     val screenWidthDp = getScreenWidthDp()
@@ -102,7 +125,8 @@ fun OneImageScreenContent(
         modifier = Modifier
             .padding(bottom = paddingValues.calculateBottomPadding()),
         floatingActionButton = {
-            if (currentStates.imageUri != null && currentStates.pictureName.isNotBlank()) {
+            if (currentScreenContentStates.imageUri != null 
+                && currentScreenContentStates.pictureName.isNotBlank()) {
                 FloatingActionButton(
                     modifier = Modifier
                         .width(100.dp)
@@ -112,13 +136,14 @@ fun OneImageScreenContent(
                         ),
                     shape = RoundedCornerShape(10.dp),
                     onClick = {
-                        val currentUri = currentStates.imageUri
+                        val currentUri = currentScreenContentStates.imageUri
                         if (currentUri != null) {
                             val imageByte = viewModel.readBytes(context, currentUri)
                             if (imageByte != null) {
                                 viewModel.putImageToStorage(
-                                    imageByte,
-                                    currentStates.pictureName
+                                    name = currentScreenContentStates.pictureName,
+                                    type = dropDownMenuStates.selectedOptionText,
+                                    imageByteArray =  imageByte
                                 )
                             }
                         }
@@ -131,10 +156,20 @@ fun OneImageScreenContent(
             }
         }
     ) {
+
         Column {
-            TextFieldPicture(currentStates = currentStates) {
-                currentStates = it
+
+            TextFieldPicture(currentStates = currentScreenContentStates) {
+                currentScreenContentStates = it
             }
+
+            DropDownTextField(
+                dropDownMenuStates = dropDownMenuStates,
+                options = optionsForDropDownMenu
+            ) { menuStatesResult ->
+                dropDownMenuStates = menuStatesResult
+            }
+
             Box(
                 modifier = Modifier
                     .padding(
@@ -156,7 +191,7 @@ fun OneImageScreenContent(
             ) {
                 Image(
                     modifier = Modifier.fillMaxSize(),
-                    painter = rememberAsyncImagePainter(currentStates.imageUri),
+                    painter = rememberAsyncImagePainter(currentScreenContentStates.imageUri),
                     contentDescription = "product image"
                 )
             }
@@ -164,11 +199,71 @@ fun OneImageScreenContent(
     }
 }
 
+//<editor-fold desc="Description">
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun DropDownTextField(
+    dropDownMenuStates: DropDownMenuStates,
+    options: List<PictureType>,
+    onOptionOrOutsideClicked: (DropDownMenuStates) -> Unit
+) {
+    ExposedDropdownMenuBox(
+        expanded = dropDownMenuStates.isProductMenuExpanded,
+        onExpandedChange = {
+            val currentStates = dropDownMenuStates.copy(isProductMenuExpanded = true)
+            onOptionOrOutsideClicked(currentStates)
+        }
+    ) {
+        OutlinedTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = 8.dp,
+                    top = 8.dp,
+                    end = 8.dp
+                ),
+            shape = MaterialTheme.shapes.small.copy(CornerSize(10.dp)),
+            readOnly = true,
+            value = dropDownMenuStates.selectedOptionText,
+            onValueChange = { },
+            label = { Text("Type") },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(
+                    expanded = dropDownMenuStates.isProductMenuExpanded
+                )
+            },
+            colors = getOutlinedTextFieldColors()
+        )
+        ExposedDropdownMenu(
+            expanded = dropDownMenuStates.isProductMenuExpanded,
+            onDismissRequest = {
+                val currentStates = dropDownMenuStates.copy(isProductMenuExpanded = false)
+                onOptionOrOutsideClicked(currentStates)
+            }
+        ) {
+            options.forEach { selectionOption ->
+                DropdownMenuItem(
+                    onClick = {
+                        val currentStates = dropDownMenuStates.copy(
+                            isProductMenuExpanded = false,
+                            selectedOptionText = selectionOption.type
+                        )
+                        onOptionOrOutsideClicked(currentStates)
+                    }
+                ) {
+                    Text(text = selectionOption.type)
+                }
+            }
+        }
+    }
+}
+//</editor-fold>
+
 //<editor-fold desc="TextFieldPicture">
 @Composable
 fun TextFieldPicture(
-    currentStates: CurrentStates,
-    onTextChanged: (CurrentStates) -> Unit
+    currentStates: CurrentScreenContentStates,
+    onTextChanged: (CurrentScreenContentStates) -> Unit
 ) {
     OutlinedTextField(
         modifier = Modifier
@@ -188,18 +283,23 @@ fun TextFieldPicture(
                 )
             )
         },
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            unfocusedBorderColor = Color.LightGray,
-            unfocusedLabelColor = Color.LightGray,
-            backgroundColor = Color.White,
-            textColor = Color.Black,
-            focusedBorderColor = Color.Black,
-            focusedLabelColor = Color.Black,
-            cursorColor = Color.Gray
-        ),
+        colors = getOutlinedTextFieldColors(),
         shape = MaterialTheme.shapes.small.copy(CornerSize(10.dp))
     )
 }
+//</editor-fold>
+
+//<editor-fold desc="getOutlinedTextFieldColors">
+@Composable
+fun getOutlinedTextFieldColors() = TextFieldDefaults.outlinedTextFieldColors(
+    unfocusedBorderColor = Color.LightGray,
+    unfocusedLabelColor = Color.LightGray,
+    backgroundColor = Color.White,
+    textColor = Color.Black,
+    focusedBorderColor = Color.Black,
+    focusedLabelColor = Color.Black,
+    cursorColor = Color.Gray
+)
 //</editor-fold>
 
 

@@ -62,8 +62,8 @@ class OneImageScreenViewModel @Inject constructor(
         }
     }
 
-    fun putImageToStorage(imageByteArray: ByteArray, name: String) {
-        putImageToStorageUseCase.putImage(imageByteArray, name)
+    fun putImageToStorage(name: String, type: String, imageByteArray: ByteArray, ) {
+        putImageToStorageUseCase.putImage(name, type, imageByteArray)
     }
 
     fun readBytes(context: Context, uri: Uri): ByteArray? =
