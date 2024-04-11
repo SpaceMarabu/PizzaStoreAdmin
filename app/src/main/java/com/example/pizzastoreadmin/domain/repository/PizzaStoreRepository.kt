@@ -1,5 +1,6 @@
 package com.example.pizzastoreadmin.domain.repository
 
+import android.net.Uri
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.City
 import kotlinx.coroutines.flow.Flow
@@ -12,6 +13,9 @@ interface PizzaStoreRepository {
     fun addOrEditCityUseCase(city: City)
 
     fun deleteCitiesUseCase(cities: List<City>)
+
+    suspend fun getListPicturesUseCase(): HashMap<String, List<Uri>>
+
 
     //<editor-fold desc="service UC">
     fun getDbResponse(): StateFlow<DBResponse>

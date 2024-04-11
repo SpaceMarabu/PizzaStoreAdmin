@@ -1,24 +1,23 @@
-package com.example.pizzastoreadmin.presentation.images
+package com.example.pizzastoreadmin.presentation.images.images
 
-import android.content.Context
-import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
+import com.example.pizzastoreadmin.domain.usecases.business.GetListPicturesUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.GetDbResponseUseCase
-import com.example.pizzastoreadmin.domain.usecases.service.PutImageToStorageUseCase
 import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class OneImageScreenViewModel @Inject constructor(
-    private val putImageToStorageUseCase: PutImageToStorageUseCase,
+class ImagesScreenViewModel @Inject constructor(
+    private val getListPicturesUseCase: GetListPicturesUseCase,
     private val getDbResponseUseCase: GetDbResponseUseCase
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<OneImageScreenState>(OneImageScreenState.Initial)
+    private val _state = MutableStateFlow<ImagesScreenState>(ImagesScreenState.Initial)
     val state = _state.asStateFlow()
 
     private val _shouldLeaveScreenState: MutableStateFlow<ShouldLeaveScreenState> =
@@ -26,7 +25,7 @@ class OneImageScreenViewModel @Inject constructor(
     val shouldLeaveScreenState = _shouldLeaveScreenState.asStateFlow()
 
     init {
-        changeScreenState(OneImageScreenState.Content)
+        changeScreenState(ImagesScreenState.Content)
         subscribeDbResponse()
     }
 
@@ -56,18 +55,16 @@ class OneImageScreenViewModel @Inject constructor(
     }
     //</editor-fold>
 
-    private fun changeScreenState(state: OneImageScreenState) {
+    fun getListPictures() {
+        viewModelScope.launch {
+            val pictures = getListPicturesUseCase.getListPictures()
+            pictures
+        }
+    }
+
+    private fun changeScreenState(state: ImagesScreenState) {
         viewModelScope.launch {
             _state.emit(state)
         }
     }
-
-    fun putImageToStorage(name: String, type: String, imageByteArray: ByteArray, ) {
-        putImageToStorageUseCase.putImage(name, type, imageByteArray)
-    }
-
-    fun readBytes(context: Context, uri: Uri): ByteArray? =
-        context.contentResolver.openInputStream(uri)?.use {
-            it.buffered().readBytes()
-        }
 }

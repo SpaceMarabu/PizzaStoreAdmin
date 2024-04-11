@@ -10,7 +10,8 @@ fun AppNavGraph(
     navHostController: NavHostController,
     citiesScreenContent: @Composable () -> Unit,
     oneCityScreenContent: @Composable () -> Unit,
-    adminScreenContent: @Composable () -> Unit
+    oneImageScreenContent: @Composable () -> Unit,
+    imagesScreenContent: @Composable () -> Unit
 ) {
     NavHost(
         navController = navHostController,
@@ -20,14 +21,9 @@ fun AppNavGraph(
             citiesScreenContent = citiesScreenContent,
             oneCityScreenContent = oneCityScreenContent
         )
-        composable(Screen.Admin.route) {
-            adminScreenContent()
-        }
-//        composable(Screen.Contacts.route) {
-//            contactsScreenContent()
-//        }
-//        composable(Screen.ShoppingBag.route) {
-//            shoppingBagScreenContent()
-//        }
+        imageScreenNavGraph(
+            imagesScreenContent = imagesScreenContent,
+            oneImageScreenContent = oneImageScreenContent
+        )
     }
 }

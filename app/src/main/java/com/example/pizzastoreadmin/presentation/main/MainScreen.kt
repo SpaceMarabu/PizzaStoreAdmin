@@ -1,6 +1,5 @@
 package com.example.pizzastoreadmin.presentation.main
 
-import android.util.Log
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
@@ -15,12 +14,13 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.pizzastore.navigation.AppNavGraph
-import com.example.pizzastore.navigation.NavigationItem
+import com.example.pizzastoreadmin.navigation.NavigationItem
 import com.example.pizzastore.navigation.Screen
 import com.example.pizzastoreadmin.navigation.rememberNavigationState
 import com.example.pizzastoreadmin.presentation.city.cities.CitiesScreen
 import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreen
-import com.example.pizzastoreadmin.presentation.images.OneImageScreen
+import com.example.pizzastoreadmin.presentation.images.images.ImagesScreen
+import com.example.pizzastoreadmin.presentation.images.oneimage.OneImageScreen
 
 
 @Composable
@@ -77,7 +77,12 @@ fun MainScreen() {
                     navigationState.navigateTo(Screen.ROUTE_CITY)
                 }
             },
-            adminScreenContent = {
+            imagesScreenContent = {
+                ImagesScreen(paddingValues) {
+
+                }
+            },
+            oneImageScreenContent = {
                 OneImageScreen(paddingValues) {
 
                 }

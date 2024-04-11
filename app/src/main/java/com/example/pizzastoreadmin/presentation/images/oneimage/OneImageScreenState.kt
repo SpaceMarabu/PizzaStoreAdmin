@@ -1,4 +1,4 @@
-package com.example.pizzastoreadmin.presentation.images
+package com.example.pizzastoreadmin.presentation.images.oneimage
 
 sealed class OneImageScreenState {
 

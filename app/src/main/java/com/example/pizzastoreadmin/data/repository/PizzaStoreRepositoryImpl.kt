@@ -1,8 +1,10 @@
 package com.example.pizzastoreadmin.data.repository
 
+import android.net.Uri
 import android.util.Log
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.City
+import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
@@ -15,7 +17,7 @@ import com.google.firebase.storage.storage
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -24,8 +26,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.asDeferred
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -34,7 +34,8 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 ) : PizzaStoreRepository {
 
     private val firebaseDatabase = FirebaseDatabase.getInstance()
-    private val dRef = firebaseDatabase.getReference("cities")
+    private val dRefCities = firebaseDatabase.getReference("cities")
+    private val dRefPictrues = firebaseDatabase.getReference("pictures")
 
     private val firebaseStorage = Firebase.storage("gs://pizzastore-b379f.appspot.com")
     private val storageRef = firebaseStorage.reference.child("product")
@@ -44,6 +45,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     private val dbResponseFlow: MutableStateFlow<DBResponse> =
         MutableStateFlow(DBResponse.Processing)
 
+    //<editor-fold desc="putImageToStorage">
     override fun putImageToStorage(name: String, type: String, imageByte: ByteArray) {
         var counter = 1
         var nameToPut = name
@@ -67,12 +69,14 @@ class PizzaStoreRepositoryImpl @Inject constructor(
                 .putBytes(imageByte)
                 .addOnSuccessListener {
                     dbResponseFlow.value = DBResponse.Complete
+                    addInfoAboutPicture(type, nameToPut)
                 }
                 .addOnFailureListener {
                     dbResponseFlow.value = DBResponse.Error(it.toString())
                 }
         }
     }
+    //</editor-fold>
 
     //<editor-fold desc="checkAvailabilityName">
     private suspend fun checkAvailabilityName(name: String, type: String) =
@@ -80,23 +84,69 @@ class PizzaStoreRepositoryImpl @Inject constructor(
             var isAvailable = true
             val regexTemplate = Regex("\\..+")
             val deferred = CompletableDeferred<Boolean>()
-                storageRef
-                    .child(type)
-                    .listAll()
-                    .addOnSuccessListener { items ->
-                        items.items.forEach { storRef ->
-                            val nameWithoutExtension = storRef.name.replace(regexTemplate, "")
-                            Log.d("TEST_TEST", storRef.name)
-                            if (nameWithoutExtension == name) {
-                                isAvailable = false
-                                return@forEach
-                            }
+            storageRef
+                .child(type)
+                .listAll()
+                .addOnSuccessListener { result ->
+                    result.items.forEach { item ->
+                        val nameWithoutExtension = item.name.replace(regexTemplate, "")
+                        if (nameWithoutExtension == name) {
+                            isAvailable = false
+                            return@forEach
                         }
-                        deferred.complete(isAvailable)
                     }
+                    deferred.complete(isAvailable)
+                }
             deferred.await()
         }
     //</editor-fold>
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override suspend fun getListPicturesUseCase(): HashMap<String, List<Uri>> {
+        val resultMap = HashMap<String, List<Uri>>()
+        withContext(Dispatchers.IO) {
+            val types = listOf(
+                PictureType.PIZZA,
+                PictureType.ROLL,
+                PictureType.STARTER,
+                PictureType.DESSERT,
+                PictureType.DRINK,
+                PictureType.STORY
+            )
+            types.forEach typesForEach@{ pictureType ->
+                val deferredTemp = CompletableDeferred<List<Uri>>()
+                storageRef
+                    .child(pictureType.type)
+                    .listAll()
+                    .addOnSuccessListener { result ->
+                        val tempUriListByCurrentType = mutableListOf<Uri>()
+                        result.items.forEach { storRef ->
+                            val scope = CoroutineScope(Dispatchers.IO)
+                            val uriDeffered = CompletableDeferred<Uri>()
+                            scope.launch {
+                                storRef
+                                    .downloadUrl
+                                    .addOnSuccessListener {
+                                        if (it != null) {
+                                            uriDeffered.complete(it)
+                                        }
+                                    }
+                                uriDeffered.invokeOnCompletion {
+                                    tempUriListByCurrentType.add(uriDeffered.getCompleted())
+                                }
+                                uriDeffered.await()
+                            }
+                        }
+                        deferredTemp.complete(tempUriListByCurrentType)
+                    }
+                deferredTemp.await()
+                deferredTemp.invokeOnCompletion {
+                    resultMap[pictureType.type] = deferredTemp.getCompleted()
+                }
+            }
+        }
+        return resultMap
+    }
 
     //<editor-fold desc="listCitiesFlow">
     private val listCitiesFlow = callbackFlow {
@@ -105,12 +155,13 @@ class PizzaStoreRepositoryImpl @Inject constructor(
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 val listCities = mutableListOf<City>()
                 maxCityIdFlow.value = -1
-                for (data in dataSnapshot.children) {
-                    val key: Int = data.key?.toInt() ?: continue
+                for (dataFromChildren in dataSnapshot.children) {
+                    dataFromChildren.key
+                    val key: Int = dataFromChildren.key?.toInt() ?: continue
                     if (maxCityIdFlow.value < key) {
                         maxCityIdFlow.value = key
                     }
-                    val value = data.getValue(City::class.java) ?: continue
+                    val value = dataFromChildren.getValue(City::class.java) ?: continue
                     listCities.add(
                         City(
                             id = key,
@@ -131,10 +182,10 @@ class PizzaStoreRepositoryImpl @Inject constructor(
                 )
             }
         }
-        dRef.addValueEventListener(postListener)
+        dRefCities.addValueEventListener(postListener)
 
         awaitClose {
-            dRef.removeEventListener(postListener)
+            dRefCities.removeEventListener(postListener)
         }
     }
     //</editor-fold>
@@ -164,7 +215,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
         val scope = CoroutineScope(Dispatchers.IO)
         scope.launch {
             dbResponseFlow.emit(DBResponse.Processing)
-            dRef.child(cityId)
+            dRefCities.child(cityId)
                 .setValue(currentCity)
                 .addOnSuccessListener(OnSuccessListener<Void?> {
                     dbResponseFlow.value = DBResponse.Complete
@@ -179,6 +230,25 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     }
     //</editor-fold>
 
+    //<editor-fold desc="addInfoAboutPicture">
+    fun addInfoAboutPicture(type: String, name: String) {
+        val scope = CoroutineScope(Dispatchers.IO)
+        scope.launch {
+            dbResponseFlow.emit(DBResponse.Processing)
+            dRefPictrues
+                .child(type)
+                .push()
+                .setValue(name)
+                .addOnSuccessListener(OnSuccessListener<Void?> {
+                    scope.cancel()
+                })
+                .addOnFailureListener(OnFailureListener { e ->
+                    scope.cancel()
+                })
+        }
+    }
+    //</editor-fold>
+
     //<editor-fold desc="deleteCitiesUseCase">
     override fun deleteCitiesUseCase(cities: List<City>) {
         var haveErrors = false
@@ -187,7 +257,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
             dbResponseFlow.emit(DBResponse.Processing)
             cities.forEach { city ->
                 val cityId = city.id.toString()
-                dRef.child(cityId)
+                dRefCities.child(cityId)
                     .removeValue()
                     .addOnFailureListener(OnFailureListener { _ ->
                         haveErrors = true

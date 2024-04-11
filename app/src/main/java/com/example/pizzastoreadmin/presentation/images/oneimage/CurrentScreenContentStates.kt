@@ -1,4 +1,4 @@
-package com.example.pizzastoreadmin.presentation.images
+package com.example.pizzastoreadmin.presentation.images.oneimage
 
 import android.net.Uri
 

@@ -1,4 +1,4 @@
-package com.example.pizzastoreadmin.presentation.images
+package com.example.pizzastoreadmin.presentation.images.oneimage
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -45,13 +45,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.pizzastore.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.PictureType
+import com.example.pizzastoreadmin.presentation.city.cities.ShowToast
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
+import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
 
 @Composable
 fun OneImageScreen(
     paddingValues: PaddingValues,
-    onExitLet: () -> Unit
+    leaveScreen: () -> Unit
 ) {
 
     val component = getApplicationComponent()
@@ -68,7 +70,9 @@ fun OneImageScreen(
             OneImageScreenContent(
                 viewModel,
                 paddingValues
-            )
+            ) {
+                leaveScreen()
+            }
         }
 
         OneImageScreenState.Loading -> {
@@ -81,8 +85,19 @@ fun OneImageScreen(
 @Composable
 fun OneImageScreenContent(
     viewModel: OneImageScreenViewModel,
-    paddingValues: PaddingValues
+    paddingValues: PaddingValues,
+    leaveScreen : () -> Unit
 ) {
+
+    val shouldLeaveScreenState by viewModel.shouldLeaveScreenState.collectAsState()
+    when (val currentShouldLeaveState = shouldLeaveScreenState) {
+        is ShouldLeaveScreenState.Error -> {
+            ShowToast(text = currentShouldLeaveState.description)
+        }
+        ShouldLeaveScreenState.Exit -> leaveScreen()
+        ShouldLeaveScreenState.Processing -> {}
+    }
+
     var currentScreenContentStates by remember {
         mutableStateOf(
             CurrentScreenContentStates(
@@ -102,14 +117,7 @@ fun OneImageScreenContent(
         )
     }
 
-    val optionsForDropDownMenu = listOf(
-        PictureType.PIZZA,
-        PictureType.ROLL,
-        PictureType.STARTER,
-        PictureType.DESSERT,
-        PictureType.DRINK,
-        PictureType.STORY
-    )
+    val optionsForDropDownMenu = viewModel.getAllPictureTypes()
 
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -207,6 +215,8 @@ fun DropDownTextField(
     options: List<PictureType>,
     onOptionOrOutsideClicked: (DropDownMenuStates) -> Unit
 ) {
+
+    dropDownMenuStates
     ExposedDropdownMenuBox(
         expanded = dropDownMenuStates.isProductMenuExpanded,
         onExpandedChange = {
