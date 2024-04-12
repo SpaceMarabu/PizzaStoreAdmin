@@ -13,11 +13,11 @@ sealed class PictureType(
     object STORY : PictureType(TYPE_STORY)
 
     companion object {
-        const val TYPE_PIZZA = "pizza"
-        const val TYPE_ROLL = "roll"
-        const val TYPE_STARTER = "starter"
-        const val TYPE_DESSERT = "dessert"
-        const val TYPE_DRINK = "drink"
-        const val TYPE_STORY = "story"
+        private const val TYPE_PIZZA = "pizza"
+        private const val TYPE_ROLL = "roll"
+        private const val TYPE_STARTER = "starter"
+        private const val TYPE_DESSERT = "dessert"
+        private const val TYPE_DRINK = "drink"
+        private const val TYPE_STORY = "story"
     }
 }

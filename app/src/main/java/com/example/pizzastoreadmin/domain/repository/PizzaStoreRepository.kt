@@ -14,7 +14,7 @@ interface PizzaStoreRepository {
 
     fun deleteCitiesUseCase(cities: List<City>)
 
-    suspend fun getListPicturesUseCase(): HashMap<String, List<Uri>>
+    suspend fun getListPicturesUseCase(type: String): Flow<List<Uri>>
 
 
     //<editor-fold desc="service UC">

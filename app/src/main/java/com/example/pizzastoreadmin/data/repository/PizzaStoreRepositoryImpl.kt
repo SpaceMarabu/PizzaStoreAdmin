@@ -4,7 +4,6 @@ import android.net.Uri
 import android.util.Log
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.City
-import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
@@ -13,6 +12,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.storage
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -35,7 +36,6 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
     private val firebaseDatabase = FirebaseDatabase.getInstance()
     private val dRefCities = firebaseDatabase.getReference("cities")
-    private val dRefPictrues = firebaseDatabase.getReference("pictures")
 
     private val firebaseStorage = Firebase.storage("gs://pizzastore-b379f.appspot.com")
     private val storageRef = firebaseStorage.reference.child("product")
@@ -69,7 +69,6 @@ class PizzaStoreRepositoryImpl @Inject constructor(
                 .putBytes(imageByte)
                 .addOnSuccessListener {
                     dbResponseFlow.value = DBResponse.Complete
-                    addInfoAboutPicture(type, nameToPut)
                 }
                 .addOnFailureListener {
                     dbResponseFlow.value = DBResponse.Error(it.toString())
@@ -101,52 +100,50 @@ class PizzaStoreRepositoryImpl @Inject constructor(
         }
     //</editor-fold>
 
+    //<editor-fold desc="getListPicturesUseCase">
     @OptIn(ExperimentalCoroutinesApi::class)
-    override suspend fun getListPicturesUseCase(): HashMap<String, List<Uri>> {
-        val resultMap = HashMap<String, List<Uri>>()
+    override suspend fun getListPicturesUseCase(type: String) = flow {
         withContext(Dispatchers.IO) {
-            val types = listOf(
-                PictureType.PIZZA,
-                PictureType.ROLL,
-                PictureType.STARTER,
-                PictureType.DESSERT,
-                PictureType.DRINK,
-                PictureType.STORY
-            )
-            types.forEach typesForEach@{ pictureType ->
-                val deferredTemp = CompletableDeferred<List<Uri>>()
+            val outerTemp = CompletableDeferred<List<Uri>>()
+            val scope = CoroutineScope(Dispatchers.IO)
+
+            scope.launch {
                 storageRef
-                    .child(pictureType.type)
+                    .child(type)
                     .listAll()
                     .addOnSuccessListener { result ->
-                        val tempUriListByCurrentType = mutableListOf<Uri>()
-                        result.items.forEach { storRef ->
-                            val scope = CoroutineScope(Dispatchers.IO)
-                            val uriDeffered = CompletableDeferred<Uri>()
-                            scope.launch {
-                                storRef
-                                    .downloadUrl
-                                    .addOnSuccessListener {
-                                        if (it != null) {
-                                            uriDeffered.complete(it)
-                                        }
-                                    }
-                                uriDeffered.invokeOnCompletion {
-                                    tempUriListByCurrentType.add(uriDeffered.getCompleted())
-                                }
-                                uriDeffered.await()
+                        val tempUriList = mutableListOf<Uri>()
+                        scope.launch {
+                            result.items.forEach { storageReference ->
+                                val uri = getUriByStorageReference(storageReference)
+                                tempUriList.add(uri)
                             }
+                            outerTemp.complete(tempUriList)
                         }
-                        deferredTemp.complete(tempUriListByCurrentType)
                     }
-                deferredTemp.await()
-                deferredTemp.invokeOnCompletion {
-                    resultMap[pictureType.type] = deferredTemp.getCompleted()
-                }
             }
+            outerTemp.await()
+            emit(outerTemp.getCompleted())
         }
-        return resultMap
     }
+
+    //</editor-fold>
+
+    //<editor-fold desc="getUriByStorageReference">
+    private suspend fun getUriByStorageReference(storageReference: StorageReference) =
+        withContext(Dispatchers.IO) {
+            val deferred = CompletableDeferred<Uri>()
+            storageReference
+                .downloadUrl
+                .addOnSuccessListener {
+                    if (it != null) {
+                        deferred.complete(it)
+                    }
+                }
+            deferred.await()
+        }
+    //</editor-fold>
+
 
     //<editor-fold desc="listCitiesFlow">
     private val listCitiesFlow = callbackFlow {
@@ -188,7 +185,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
             dRefCities.removeEventListener(postListener)
         }
     }
-    //</editor-fold>
+//</editor-fold>
 
     override fun getCitiesUseCase(): Flow<List<City>> {
         return listCitiesFlow
@@ -228,26 +225,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
                 })
         }
     }
-    //</editor-fold>
-
-    //<editor-fold desc="addInfoAboutPicture">
-    fun addInfoAboutPicture(type: String, name: String) {
-        val scope = CoroutineScope(Dispatchers.IO)
-        scope.launch {
-            dbResponseFlow.emit(DBResponse.Processing)
-            dRefPictrues
-                .child(type)
-                .push()
-                .setValue(name)
-                .addOnSuccessListener(OnSuccessListener<Void?> {
-                    scope.cancel()
-                })
-                .addOnFailureListener(OnFailureListener { e ->
-                    scope.cancel()
-                })
-        }
-    }
-    //</editor-fold>
+//</editor-fold>
 
     //<editor-fold desc="deleteCitiesUseCase">
     override fun deleteCitiesUseCase(cities: List<City>) {
@@ -272,7 +250,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
             )
         }
     }
-    //</editor-fold>
+//</editor-fold>
 
     override fun getDbResponse(): StateFlow<DBResponse> {
         dbResponseFlow.value = DBResponse.Processing

@@ -10,7 +10,7 @@ class GetListPicturesUseCase  @Inject constructor(
     private val repository: PizzaStoreRepository
 ) {
 
-    suspend fun getListPictures(): HashMap<String, List<Uri>> {
-        return repository.getListPicturesUseCase()
+    suspend fun getListPictures(type: String): List<Uri> {
+        return repository.getListPicturesUseCase(type)
     }
 }

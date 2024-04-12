@@ -16,7 +16,7 @@ sealed class NavigationItem(
     )
 
     object Admin : NavigationItem(
-        screen = Screen.OneImage,
+        screen = Screen.Images,
         titleResId = R.string.admin,
         icon = R.drawable.ic_admin
     )

@@ -1,9 +1,10 @@
 package com.example.pizzastoreadmin.presentation.images.images
 
-import android.util.Log
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
+import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.usecases.business.GetListPicturesUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.GetDbResponseUseCase
 import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
@@ -23,6 +24,9 @@ class ImagesScreenViewModel @Inject constructor(
     private val _shouldLeaveScreenState: MutableStateFlow<ShouldLeaveScreenState> =
         MutableStateFlow(ShouldLeaveScreenState.Processing)
     val shouldLeaveScreenState = _shouldLeaveScreenState.asStateFlow()
+
+    private val _listUriPictures: MutableStateFlow<List<Uri>> = MutableStateFlow()
+    val listUriPictures = _shouldLeaveScreenState.asStateFlow()
 
     init {
         changeScreenState(ImagesScreenState.Content)
@@ -57,10 +61,20 @@ class ImagesScreenViewModel @Inject constructor(
 
     fun getListPictures() {
         viewModelScope.launch {
-            val pictures = getListPicturesUseCase.getListPictures()
-            pictures
+            val pictures = getListPicturesUseCase.getListPictures(PictureType.STORY.type)
         }
     }
+
+    //<editor-fold desc="getAllPictureTypes">
+    fun getAllPictureTypes() = listOf(
+        PictureType.PIZZA,
+        PictureType.ROLL,
+        PictureType.STARTER,
+        PictureType.DESSERT,
+        PictureType.DRINK,
+        PictureType.STORY
+    )
+    //</editor-fold>
 
     private fun changeScreenState(state: ImagesScreenState) {
         viewModelScope.launch {
