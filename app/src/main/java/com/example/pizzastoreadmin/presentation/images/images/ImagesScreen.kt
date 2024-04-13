@@ -1,5 +1,6 @@
 package com.example.pizzastoreadmin.presentation.images.images
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,10 +45,11 @@ fun ImagesScreen(
     val component = getApplicationComponent()
     val viewModel: ImagesScreenViewModel = viewModel(factory = component.getViewModelFactory())
 
-    val screenState = viewModel.state.collectAsState()
+    val screenState by viewModel.state.collectAsState()
+    Log.d("TEST_IMAGES", screenState.toString())
 
 
-    when (screenState.value) {
+    when (screenState) {
 
         ImagesScreenState.Initial -> {}
 
@@ -129,7 +132,7 @@ fun ImagesScreenContent(
                     .fillMaxSize(),
                 rows = GridCells.Fixed(3)
             ) {
-                items()
+//                items()
             }
         }
     }

@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.City
+import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
@@ -17,15 +18,15 @@ import com.google.firebase.storage.storage
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -45,104 +46,8 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     private val dbResponseFlow: MutableStateFlow<DBResponse> =
         MutableStateFlow(DBResponse.Processing)
 
-    //<editor-fold desc="putImageToStorage">
-    override fun putImageToStorage(name: String, type: String, imageByte: ByteArray) {
-        var counter = 1
-        var nameToPut = name
-        var needNextCheck = true
-        val scope = CoroutineScope(Dispatchers.IO)
-
-        scope.launch {
-            while (needNextCheck) {
-                val isAvailableName = checkAvailabilityName(nameToPut, type)
-                Log.d("TEST_TEST", isAvailableName.toString())
-                if (isAvailableName) {
-                    needNextCheck = false
-                } else {
-                    nameToPut = "${name}${counter++}"
-                }
-            }
-            dbResponseFlow.value = DBResponse.Processing
-            storageRef
-                .child(type)
-                .child(nameToPut)
-                .putBytes(imageByte)
-                .addOnSuccessListener {
-                    dbResponseFlow.value = DBResponse.Complete
-                }
-                .addOnFailureListener {
-                    dbResponseFlow.value = DBResponse.Error(it.toString())
-                }
-        }
-    }
-    //</editor-fold>
-
-    //<editor-fold desc="checkAvailabilityName">
-    private suspend fun checkAvailabilityName(name: String, type: String) =
-        withContext(Dispatchers.IO) {
-            var isAvailable = true
-            val regexTemplate = Regex("\\..+")
-            val deferred = CompletableDeferred<Boolean>()
-            storageRef
-                .child(type)
-                .listAll()
-                .addOnSuccessListener { result ->
-                    result.items.forEach { item ->
-                        val nameWithoutExtension = item.name.replace(regexTemplate, "")
-                        if (nameWithoutExtension == name) {
-                            isAvailable = false
-                            return@forEach
-                        }
-                    }
-                    deferred.complete(isAvailable)
-                }
-            deferred.await()
-        }
-    //</editor-fold>
-
-    //<editor-fold desc="getListPicturesUseCase">
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override suspend fun getListPicturesUseCase(type: String) = flow {
-        withContext(Dispatchers.IO) {
-            val outerTemp = CompletableDeferred<List<Uri>>()
-            val scope = CoroutineScope(Dispatchers.IO)
-
-            scope.launch {
-                storageRef
-                    .child(type)
-                    .listAll()
-                    .addOnSuccessListener { result ->
-                        val tempUriList = mutableListOf<Uri>()
-                        scope.launch {
-                            result.items.forEach { storageReference ->
-                                val uri = getUriByStorageReference(storageReference)
-                                tempUriList.add(uri)
-                            }
-                            outerTemp.complete(tempUriList)
-                        }
-                    }
-            }
-            outerTemp.await()
-            emit(outerTemp.getCompleted())
-        }
-    }
-
-    //</editor-fold>
-
-    //<editor-fold desc="getUriByStorageReference">
-    private suspend fun getUriByStorageReference(storageReference: StorageReference) =
-        withContext(Dispatchers.IO) {
-            val deferred = CompletableDeferred<Uri>()
-            storageReference
-                .downloadUrl
-                .addOnSuccessListener {
-                    if (it != null) {
-                        deferred.complete(it)
-                    }
-                }
-            deferred.await()
-        }
-    //</editor-fold>
+    private val typeFlow: MutableSharedFlow<PictureType> = MutableSharedFlow(replay = 1)
+    private val listPicturesUriFlow: MutableSharedFlow<List<Uri>> = MutableSharedFlow(replay = 1)
 
 
     //<editor-fold desc="listCitiesFlow">
@@ -185,6 +90,116 @@ class PizzaStoreRepositoryImpl @Inject constructor(
             dRefCities.removeEventListener(postListener)
         }
     }
+//</editor-fold>
+
+    init {
+        CoroutineScope(Dispatchers.IO).launch {
+            subscribePicturesTypeFlow()
+        }
+    }
+
+    //<editor-fold desc="getListPictures">
+    private suspend fun getListPictures(type: String) =
+        withContext(Dispatchers.IO) {
+            val scope = CoroutineScope(Dispatchers.IO)
+            storageRef
+                .child(type)
+                .listAll()
+                .addOnSuccessListener { result ->
+                    val tempUriList = mutableListOf<Uri>()
+                    scope.launch {
+                        result
+                            .items
+                            .forEach { storageReference ->
+                                val uri = getUriByStorageReference(storageReference)
+                                tempUriList.add(uri)
+                            }
+                        listPicturesUriFlow.emit(tempUriList)
+                    }
+                }
+        }
+    //</editor-fold>
+
+    override suspend fun postPicturesType(type: PictureType) = typeFlow.emit(type)
+
+    //<editor-fold desc="subscribeTypeFlow">
+    private suspend fun subscribePicturesTypeFlow() {
+        typeFlow.collect {
+            getListPictures(it.type)
+        }
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="putImageToStorage">
+    override fun putImageToStorage(name: String, type: String, imageByte: ByteArray) {
+        var counter = 1
+        var nameToPut = name
+        var needNextCheck = true
+        val scope = CoroutineScope(Dispatchers.IO)
+
+        scope.launch {
+            while (needNextCheck) {
+                val isAvailableName = checkAvailabilityName(nameToPut, type)
+                Log.d("TEST_TEST", isAvailableName.toString())
+                if (isAvailableName) {
+                    needNextCheck = false
+                } else {
+                    nameToPut = "${name}${counter++}"
+                }
+            }
+            dbResponseFlow.value = DBResponse.Processing
+            storageRef
+                .child(type)
+                .child(nameToPut)
+                .putBytes(imageByte)
+                .addOnSuccessListener {
+                    dbResponseFlow.value = DBResponse.Complete
+                }
+                .addOnFailureListener {
+                    dbResponseFlow.value = DBResponse.Error(it.toString())
+                }
+        }
+    }
+//</editor-fold>
+
+    //<editor-fold desc="checkAvailabilityName">
+    private suspend fun checkAvailabilityName(name: String, type: String) =
+        withContext(Dispatchers.IO) {
+            var isAvailable = true
+            val regexTemplate = Regex("\\..+")
+            val deferred = CompletableDeferred<Boolean>()
+            storageRef
+                .child(type)
+                .listAll()
+                .addOnSuccessListener { result ->
+                    result.items.forEach { item ->
+                        val nameWithoutExtension = item.name.replace(regexTemplate, "")
+                        if (nameWithoutExtension == name) {
+                            isAvailable = false
+                            return@forEach
+                        }
+                    }
+                    deferred.complete(isAvailable)
+                }
+            deferred.await()
+        }
+//</editor-fold>
+
+    override suspend fun getListPicturesUseCase() = listPicturesUriFlow.asSharedFlow()
+
+    //<editor-fold desc="getUriByStorageReference">
+    private suspend fun getUriByStorageReference(storageReference: StorageReference) =
+        withContext(Dispatchers.IO) {
+            val deferred = CompletableDeferred<Uri>()
+            storageReference
+                .downloadUrl
+                .addOnSuccessListener {
+                    if (it != null) {
+                        deferred.complete(it)
+                    }
+                }
+            deferred.await()
+        }
 //</editor-fold>
 
     override fun getCitiesUseCase(): Flow<List<City>> {

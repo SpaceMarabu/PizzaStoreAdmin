@@ -7,14 +7,17 @@ import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.usecases.business.GetListPicturesUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.GetDbResponseUseCase
+import com.example.pizzastoreadmin.domain.usecases.service.PostCurrentPictureTypeUseCase
 import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class ImagesScreenViewModel @Inject constructor(
     private val getListPicturesUseCase: GetListPicturesUseCase,
+    private val postCurrentPictureTypeUseCase: PostCurrentPictureTypeUseCase,
     private val getDbResponseUseCase: GetDbResponseUseCase
 ) : ViewModel() {
 
@@ -25,11 +28,10 @@ class ImagesScreenViewModel @Inject constructor(
         MutableStateFlow(ShouldLeaveScreenState.Processing)
     val shouldLeaveScreenState = _shouldLeaveScreenState.asStateFlow()
 
-    private val _listUriPictures: MutableStateFlow<List<Uri>> = MutableStateFlow()
-    val listUriPictures = _shouldLeaveScreenState.asStateFlow()
+    private val _listPicturesUri:
 
     init {
-        changeScreenState(ImagesScreenState.Content)
+//        changeImagesType(PictureType.PIZZA)
         subscribeDbResponse()
     }
 
@@ -59,10 +61,15 @@ class ImagesScreenViewModel @Inject constructor(
     }
     //</editor-fold>
 
-    fun getListPictures() {
+    private fun getListPictures(type: PictureType): List<Uri> {
+        var listUri = listOf<Uri>()
         viewModelScope.launch {
-            val pictures = getListPicturesUseCase.getListPictures(PictureType.STORY.type)
+            getListPicturesUseCase.getListPictures(type.type)
+                .collect {
+                    listUri = it
+                }
         }
+        return listUri
     }
 
     //<editor-fold desc="getAllPictureTypes">
@@ -79,6 +86,16 @@ class ImagesScreenViewModel @Inject constructor(
     private fun changeScreenState(state: ImagesScreenState) {
         viewModelScope.launch {
             _state.emit(state)
+        }
+    }
+
+    fun changeImagesType(type: PictureType) {
+        val listPicturesUri = getListPictures(type)
+        viewModelScope.launch {
+            changeScreenState(
+                ImagesScreenState
+                    .Content(listPicturesUri = listPicturesUri)
+            )
         }
     }
 }

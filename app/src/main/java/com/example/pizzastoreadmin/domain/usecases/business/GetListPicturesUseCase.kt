@@ -10,7 +10,7 @@ class GetListPicturesUseCase  @Inject constructor(
     private val repository: PizzaStoreRepository
 ) {
 
-    suspend fun getListPictures(type: String): List<Uri> {
-        return repository.getListPicturesUseCase(type)
+    suspend fun getListPictures(): Flow<List<Uri>> {
+        return repository.getListPicturesUseCase()
     }
 }
