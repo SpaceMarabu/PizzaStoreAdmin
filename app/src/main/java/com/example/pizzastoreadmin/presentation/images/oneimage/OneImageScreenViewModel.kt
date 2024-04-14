@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.usecases.service.GetDbResponseUseCase
-import com.example.pizzastoreadmin.domain.usecases.service.PutImageToStorageUseCase
+import com.example.pizzastoreadmin.domain.usecases.business.PutImageToStorageUseCase
 import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

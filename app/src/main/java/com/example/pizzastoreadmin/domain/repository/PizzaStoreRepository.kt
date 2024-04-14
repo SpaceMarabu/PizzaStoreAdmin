@@ -18,8 +18,9 @@ interface PizzaStoreRepository {
 
     suspend fun getListPicturesUseCase(): SharedFlow<List<Uri>>
 
-
     fun putImageToStorage(name: String, type: String, imageByte: ByteArray)
+
+    fun deletePicturesUseCase(listToDelete: List<Uri>)
 
 
     //<editor-fold desc="service UC">
@@ -28,6 +29,8 @@ interface PizzaStoreRepository {
     fun getCurrentCityUseCase(): StateFlow<City>
 
     fun setCurrentCityUseCase(city: City? = null)
+
+    fun setCurrentProductImageUseCase(imageUri: Uri? = null)
 
     suspend fun postPicturesType(type: PictureType)
     //</editor-fold>

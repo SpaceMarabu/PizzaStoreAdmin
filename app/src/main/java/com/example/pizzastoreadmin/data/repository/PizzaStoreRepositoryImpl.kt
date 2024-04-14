@@ -48,6 +48,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
     private val typeFlow: MutableSharedFlow<PictureType> = MutableSharedFlow(replay = 1)
     private val listPicturesUriFlow: MutableSharedFlow<List<Uri>> = MutableSharedFlow(replay = 1)
+    private val currentPictureUriFlow: MutableStateFlow<Uri?> = MutableStateFlow(null)
 
 
     //<editor-fold desc="listCitiesFlow">
@@ -121,6 +122,22 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     //</editor-fold>
 
     override suspend fun postPicturesType(type: PictureType) = typeFlow.emit(type)
+
+    override fun deletePicturesUseCase(listToDelete: List<Uri>) {
+        listToDelete.forEach {
+            val uriString = it.toString()
+            val startSubstring = uriString.indexOf("/product")
+            val endSubstring = uriString.indexOf("?alt")
+            val currentAddressToDelete = uriString
+                .substring(startSubstring, endSubstring)
+                .replace("%2F", "/")
+
+        }
+    }
+
+    override fun setCurrentProductImageUseCase(imageUri: Uri?) {
+        currentPictureUriFlow.value = imageUri
+    }
 
     //<editor-fold desc="subscribeTypeFlow">
     private suspend fun subscribePicturesTypeFlow() {

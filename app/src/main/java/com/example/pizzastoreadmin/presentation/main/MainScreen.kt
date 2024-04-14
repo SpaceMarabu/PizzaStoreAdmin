@@ -78,13 +78,18 @@ fun MainScreen() {
                 }
             },
             imagesScreenContent = {
-                ImagesScreen(paddingValues) {
+                ImagesScreen(
+                    paddingValues,
+                    addImageClicked = {
+                        navigationState.navigateTo(Screen.ROUTE_ONE_IMAGE)
+                    }
+                ) {
 
                 }
             },
             oneImageScreenContent = {
                 OneImageScreen(paddingValues) {
-
+                    navigationState.navigateTo(Screen.ROUTE_IMAGES)
                 }
             }
         )
