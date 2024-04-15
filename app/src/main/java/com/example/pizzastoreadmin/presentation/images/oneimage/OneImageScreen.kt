@@ -216,7 +216,7 @@ fun DropDownTextField(
     onOptionOrOutsideClicked: (DropDownMenuStates) -> Unit
 ) {
 
-    dropDownMenuStates
+
     ExposedDropdownMenuBox(
         expanded = dropDownMenuStates.isProductMenuExpanded,
         onExpandedChange = {

@@ -81,7 +81,7 @@ fun MainScreen() {
                 ImagesScreen(
                     paddingValues,
                     addImageClicked = {
-                        navigationState.navigateTo(Screen.ROUTE_ONE_IMAGE)
+                        navigationState.navigateWithoutPop(Screen.ROUTE_ONE_IMAGE)
                     }
                 ) {
 

@@ -4,17 +4,13 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.usecases.business.DeletePicturesUseCase
 import com.example.pizzastoreadmin.domain.usecases.business.GetListPicturesUseCase
-import com.example.pizzastoreadmin.domain.usecases.service.GetDbResponseUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.PostCurrentPictureTypeUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.SetCurrentProductImageUriUseCase
-import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,8 +18,7 @@ class ImagesScreenViewModel @Inject constructor(
     private val getListPicturesUseCase: GetListPicturesUseCase,
     private val postCurrentPictureTypeUseCase: PostCurrentPictureTypeUseCase,
     private val setCurrentProductImageUriUseCase: SetCurrentProductImageUriUseCase,
-    private val deleteImageUriUseCase: DeletePicturesUseCase,
-    private val getDbResponseUseCase: GetDbResponseUseCase
+    private val deleteImageUriUseCase: DeletePicturesUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<ImagesScreenState>(ImagesScreenState.Initial)
@@ -48,7 +43,6 @@ class ImagesScreenViewModel @Inject constructor(
             getListPicturesUseCase
                 .getListPictures()
                 .collect {
-                    Log.d("TEST_IMAGE", it[0].path.toString())
                     _isLoadingContent.emit(false)
                     _listPicturesUriState.emit(it)
                 }
@@ -76,6 +70,9 @@ class ImagesScreenViewModel @Inject constructor(
     //</editor-fold>
 
     fun deleteImages(listUri: List<Uri>) {
+        viewModelScope.launch {
+            _isLoadingContent.emit(true)
+        }
         deleteImageUriUseCase.deletePictures(listUri)
     }
 

@@ -46,7 +46,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     private val dbResponseFlow: MutableStateFlow<DBResponse> =
         MutableStateFlow(DBResponse.Processing)
 
-    private val typeFlow: MutableSharedFlow<PictureType> = MutableSharedFlow(replay = 1)
+    private val typeFlow: MutableStateFlow<PictureType?> = MutableStateFlow(null)
     private val listPicturesUriFlow: MutableSharedFlow<List<Uri>> = MutableSharedFlow(replay = 1)
     private val currentPictureUriFlow: MutableStateFlow<Uri?> = MutableStateFlow(null)
 
@@ -123,6 +123,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
     override suspend fun postPicturesType(type: PictureType) = typeFlow.emit(type)
 
+    //<editor-fold desc="deletePicturesUseCase">
     override fun deletePicturesUseCase(listToDelete: List<Uri>) {
         listToDelete.forEach {
             val uriString = it.toString()
@@ -131,9 +132,22 @@ class PizzaStoreRepositoryImpl @Inject constructor(
             val currentAddressToDelete = uriString
                 .substring(startSubstring, endSubstring)
                 .replace("%2F", "/")
-
+                .replace("/product", "")
+            CoroutineScope(Dispatchers.IO).launch {
+                storageRef.child(currentAddressToDelete)
+                    .delete()
+                    .addOnSuccessListener {
+                        val currentType = typeFlow.value?.type
+                        CoroutineScope(Dispatchers.IO).launch {
+                            if (currentType != null) {
+                                getListPictures(currentType)
+                            }
+                        }
+                    }
+            }
         }
     }
+    //</editor-fold>
 
     override fun setCurrentProductImageUseCase(imageUri: Uri?) {
         currentPictureUriFlow.value = imageUri
@@ -142,7 +156,9 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     //<editor-fold desc="subscribeTypeFlow">
     private suspend fun subscribePicturesTypeFlow() {
         typeFlow.collect {
-            getListPictures(it.type)
+            if (it != null) {
+                getListPictures(it.type)
+            }
         }
     }
     //</editor-fold>

@@ -13,13 +13,14 @@ class NavigationState(
     fun navigateTo(route: String) {
         navHostController.navigate(route) {
             popUpTo(Screen.ROUTE_CITIES)
+            restoreState = true
             launchSingleTop = true
         }
     }
 
-    fun navigateWithDestroy(route: String) {
+    fun navigateWithoutPop(route: String) {
         navHostController.navigate(route) {
-            popUpTo(Screen.ROUTE_CITIES)
+            restoreState = true
             launchSingleTop = true
         }
     }
