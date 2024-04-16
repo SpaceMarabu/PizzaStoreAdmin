@@ -2,7 +2,6 @@ package com.example.pizzastoreadmin.domain.usecases.business
 
 import android.net.Uri
 import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
-import com.example.pizzastoreadmin.domain.entity.City
 import javax.inject.Inject
 
 class DeletePicturesUseCase  @Inject constructor(
@@ -10,6 +9,6 @@ class DeletePicturesUseCase  @Inject constructor(
 ) {
 
     fun deletePictures(imageUri: List<Uri>) {
-        repository.deletePicturesUseCase(imageUri)
+        repository.deleteImagesUseCase(imageUri)
     }
 }

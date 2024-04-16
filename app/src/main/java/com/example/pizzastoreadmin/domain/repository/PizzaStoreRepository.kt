@@ -4,6 +4,7 @@ import android.net.Uri
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.domain.entity.PictureType
+import com.example.pizzastoreadmin.domain.entity.Product
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,11 +17,13 @@ interface PizzaStoreRepository {
 
     fun deleteCitiesUseCase(cities: List<City>)
 
-    suspend fun getListPicturesUseCase(): SharedFlow<List<Uri>>
+    suspend fun getListImagesUseCase(): SharedFlow<List<Uri>>
 
     fun putImageToStorage(name: String, type: String, imageByte: ByteArray)
 
-    fun deletePicturesUseCase(listToDelete: List<Uri>)
+    fun deleteImagesUseCase(listToDelete: List<Uri>)
+
+    fun addOrEditProductUseCase(product: Product)
 
 
     //<editor-fold desc="service UC">
@@ -33,6 +36,10 @@ interface PizzaStoreRepository {
     fun setCurrentProductImageUseCase(imageUri: Uri? = null)
 
     suspend fun postPicturesType(type: PictureType)
+
+    fun setCurrentProductUseCase(product: Product? = null)
+
+    fun getCurrentProductUseCase(): StateFlow<Product>
     //</editor-fold>
 
 }

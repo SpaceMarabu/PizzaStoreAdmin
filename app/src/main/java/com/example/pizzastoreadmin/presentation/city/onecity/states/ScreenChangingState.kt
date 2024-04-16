@@ -1,5 +1,6 @@
 package com.example.pizzastoreadmin.presentation.city.onecity.states
 
+
 sealed class ScreenChangingState() {
 
     data class ChangeCityName(

@@ -62,7 +62,8 @@ class OneCityScreenViewModel @Inject constructor(
     //<editor-fold desc="getCurrentCity">
     private fun getCurrentCity() {
         viewModelScope.launch {
-            getCurrentCityUseCase.getCity().collect {
+            getCurrentCityUseCase.getCity()
+                .collect {
                 _cityState.value = CityViewState(city = it)
                 initListPoints(it.points)
             }

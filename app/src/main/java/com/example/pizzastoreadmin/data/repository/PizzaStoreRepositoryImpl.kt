@@ -5,6 +5,7 @@ import android.util.Log
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.domain.entity.PictureType
+import com.example.pizzastoreadmin.domain.entity.Product
 import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
@@ -37,9 +38,12 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
     private val firebaseDatabase = FirebaseDatabase.getInstance()
     private val dRefCities = firebaseDatabase.getReference("cities")
+    private val dRefProduct = firebaseDatabase.getReference("product")
 
     private val firebaseStorage = Firebase.storage("gs://pizzastore-b379f.appspot.com")
     private val storageRef = firebaseStorage.reference.child("product")
+
+    private val currentProduct: MutableStateFlow<Product> = MutableStateFlow(Product())
 
     private val currentCity: MutableStateFlow<City> = MutableStateFlow(City())
     private val maxCityIdFlow = MutableStateFlow(-1)
@@ -124,7 +128,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     override suspend fun postPicturesType(type: PictureType) = typeFlow.emit(type)
 
     //<editor-fold desc="deletePicturesUseCase">
-    override fun deletePicturesUseCase(listToDelete: List<Uri>) {
+    override fun deleteImagesUseCase(listToDelete: List<Uri>) {
         listToDelete.forEach {
             val uriString = it.toString()
             val startSubstring = uriString.indexOf("/product")
@@ -218,7 +222,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
         }
 //</editor-fold>
 
-    override suspend fun getListPicturesUseCase() = listPicturesUriFlow.asSharedFlow()
+    override suspend fun getListImagesUseCase() = listPicturesUriFlow.asSharedFlow()
 
     //<editor-fold desc="getUriByStorageReference">
     private suspend fun getUriByStorageReference(storageReference: StorageReference) =
@@ -235,9 +239,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
         }
 //</editor-fold>
 
-    override fun getCitiesUseCase(): Flow<List<City>> {
-        return listCitiesFlow
-    }
+    override fun getCitiesUseCase(): Flow<List<City>> = listCitiesFlow
 
     override fun setCurrentCityUseCase(city: City?) {
         currentCity.value = city ?: City()
@@ -299,6 +301,43 @@ class PizzaStoreRepositoryImpl @Inject constructor(
         }
     }
 //</editor-fold>
+
+    override fun addOrEditProductUseCase(product: Product) {
+
+        var currentProduct = product
+//        val currentIdToInsert = (maxCityIdFlow.value + 1).toString()
+        val currentIdToInsert = 1
+        val productId = if (product.id == -1) {
+            currentProduct = currentProduct.copy(id = currentIdToInsert)
+            currentIdToInsert.toString()
+        } else {
+            product.id.toString()
+        }
+
+        Log.d("TEST_PRODUCT", currentProduct.toString())
+
+//        val scope = CoroutineScope(Dispatchers.IO)
+//        scope.launch {
+//            dbResponseFlow.emit(DBResponse.Processing)
+//            dRefProduct.child(productId)
+//                .setValue(currentProduct)
+//                .addOnSuccessListener(OnSuccessListener<Void?> {
+//                    dbResponseFlow.value = DBResponse.Complete
+//                    scope.cancel()
+//                })
+//                .addOnFailureListener(OnFailureListener { e ->
+//                    dbResponseFlow.value =
+//                        DBResponse.Error("Не удалось изменить данные. $e")
+//                    scope.cancel()
+//                })
+//        }
+    }
+
+    override fun setCurrentProductUseCase(product: Product?) {
+        currentProduct.value = product ?: Product()
+    }
+
+    override fun getCurrentProductUseCase(): StateFlow<Product> = currentProduct.asStateFlow()
 
     override fun getDbResponse(): StateFlow<DBResponse> {
         dbResponseFlow.value = DBResponse.Processing
