@@ -18,14 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ExposedDropdownMenuBox
-import androidx.compose.material.ExposedDropdownMenuDefaults
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -47,6 +42,9 @@ import com.example.pizzastore.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.presentation.city.cities.ShowToast
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
+import com.example.pizzastoreadmin.presentation.funs.dropdown.DropDownMenuStates
+import com.example.pizzastoreadmin.presentation.funs.dropdown.DropDownTextField
+import com.example.pizzastoreadmin.presentation.funs.getOutlinedTextFieldColors
 import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
 import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
 
@@ -207,67 +205,6 @@ fun OneImageScreenContent(
     }
 }
 
-//<editor-fold desc="Description">
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun DropDownTextField(
-    dropDownMenuStates: DropDownMenuStates,
-    options: List<PictureType>,
-    onOptionOrOutsideClicked: (DropDownMenuStates) -> Unit
-) {
-
-
-    ExposedDropdownMenuBox(
-        expanded = dropDownMenuStates.isProductMenuExpanded,
-        onExpandedChange = {
-            val currentStates = dropDownMenuStates.copy(isProductMenuExpanded = true)
-            onOptionOrOutsideClicked(currentStates)
-        }
-    ) {
-        OutlinedTextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = 8.dp,
-                    top = 8.dp,
-                    end = 8.dp
-                ),
-            shape = MaterialTheme.shapes.small.copy(CornerSize(10.dp)),
-            readOnly = true,
-            value = dropDownMenuStates.selectedOptionText,
-            onValueChange = { },
-            label = { Text("Type") },
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(
-                    expanded = dropDownMenuStates.isProductMenuExpanded
-                )
-            },
-            colors = getOutlinedTextFieldColors()
-        )
-        ExposedDropdownMenu(
-            expanded = dropDownMenuStates.isProductMenuExpanded,
-            onDismissRequest = {
-                val currentStates = dropDownMenuStates.copy(isProductMenuExpanded = false)
-                onOptionOrOutsideClicked(currentStates)
-            }
-        ) {
-            options.forEach { selectionOption ->
-                DropdownMenuItem(
-                    onClick = {
-                        val currentStates = dropDownMenuStates.copy(
-                            isProductMenuExpanded = false,
-                            selectedOptionText = selectionOption.type
-                        )
-                        onOptionOrOutsideClicked(currentStates)
-                    }
-                ) {
-                    Text(text = selectionOption.type)
-                }
-            }
-        }
-    }
-}
-//</editor-fold>
 
 //<editor-fold desc="TextFieldPicture">
 @Composable
@@ -299,18 +236,7 @@ fun TextFieldPicture(
 }
 //</editor-fold>
 
-//<editor-fold desc="getOutlinedTextFieldColors">
-@Composable
-fun getOutlinedTextFieldColors() = TextFieldDefaults.outlinedTextFieldColors(
-    unfocusedBorderColor = Color.LightGray,
-    unfocusedLabelColor = Color.LightGray,
-    backgroundColor = Color.White,
-    textColor = Color.Black,
-    focusedBorderColor = Color.Black,
-    focusedLabelColor = Color.Black,
-    cursorColor = Color.Gray
-)
-//</editor-fold>
+
 
 
 

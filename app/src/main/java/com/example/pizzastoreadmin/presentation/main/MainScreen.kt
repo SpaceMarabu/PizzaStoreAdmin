@@ -1,5 +1,6 @@
 package com.example.pizzastoreadmin.presentation.main
 
+import android.util.Log
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
@@ -13,14 +14,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.pizzastore.navigation.AppNavGraph
+import com.example.pizzastoreadmin.navigation.AppNavGraph
 import com.example.pizzastoreadmin.navigation.NavigationItem
-import com.example.pizzastore.navigation.Screen
+import com.example.pizzastoreadmin.navigation.Screen
 import com.example.pizzastoreadmin.navigation.rememberNavigationState
 import com.example.pizzastoreadmin.presentation.city.cities.CitiesScreen
 import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreen
 import com.example.pizzastoreadmin.presentation.images.images.ImagesScreen
 import com.example.pizzastoreadmin.presentation.images.oneimage.OneImageScreen
+import com.example.pizzastoreadmin.presentation.product.oneproduct.OneProductScreen
 
 
 @Composable
@@ -46,7 +48,11 @@ fun MainScreen() {
                     BottomNavigationItem(
                         selected = currentRoute == item.screen.route,
                         onClick = {
-                            navigationState.navigateTo(item.screen.route)
+                            if (item.screen.route == Screen.ROUTE_ONE_PRODUCT) {
+                                navigationState.navigateToProduct("")
+                            } else {
+                                navigationState.navigateTo(item.screen.route)
+                            }
                         },
                         icon = {
                             Icon(
@@ -84,13 +90,28 @@ fun MainScreen() {
                         navigationState.navigateWithoutPop(Screen.ROUTE_ONE_IMAGE)
                     }
                 ) {
-
+                    navigationState.navigateToProduct(it)
+                    Log.d("TEST_NAV", it)
                 }
             },
             oneImageScreenContent = {
                 OneImageScreen(paddingValues) {
                     navigationState.navigateTo(Screen.ROUTE_IMAGES)
                 }
+            },
+            oneProductScreenContent = {
+                OneProductScreen(
+                    paddingValues = paddingValues,
+                    photoUriString = it,
+                    needPhotoUri = {
+                        navigationState.navigateWithoutPop(Screen.ROUTE_IMAGES)
+                    }
+                ) {
+                    navigationState.navigateTo(Screen.ROUTE_PRODUCTS)
+                }
+            },
+            productsScreenContent = {
+
             }
         )
     }

@@ -1,4 +1,4 @@
-package com.example.pizzastore.navigation
+package com.example.pizzastoreadmin.navigation
 
 sealed class Screen(
     val route: String
@@ -10,15 +10,32 @@ sealed class Screen(
     object OneImage : Screen(ROUTE_ONE_IMAGE)
     object Image : Screen(ROUTE_IMAGE)
     object Images : Screen(ROUTE_IMAGES)
+    object OneProduct : Screen(ROUTE_ONE_PRODUCT) {
+
+        private const val ROUTE_FOR_ARGS = "one_product"
+        fun getRouteWithArgs(uriString: String): String {
+            return "$ROUTE_FOR_ARGS/$uriString"
+        }
+
+    }
+    object Product : Screen(ROUTE_PRODUCTS)
+    object Products : Screen(ROUTE_PRODUCT)
 
 
     companion object {
 
+        const val KEY_URI_STRING = "uriString"
+
         const val ROUTE_CITIES = "cities"
         const val ROUTE_ONE_CITY = "one_city"
         const val ROUTE_CITY = "city"
+
         const val ROUTE_ONE_IMAGE = "one_image"
         const val ROUTE_IMAGES = "images"
         const val ROUTE_IMAGE = "image"
+
+        const val ROUTE_ONE_PRODUCT = "one_product/$KEY_URI_STRING"
+        const val ROUTE_PRODUCTS = "products"
+        const val ROUTE_PRODUCT = "product"
     }
 }

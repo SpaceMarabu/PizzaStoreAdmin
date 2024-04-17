@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.example.pizzastore.navigation.Screen
 
 class NavigationState(
     val navHostController: NavHostController
@@ -23,6 +22,10 @@ class NavigationState(
             restoreState = true
             launchSingleTop = true
         }
+    }
+
+    fun navigateToProduct(uriString: String) {
+        navHostController.navigate(Screen.OneProduct.getRouteWithArgs(uriString))
     }
 }
 

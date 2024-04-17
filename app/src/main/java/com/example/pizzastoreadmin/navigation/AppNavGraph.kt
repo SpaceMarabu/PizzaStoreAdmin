@@ -1,9 +1,10 @@
-package com.example.pizzastore.navigation
+package com.example.pizzastoreadmin.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
+import com.example.pizzastore.navigation.cityScreenNavGraph
+import com.example.pizzastore.navigation.imageScreenNavGraph
 
 @Composable
 fun AppNavGraph(
@@ -11,7 +12,9 @@ fun AppNavGraph(
     citiesScreenContent: @Composable () -> Unit,
     oneCityScreenContent: @Composable () -> Unit,
     oneImageScreenContent: @Composable () -> Unit,
-    imagesScreenContent: @Composable () -> Unit
+    imagesScreenContent: @Composable () -> Unit,
+    oneProductScreenContent: @Composable (String) -> Unit,
+    productsScreenContent: @Composable () -> Unit
 ) {
     NavHost(
         navController = navHostController,
@@ -24,6 +27,10 @@ fun AppNavGraph(
         imageScreenNavGraph(
             imagesScreenContent = imagesScreenContent,
             oneImageScreenContent = oneImageScreenContent
+        )
+        productScreenNavGraph(
+            productsScreenContent = productsScreenContent,
+            oneProductScreenContent = oneProductScreenContent
         )
     }
 }

@@ -1,4 +1,4 @@
-package com.example.pizzastoreadmin.presentation.images.oneimage
+package com.example.pizzastoreadmin.presentation.funs.dropdown
 
 data class DropDownMenuStates(
     val isProductMenuExpanded: Boolean,

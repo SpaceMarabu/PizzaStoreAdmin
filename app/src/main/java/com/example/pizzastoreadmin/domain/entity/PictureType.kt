@@ -1,8 +1,8 @@
 package com.example.pizzastoreadmin.domain.entity
 
 sealed class PictureType(
-    val type: String
-) {
+    override val type: String
+): ObjectWithType {
 
     object PIZZA : PictureType(TYPE_PIZZA)
     object ROLL : PictureType(TYPE_ROLL)

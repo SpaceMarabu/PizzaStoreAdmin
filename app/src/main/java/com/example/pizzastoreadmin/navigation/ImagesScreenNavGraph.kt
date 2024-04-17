@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import com.example.pizzastoreadmin.navigation.Screen
 
 fun NavGraphBuilder.imageScreenNavGraph(
     imagesScreenContent: @Composable () -> Unit,

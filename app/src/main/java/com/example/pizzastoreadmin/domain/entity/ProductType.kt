@@ -5,8 +5,8 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 sealed class ProductType(
-    val type: String
-) : Parcelable {
+    override val type: String
+) : ObjectWithType, Parcelable {
 
     object PIZZA : ProductType(TYPE_PIZZA)
     object ROLL : ProductType(TYPE_ROLL)

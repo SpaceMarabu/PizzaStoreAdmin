@@ -3,11 +3,14 @@ package com.example.pizzastoreadmin.presentation.product.oneproduct
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
+import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.entity.Product
+import com.example.pizzastoreadmin.domain.entity.ProductType
 import com.example.pizzastoreadmin.domain.usecases.business.AddOrEditProductUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.GetCurrentProductUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.GetDbResponseUseCase
 import com.example.pizzastoreadmin.presentation.product.oneproduct.states.EditTextFieldState
+import com.example.pizzastoreadmin.presentation.product.oneproduct.states.EditType
 import com.example.pizzastoreadmin.presentation.product.oneproduct.states.ScreenChangingState
 import com.example.pizzastoreadmin.presentation.product.oneproduct.states.OneProductScreenState
 import com.example.pizzastoreadmin.presentation.product.oneproduct.states.ProductView
@@ -232,7 +235,45 @@ class OneProductScreenViewModel @Inject constructor(
     }
 //</editor-fold>
 
-    fun editProduct()
+    //<editor-fold desc="editProduct">
+    fun editProduct(type: EditType, value: String) {
+        viewModelScope.launch {
+            val changingState = when(type) {
+                EditType.NAME -> {
+                    ScreenChangingState.ChangeProductName(value)
+                }
+                EditType.PRICE -> {
+                    ScreenChangingState.ChangeProductPrice(value.toInt())
+                }
+                EditType.PHOTO -> {
+                    ScreenChangingState.ChangeProductPhoto(value)
+                }
+                EditType.DESCRIPTION -> {
+                    ScreenChangingState.ChangeProductDescription(value)
+                }
+            }
+            _screenChanges.emit(changingState)
+        }
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="getAllProductTypes">
+    fun getAllProductTypes() = listOf(
+        PictureType.PIZZA,
+        PictureType.ROLL,
+        PictureType.STARTER,
+        PictureType.DESSERT,
+        PictureType.DRINK,
+        PictureType.STORY
+    )
+    //</editor-fold>
+
+    fun editProduct(value: ProductType) {
+        viewModelScope.launch {
+            val changingState = ScreenChangingState.ChangeProductType(value)
+            _screenChanges.emit(changingState)
+        }
+    }
 
 
     private fun changeScreenState(state: OneProductScreenState) {
