@@ -44,7 +44,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import com.example.pizzastore.R
 import com.example.pizzastore.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.entity.ProductType
@@ -56,11 +59,12 @@ import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
 import com.example.pizzastoreadmin.presentation.product.oneproduct.states.EditType
 import com.example.pizzastoreadmin.presentation.product.oneproduct.states.OneProductScreenState
 import kotlinx.coroutines.flow.StateFlow
+import java.net.URI
 
 @Composable
 fun OneProductScreen(
     paddingValues: PaddingValues,
-    photoUriString: String,
+    photoUriString: String?,
     needPhotoUri: () -> Unit,
     onExitLet: () -> Unit
 ) {
@@ -99,7 +103,7 @@ fun OneProductScreen(
 fun OneCityScreenContent(
     paddingValues: PaddingValues,
     viewModel: OneProductScreenViewModel,
-    photoUriString: String,
+    photoUriString: String?,
     needPhotoUri: () -> Unit,
     onExitLet: () -> Unit
 ) {
@@ -108,11 +112,28 @@ fun OneCityScreenContent(
     val currentProductState by viewModel.currentProduct.collectAsState()
     val needCallback by viewModel.needCallback.collectAsState()
 
-
     val screenWidthDp = getScreenWidthDp()
     val edgeOfBoxPicture = 300.dp
     val borderStrokeDpPicture = 1.dp
     val paddingBoxPicture = ((screenWidthDp - edgeOfBoxPicture) / 2) - borderStrokeDpPicture
+
+    val request = ImageRequest
+        .Builder(LocalContext.current)
+        .data(
+            photoUriString
+                ?: currentProductState.product.photo
+                ?: R.drawable.pic_hungry_cat
+        )
+        .size(coil.size.Size.ORIGINAL)
+        .build()
+
+    val painter = rememberAsyncImagePainter(
+        model = request,
+        onState = {
+//            imageState.value = it
+            it
+        }
+    )
 
     var dropDownMenuStates by remember {
         mutableStateOf(
@@ -167,7 +188,7 @@ fun OneCityScreenContent(
             ) {
                 Image(
                     modifier = Modifier.fillMaxSize(),
-                    painter = rememberAsyncImagePainter(currentProductState.product.photo),
+                    painter = painter,
                     contentDescription = "product image"
                 )
             }
@@ -263,7 +284,7 @@ fun TextFieldProduct(
     isError: Boolean = false,
     needCallback: Boolean,
     modifier: Modifier = Modifier,
-    keyboardOptions: KeyboardOptions =KeyboardOptions.Default,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     textResult: (String) -> Unit
 ) {
 

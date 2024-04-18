@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 class NavigationState(
     val navHostController: NavHostController
@@ -24,8 +26,14 @@ class NavigationState(
         }
     }
 
-    fun navigateToProduct(uriString: String) {
-        navHostController.navigate(Screen.OneProduct.getRouteWithArgs(uriString))
+    fun navigateToProduct(uriString: String = Screen.EMPTY_ARG) {
+        val encodedUri = if (uriString != Screen.EMPTY_ARG) {
+//            val temp = uriString.replace("/", "{slash}").replace("?", "{questionCharacter}")
+            URLEncoder.encode(uriString, StandardCharsets.UTF_8.toString())
+        } else {
+            uriString
+        }
+        navHostController.navigate(Screen.OneProduct.getRouteWithArgs(encodedUri))
     }
 }
 

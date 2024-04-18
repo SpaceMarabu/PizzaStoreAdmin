@@ -49,7 +49,7 @@ fun MainScreen() {
                         selected = currentRoute == item.screen.route,
                         onClick = {
                             if (item.screen.route == Screen.ROUTE_ONE_PRODUCT) {
-                                navigationState.navigateToProduct("")
+                                navigationState.navigateToProduct()
                             } else {
                                 navigationState.navigateTo(item.screen.route)
                             }
@@ -91,7 +91,6 @@ fun MainScreen() {
                     }
                 ) {
                     navigationState.navigateToProduct(it)
-                    Log.d("TEST_NAV", it)
                 }
             },
             oneImageScreenContent = {
@@ -111,7 +110,6 @@ fun MainScreen() {
                 }
             },
             productsScreenContent = {
-
             }
         )
     }

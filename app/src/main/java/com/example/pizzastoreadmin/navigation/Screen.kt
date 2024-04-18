@@ -13,7 +13,8 @@ sealed class Screen(
     object OneProduct : Screen(ROUTE_ONE_PRODUCT) {
 
         private const val ROUTE_FOR_ARGS = "one_product"
-        fun getRouteWithArgs(uriString: String): String {
+
+        fun getRouteWithArgs(uriString: String?): String {
             return "$ROUTE_FOR_ARGS/$uriString"
         }
 
@@ -26,6 +27,8 @@ sealed class Screen(
 
         const val KEY_URI_STRING = "uriString"
 
+        const val EMPTY_ARG = "empty_arg"
+
         const val ROUTE_CITIES = "cities"
         const val ROUTE_ONE_CITY = "one_city"
         const val ROUTE_CITY = "city"
@@ -34,7 +37,7 @@ sealed class Screen(
         const val ROUTE_IMAGES = "images"
         const val ROUTE_IMAGE = "image"
 
-        const val ROUTE_ONE_PRODUCT = "one_product/$KEY_URI_STRING"
+        const val ROUTE_ONE_PRODUCT = "one_product/{$KEY_URI_STRING}"
         const val ROUTE_PRODUCTS = "products"
         const val ROUTE_PRODUCT = "product"
     }

@@ -13,7 +13,7 @@ fun AppNavGraph(
     oneCityScreenContent: @Composable () -> Unit,
     oneImageScreenContent: @Composable () -> Unit,
     imagesScreenContent: @Composable () -> Unit,
-    oneProductScreenContent: @Composable (String) -> Unit,
+    oneProductScreenContent: @Composable (String?) -> Unit,
     productsScreenContent: @Composable () -> Unit
 ) {
     NavHost(
