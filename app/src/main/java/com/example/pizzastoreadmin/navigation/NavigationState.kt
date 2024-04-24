@@ -2,6 +2,7 @@ package com.example.pizzastoreadmin.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import java.net.URLEncoder
@@ -19,6 +20,15 @@ class NavigationState(
         }
     }
 
+    fun navigateWithPopInclusive(route: String) {
+        navHostController.navigate(route) {
+            popUpTo(navHostController.graph.findStartDestination().id) {
+//                saveState = true
+                inclusive = true
+            }
+        }
+    }
+
     fun navigateWithoutPop(route: String) {
         navHostController.navigate(route) {
             restoreState = true
@@ -28,12 +38,18 @@ class NavigationState(
 
     fun navigateToProduct(uriString: String = Screen.EMPTY_ARG) {
         val encodedUri = if (uriString != Screen.EMPTY_ARG) {
-//            val temp = uriString.replace("/", "{slash}").replace("?", "{questionCharacter}")
             URLEncoder.encode(uriString, StandardCharsets.UTF_8.toString())
         } else {
             uriString
         }
-        navHostController.navigate(Screen.OneProduct.getRouteWithArgs(encodedUri))
+        navHostController.navigate(
+            Screen.OneProduct.getRouteWithArgs(encodedUri)
+        ) {
+            popUpTo(Screen.ROUTE_ONE_PRODUCT) {
+//                saveState = true
+                inclusive = true
+            }
+        }
     }
 }
 

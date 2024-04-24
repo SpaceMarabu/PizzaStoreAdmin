@@ -110,7 +110,7 @@ fun OneImageScreenContent(
         mutableStateOf(
             DropDownMenuStates(
                 isProductMenuExpanded = false,
-                selectedOptionText = PictureType.PIZZA.type
+                selectedOption = PictureType.PIZZA
             )
         )
     }
@@ -148,7 +148,7 @@ fun OneImageScreenContent(
                             if (imageByte != null) {
                                 viewModel.putImageToStorage(
                                     name = currentScreenContentStates.pictureName,
-                                    type = dropDownMenuStates.selectedOptionText,
+                                    type = dropDownMenuStates.selectedOption.type,
                                     imageByteArray =  imageByte
                                 )
                             }

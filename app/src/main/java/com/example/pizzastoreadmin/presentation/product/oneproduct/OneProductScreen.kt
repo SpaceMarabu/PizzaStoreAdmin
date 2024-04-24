@@ -1,5 +1,6 @@
 package com.example.pizzastoreadmin.presentation.product.oneproduct
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -20,6 +21,7 @@ import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Divider
+import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.TextFieldDefaults
@@ -37,19 +39,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.pizzastore.R
 import com.example.pizzastore.di.getApplicationComponent
-import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.entity.ProductType
 import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
@@ -58,8 +57,6 @@ import com.example.pizzastoreadmin.presentation.funs.dropdown.DropDownMenuStates
 import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
 import com.example.pizzastoreadmin.presentation.product.oneproduct.states.EditType
 import com.example.pizzastoreadmin.presentation.product.oneproduct.states.OneProductScreenState
-import kotlinx.coroutines.flow.StateFlow
-import java.net.URI
 
 @Composable
 fun OneProductScreen(
@@ -117,13 +114,13 @@ fun OneCityScreenContent(
     val borderStrokeDpPicture = 1.dp
     val paddingBoxPicture = ((screenWidthDp - edgeOfBoxPicture) / 2) - borderStrokeDpPicture
 
+    val imageSource = photoUriString
+        ?: currentProductState.product.photo
+        ?: R.drawable.pic_hungry_cat
+
     val request = ImageRequest
         .Builder(LocalContext.current)
-        .data(
-            photoUriString
-                ?: currentProductState.product.photo
-                ?: R.drawable.pic_hungry_cat
-        )
+        .data(imageSource)
         .size(coil.size.Size.ORIGINAL)
         .build()
 
@@ -139,9 +136,14 @@ fun OneCityScreenContent(
         mutableStateOf(
             DropDownMenuStates(
                 isProductMenuExpanded = false,
-                selectedOptionText = ProductType.PIZZA.type
+                selectedOption = ProductType.PIZZA
             )
         )
+    }
+
+    if (needCallback) {
+        viewModel.editProduct(EditType.PHOTO, imageSource.toString())
+        viewModel.editProduct(dropDownMenuStates.selectedOption as ProductType)
     }
 
     when (shouldLeaveScreen.value) {
@@ -163,7 +165,33 @@ fun OneCityScreenContent(
 
     Scaffold(
         modifier = Modifier
-            .padding(bottom = paddingValues.calculateBottomPadding())
+            .padding(bottom = paddingValues.calculateBottomPadding()),
+        floatingActionButton = {
+            if (
+                currentProductState.isNameValid
+                && currentProductState.isPriceValid
+                && currentProductState.isPhotoIsNotEmpty
+            ) {
+                FloatingActionButton(
+                    modifier = Modifier
+                        .width(100.dp)
+                        .border(
+                            border = BorderStroke(1.dp, Color.Black),
+                            shape = RoundedCornerShape(10.dp)
+                        ),
+                    shape = RoundedCornerShape(10.dp),
+                    onClick = {
+                        val currentProduct = currentProductState.product
+                        viewModel.exitScreen()
+                        Log.d("TEST_PRODUCT", currentProduct.toString())
+                    }) {
+                    Text(
+                        text = "ADD",
+                        fontSize = 24.sp
+                    )
+                }
+            }
+        }
     ) { _ ->
         Column {
 
@@ -184,6 +212,7 @@ fun OneCityScreenContent(
                     )
                     .clickable {
                         needPhotoUri()
+                        viewModel.needCallbackScreen()
                     }
             ) {
                 Image(

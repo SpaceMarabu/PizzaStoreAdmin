@@ -3,12 +3,14 @@ package com.example.pizzastoreadmin.presentation.product.oneproduct
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
+import com.example.pizzastoreadmin.domain.entity.ObjectWithType
 import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.entity.Product
 import com.example.pizzastoreadmin.domain.entity.ProductType
 import com.example.pizzastoreadmin.domain.usecases.business.AddOrEditProductUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.GetCurrentProductUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.GetDbResponseUseCase
+import com.example.pizzastoreadmin.domain.usecases.service.SetCurrentProductUseCase
 import com.example.pizzastoreadmin.presentation.product.oneproduct.states.EditTextFieldState
 import com.example.pizzastoreadmin.presentation.product.oneproduct.states.EditType
 import com.example.pizzastoreadmin.presentation.product.oneproduct.states.ScreenChangingState
@@ -25,6 +27,7 @@ import javax.inject.Inject
 class OneProductScreenViewModel @Inject constructor(
     private val addOrEditProductUseCase: AddOrEditProductUseCase,
     private val getCurrentProductUseCase: GetCurrentProductUseCase,
+    private val setCurrentProductUseCase: SetCurrentProductUseCase,
     private val getDbResponseUseCase: GetDbResponseUseCase
 ) : ViewModel() {
 
@@ -58,11 +61,8 @@ class OneProductScreenViewModel @Inject constructor(
         viewModelScope.launch {
             getCurrentProductUseCase.getProduct()
                 .collect { product ->
-                    _currentProduct.emit(
-                        ProductView(
-                            product = product
-                        )
-                    )
+                    val currentProductViewStates = _currentProduct.value.copy(product = product)
+                    _currentProduct.emit(currentProductViewStates)
                 }
         }
     }
@@ -174,6 +174,7 @@ class OneProductScreenViewModel @Inject constructor(
                         }
                     }
                 }
+                setCurrentProductUseCase.setProduct(productViewToChange.product)
                 _currentProduct.emit(productViewToChange)
             }
         }
@@ -219,7 +220,7 @@ class OneProductScreenViewModel @Inject constructor(
 //</editor-fold>
 
     //<editor-fold desc="needCallbackScreen">
-    private fun needCallbackScreen() {
+    fun needCallbackScreen() {
         viewModelScope.launch {
             _resultEditStateFlow.emit(EditTextFieldState())
             _needCallback.emit(true)
@@ -259,12 +260,11 @@ class OneProductScreenViewModel @Inject constructor(
 
     //<editor-fold desc="getAllProductTypes">
     fun getAllProductTypes() = listOf(
-        PictureType.PIZZA,
-        PictureType.ROLL,
-        PictureType.STARTER,
-        PictureType.DESSERT,
-        PictureType.DRINK,
-        PictureType.STORY
+        ProductType.PIZZA,
+        ProductType.ROLL,
+        ProductType.STARTER,
+        ProductType.DESSERT,
+        ProductType.DRINK
     )
     //</editor-fold>
 

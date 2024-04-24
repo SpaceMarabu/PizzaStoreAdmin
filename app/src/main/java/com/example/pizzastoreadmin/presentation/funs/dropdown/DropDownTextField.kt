@@ -43,7 +43,7 @@ fun DropDownTextField(
                 ),
             shape = MaterialTheme.shapes.small.copy(CornerSize(10.dp)),
             readOnly = true,
-            value = dropDownMenuStates.selectedOptionText,
+            value = dropDownMenuStates.selectedOption.type,
             onValueChange = { },
             label = { Text("Type") },
             trailingIcon = {
@@ -65,7 +65,7 @@ fun DropDownTextField(
                     onClick = {
                         val currentStates = dropDownMenuStates.copy(
                             isProductMenuExpanded = false,
-                            selectedOptionText = selectionOption.type
+                            selectedOption = selectionOption
                         )
                         onOptionOrOutsideClicked(currentStates)
                     }

@@ -87,7 +87,7 @@ fun MainScreen() {
                 ImagesScreen(
                     paddingValues,
                     addImageClicked = {
-                        navigationState.navigateWithoutPop(Screen.ROUTE_ONE_IMAGE)
+                        navigationState.navigateTo(Screen.ROUTE_ONE_IMAGE)
                     }
                 ) {
                     navigationState.navigateToProduct(it)
@@ -103,7 +103,7 @@ fun MainScreen() {
                     paddingValues = paddingValues,
                     photoUriString = it,
                     needPhotoUri = {
-                        navigationState.navigateWithoutPop(Screen.ROUTE_IMAGES)
+                        navigationState.navigateTo(Screen.ROUTE_IMAGES)
                     }
                 ) {
                     navigationState.navigateTo(Screen.ROUTE_PRODUCTS)
