@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.pizzastoreadmin.navigation.AppNavGraph
 import com.example.pizzastoreadmin.navigation.NavigationItem
 import com.example.pizzastoreadmin.navigation.Screen
@@ -27,7 +28,6 @@ import com.example.pizzastoreadmin.presentation.product.oneproduct.OneProductScr
 
 @Composable
 fun MainScreen() {
-
 
     val navigationState = rememberNavigationState()
 
@@ -51,7 +51,7 @@ fun MainScreen() {
                             if (item.screen.route == Screen.ROUTE_ONE_PRODUCT) {
                                 navigationState.navigateToProduct()
                             } else {
-                                navigationState.navigateTo(item.screen.route)
+                                navigationState.navigateStartDestination(item.screen.route)
                             }
                         },
                         icon = {

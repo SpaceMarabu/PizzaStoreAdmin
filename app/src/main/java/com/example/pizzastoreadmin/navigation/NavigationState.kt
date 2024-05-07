@@ -11,12 +11,18 @@ import java.nio.charset.StandardCharsets
 class NavigationState(
     val navHostController: NavHostController
 ) {
-
     fun navigateTo(route: String) {
         navHostController.navigate(route) {
-            popUpTo(Screen.ROUTE_CITIES)
+//            popUpTo(Screen.ROUTE_CITIES)
             restoreState = true
             launchSingleTop = true
+        }
+    }
+
+    fun navigateStartDestination(route: String) {
+        navHostController.navigate(route) {
+            launchSingleTop = true
+            popUpTo(0)
         }
     }
 
@@ -45,9 +51,11 @@ class NavigationState(
         navHostController.navigate(
             Screen.OneProduct.getRouteWithArgs(encodedUri)
         ) {
-            popUpTo(Screen.ROUTE_ONE_PRODUCT) {
+            restoreState = true
+            launchSingleTop = true
+            popUpTo(0) {
 //                saveState = true
-                inclusive = true
+//                inclusive = true
             }
         }
     }
