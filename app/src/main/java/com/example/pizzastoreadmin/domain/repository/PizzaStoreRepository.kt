@@ -25,6 +25,8 @@ interface PizzaStoreRepository {
 
     fun addOrEditProductUseCase(product: Product)
 
+    fun getProductsUseCase(): Flow<List<Product>>
+
 
     //<editor-fold desc="service UC">
     fun getDbResponse(): StateFlow<DBResponse>

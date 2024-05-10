@@ -183,7 +183,6 @@ fun OneCityScreenContent(
                     onClick = {
                         val currentProduct = currentProductState.product
                         viewModel.exitScreen()
-                        Log.d("TEST_PRODUCT", currentProduct.toString())
                     }) {
                     Text(
                         text = "ADD",

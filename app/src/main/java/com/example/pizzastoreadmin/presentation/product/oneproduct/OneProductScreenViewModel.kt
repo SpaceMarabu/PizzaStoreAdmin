@@ -2,12 +2,14 @@ package com.example.pizzastoreadmin.presentation.product.oneproduct
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.ObjectWithType
 import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.entity.Product
 import com.example.pizzastoreadmin.domain.entity.ProductType
 import com.example.pizzastoreadmin.domain.usecases.business.AddOrEditProductUseCase
+import com.example.pizzastoreadmin.domain.usecases.business.GetAllProductsUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.GetCurrentProductUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.GetDbResponseUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.SetCurrentProductUseCase
@@ -21,6 +23,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,6 +31,7 @@ class OneProductScreenViewModel @Inject constructor(
     private val addOrEditProductUseCase: AddOrEditProductUseCase,
     private val getCurrentProductUseCase: GetCurrentProductUseCase,
     private val setCurrentProductUseCase: SetCurrentProductUseCase,
+    private val getListProductsUseCase: GetAllProductsUseCase,
     private val getDbResponseUseCase: GetDbResponseUseCase
 ) : ViewModel() {
 
@@ -54,6 +58,12 @@ class OneProductScreenViewModel @Inject constructor(
         changeScreenState(OneProductScreenState.Content)
         changeScreenContent()
         subscribeDbResponse()
+        viewModelScope.launch {
+            getListProductsUseCase.getProductsFlow().collect {
+                it
+            }
+        }
+
     }
 
     //<editor-fold desc="getCurrentProduct">

@@ -6,6 +6,7 @@ import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.entity.Product
+import com.example.pizzastoreadmin.domain.entity.ProductType
 import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
@@ -47,6 +48,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
     private val currentCity: MutableStateFlow<City> = MutableStateFlow(City())
     private val maxCityIdFlow = MutableStateFlow(-1)
+    private val maxProductIdFlow = MutableStateFlow(-1)
     private val dbResponseFlow: MutableStateFlow<DBResponse> =
         MutableStateFlow(DBResponse.Processing)
 
@@ -93,6 +95,65 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
         awaitClose {
             dRefCities.removeEventListener(postListener)
+        }
+    }
+//</editor-fold>
+
+    //<editor-fold desc="listProductsFlow">
+    private val listProductsFlow = callbackFlow {
+
+        val postListener = object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                val listProducts = mutableListOf<Product>()
+                maxProductIdFlow.value = -1
+                for (dataFromChildren in dataSnapshot.children) {
+                    dataFromChildren.key
+                    val key: Int = dataFromChildren.key?.toInt() ?: continue
+                    if (maxProductIdFlow.value < key) {
+                        maxProductIdFlow.value = key
+                    }
+
+                    val id = dataFromChildren.child("id").value.toString().toInt()
+                    val name = dataFromChildren.child("name").value.toString()
+                    val typeFromSnapshot = dataFromChildren.child("type").value
+                    val price = dataFromChildren.child("price").value.toString().toInt()
+                    val photo = dataFromChildren.child("photo").value.toString()
+                    val description = dataFromChildren.child("description").value.toString()
+
+                    val typeObject = when (typeFromSnapshot) {
+                        ProductType.PIZZA.type -> ProductType.PIZZA
+                        ProductType.DESSERT.type -> ProductType.DESSERT
+                        ProductType.STARTER.type -> ProductType.STARTER
+                        ProductType.DRINK.type -> ProductType.DRINK
+                        else -> ProductType.ROLL
+                    }
+                    listProducts.add(
+                        Product(
+                            id = id,
+                            name = name,
+                            type = typeObject,
+                            price = price,
+                            photo = photo,
+                            description = description
+                        )
+                    )
+                }
+                val returnList = listProducts.toList()
+                trySend(returnList)
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                Log.w(
+                    "PizzaStoreRepositoryImpl",
+                    "loadCities:onCancelled",
+                    databaseError.toException()
+                )
+            }
+        }
+        dRefProduct.addValueEventListener(postListener)
+
+        awaitClose {
+            dRefProduct.removeEventListener(postListener)
         }
     }
 //</editor-fold>
@@ -241,6 +302,8 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
     override fun getCitiesUseCase(): Flow<List<City>> = listCitiesFlow
 
+    override fun getProductsUseCase(): Flow<List<Product>> = listProductsFlow
+
     override fun setCurrentCityUseCase(city: City?) {
         currentCity.value = city ?: City()
     }
@@ -302,11 +365,11 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     }
 //</editor-fold>
 
+    //<editor-fold desc="addOrEditProductUseCase">
     override fun addOrEditProductUseCase(product: Product) {
 
         var currentProduct = product
-//        val currentIdToInsert = (maxCityIdFlow.value + 1).toString()
-        val currentIdToInsert = 1
+        val currentIdToInsert = maxProductIdFlow.value + 1
         val productId = if (product.id == -1) {
             currentProduct = currentProduct.copy(id = currentIdToInsert)
             currentIdToInsert.toString()
@@ -314,24 +377,23 @@ class PizzaStoreRepositoryImpl @Inject constructor(
             product.id.toString()
         }
 
-        Log.d("TEST_PRODUCT", currentProduct.toString())
-
-//        val scope = CoroutineScope(Dispatchers.IO)
-//        scope.launch {
-//            dbResponseFlow.emit(DBResponse.Processing)
-//            dRefProduct.child(productId)
-//                .setValue(currentProduct)
-//                .addOnSuccessListener(OnSuccessListener<Void?> {
-//                    dbResponseFlow.value = DBResponse.Complete
-//                    scope.cancel()
-//                })
-//                .addOnFailureListener(OnFailureListener { e ->
-//                    dbResponseFlow.value =
-//                        DBResponse.Error("Не удалось изменить данные. $e")
-//                    scope.cancel()
-//                })
-//        }
+        val scope = CoroutineScope(Dispatchers.IO)
+        scope.launch {
+            dbResponseFlow.emit(DBResponse.Processing)
+            dRefProduct.child(productId)
+                .setValue(currentProduct)
+                .addOnSuccessListener(OnSuccessListener<Void?> {
+                    dbResponseFlow.value = DBResponse.Complete
+                    scope.cancel()
+                })
+                .addOnFailureListener(OnFailureListener { e ->
+                    dbResponseFlow.value =
+                        DBResponse.Error("Не удалось изменить данные. $e")
+                    scope.cancel()
+                })
+        }
     }
+    //</editor-fold>
 
     override fun setCurrentProductUseCase(product: Product?) {
         currentProduct.value = product ?: Product()
