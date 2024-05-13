@@ -24,6 +24,7 @@ import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreen
 import com.example.pizzastoreadmin.presentation.images.images.ImagesScreen
 import com.example.pizzastoreadmin.presentation.images.oneimage.OneImageScreen
 import com.example.pizzastoreadmin.presentation.product.oneproduct.OneProductScreen
+import com.example.pizzastoreadmin.presentation.product.products.ProductsScreen
 
 
 @Composable
@@ -110,6 +111,9 @@ fun MainScreen() {
                 }
             },
             productsScreenContent = {
+                ProductsScreen(paddingValues = paddingValues) {
+                    navigationState.navigateTo(Screen.ROUTE_ONE_PRODUCT)
+                }
             }
         )
     }

@@ -1,6 +1,5 @@
 package com.example.pizzastoreadmin.presentation.product.oneproduct
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -50,6 +49,7 @@ import coil.request.ImageRequest
 import com.example.pizzastore.R
 import com.example.pizzastore.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.ProductType
+import com.example.pizzastoreadmin.navigation.Screen
 import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 import com.example.pizzastoreadmin.presentation.funs.dropdown.DropDownTextField
@@ -77,7 +77,7 @@ fun OneProductScreen(
         OneProductScreenState.Initial -> {}
 
         is OneProductScreenState.Content -> {
-            OneCityScreenContent(
+            OneProductScreenContent(
                 paddingValues = paddingValues,
                 viewModel = viewModel,
                 photoUriString = photoUriString,
@@ -97,7 +97,7 @@ fun OneProductScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OneCityScreenContent(
+fun OneProductScreenContent(
     paddingValues: PaddingValues,
     viewModel: OneProductScreenViewModel,
     photoUriString: String?,
@@ -114,9 +114,19 @@ fun OneCityScreenContent(
     val borderStrokeDpPicture = 1.dp
     val paddingBoxPicture = ((screenWidthDp - edgeOfBoxPicture) / 2) - borderStrokeDpPicture
 
-    val imageSource = photoUriString
-        ?: currentProductState.product.photo
-        ?: R.drawable.pic_hungry_cat
+    val imageSource =
+        (
+                if (
+                    (photoUriString != null && photoUriString.contains(Screen.KEY_URI_STRING))
+                    || photoUriString == null
+                )
+                    currentProductState.product.photo
+                        ?: R.drawable.pic_hungry_cat
+                else
+                    photoUriString
+                )
+
+    imageSource
 
     val request = ImageRequest
         .Builder(LocalContext.current)
@@ -136,7 +146,7 @@ fun OneCityScreenContent(
         mutableStateOf(
             DropDownMenuStates(
                 isProductMenuExpanded = false,
-                selectedOption = ProductType.PIZZA
+                selectedOption = currentProductState.product.type
             )
         )
     }

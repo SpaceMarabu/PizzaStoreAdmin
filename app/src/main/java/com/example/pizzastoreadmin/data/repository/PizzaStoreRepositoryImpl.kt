@@ -395,6 +395,31 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     }
     //</editor-fold>
 
+    //<editor-fold desc="deleteProductsUseCase">
+    override fun deleteProductsUseCase(products: List<Product>) {
+        var haveErrors = false
+        val scope = CoroutineScope(Dispatchers.IO)
+        scope.launch {
+            dbResponseFlow.emit(DBResponse.Processing)
+            products.forEach { product ->
+                val productId = product.id.toString()
+                dRefProduct.child(productId)
+                    .removeValue()
+                    .addOnFailureListener(OnFailureListener { _ ->
+                        haveErrors = true
+                    })
+            }
+            dbResponseFlow.emit(
+                if (haveErrors) {
+                    DBResponse.Error("Ошибка удаления")
+                } else {
+                    DBResponse.Complete
+                }
+            )
+        }
+    }
+    //</editor-fold>
+
     override fun setCurrentProductUseCase(product: Product?) {
         currentProduct.value = product ?: Product()
     }

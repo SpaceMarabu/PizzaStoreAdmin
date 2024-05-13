@@ -31,7 +31,6 @@ class OneProductScreenViewModel @Inject constructor(
     private val addOrEditProductUseCase: AddOrEditProductUseCase,
     private val getCurrentProductUseCase: GetCurrentProductUseCase,
     private val setCurrentProductUseCase: SetCurrentProductUseCase,
-    private val getListProductsUseCase: GetAllProductsUseCase,
     private val getDbResponseUseCase: GetDbResponseUseCase
 ) : ViewModel() {
 
@@ -58,12 +57,6 @@ class OneProductScreenViewModel @Inject constructor(
         changeScreenState(OneProductScreenState.Content)
         changeScreenContent()
         subscribeDbResponse()
-        viewModelScope.launch {
-            getListProductsUseCase.getProductsFlow().collect {
-                it
-            }
-        }
-
     }
 
     //<editor-fold desc="getCurrentProduct">
