@@ -1,15 +1,24 @@
 package com.example.pizzastoreadmin.presentation.product.products
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
 import androidx.compose.material.FloatingActionButton
@@ -23,20 +32,26 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pizzastore.di.getApplicationComponent
+import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.entity.Product
+import com.example.pizzastoreadmin.domain.entity.ProductType
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 import com.example.pizzastoreadmin.presentation.product.products.states.CurrentStates
 import com.example.pizzastoreadmin.presentation.product.products.states.ProductsScreenState
 import com.example.pizzastoreadmin.presentation.product.products.states.WarningState
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProductsScreen(
@@ -82,7 +97,7 @@ fun ShowToast(text: String) {
 }
 //</editor-fold>
 
-//<editor-fold desc="Экран со списком городов">
+//<editor-fold desc="Экран со списком продуктов">
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListProductsScreen(
@@ -93,6 +108,17 @@ fun ListProductsScreen(
 ) {
 
     val warningState = viewModel.warningState.collectAsState()
+
+    val indexMapForScroll by viewModel.typesMap.collectAsState()
+
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
+    val listTypes = viewModel.getAllProductTypes()
+
+    var clickedType: ProductType by remember {
+        mutableStateOf(ProductType.PIZZA)
+    }
 
     val stateHolder = remember {
         mutableStateOf(
@@ -169,34 +195,75 @@ fun ListProductsScreen(
             }
         }
     ) {
-        LazyColumn {
-            items(items = products, key = { it.id }) { product ->
-                ProductRow(
-                    product = product,
-                    onClick = {
+        Column {
+            LazyRow(
+                modifier = Modifier
+                    .padding(top = 16.dp)
+            ) {
+                items(items = listTypes) { productType ->
+                    Row(
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .width(150.dp)
+                            .height(40.dp)
+                            .background(
+                                if (clickedType == productType)
+                                    Color.LightGray
+                                else Color.LightGray.copy(alpha = 0.3f)
+                            )
+                            .clickable {
+                                clickedType = productType
+                                coroutineScope.launch {
+                                    val indexType = indexMapForScroll[clickedType]
+                                    listState.animateScrollToItem(index = indexType ?: 0)
+                                }
+                            },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = productType.type,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+            Spacer(
+                modifier = Modifier
+                    .padding(top = 8.dp)
+            )
+            LazyColumn (
+                state = listState
+            ) {
+                items(items = products) { product ->
+                    ProductRow(
+                        product = product,
+                        onClick = {
+                            stateHolder.value = currentStateValue
+                                .copy(
+                                    isItemClicked = true,
+                                    currentProduct = product
+                                )
+                        }
+                    ) { isBoxChecked ->
+                        if (isBoxChecked) {
+                            currentStateValue.productsToDelete.add(product)
+                        } else {
+                            currentStateValue.productsToDelete.removeIf { it.id == product.id }
+                        }
                         stateHolder.value = currentStateValue
                             .copy(
-                                isItemClicked = true,
-                                currentProduct = product
+                                productsToDelete = currentStateValue.productsToDelete,
+                                isProductsToDeleteEmpty = currentStateValue.productsToDelete.size == 0
                             )
                     }
-                ) { isBoxChecked ->
-                    if (isBoxChecked) {
-                        currentStateValue.productsToDelete.add(product)
-                    } else {
-                        currentStateValue.productsToDelete.removeIf { it.id == product.id }
-                    }
-                    stateHolder.value = currentStateValue
-                        .copy(
-                            productsToDelete = currentStateValue.productsToDelete,
-                            isProductsToDeleteEmpty = currentStateValue.productsToDelete.size == 0
-                        )
+                    DividerList()
                 }
-                DividerList()
             }
         }
     }
-
 }
 //</editor-fold>
 
@@ -213,6 +280,7 @@ fun ProductRow(
     }
     Row(
         modifier = Modifier
+            .fillMaxWidth()
             .clickable {
                 onClick()
             },

@@ -126,8 +126,6 @@ fun OneProductScreenContent(
                     photoUriString
                 )
 
-    imageSource
-
     val request = ImageRequest
         .Builder(LocalContext.current)
         .data(imageSource)
@@ -195,7 +193,7 @@ fun OneProductScreenContent(
                         viewModel.exitScreen()
                     }) {
                     Text(
-                        text = "ADD",
+                        text = "DONE",
                         fontSize = 24.sp
                     )
                 }

@@ -36,7 +36,6 @@ class ImagesScreenViewModel @Inject constructor(
         changeImagesType(PictureType.PIZZA)
     }
 
-
     //<editor-fold desc="subscribeListPicturesFlow">
     private fun subscribeListPicturesFlow() {
         viewModelScope.launch {

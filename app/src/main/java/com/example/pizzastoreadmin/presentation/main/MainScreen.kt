@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.pizzastoreadmin.navigation.AppNavGraph
@@ -42,12 +43,19 @@ fun MainScreen() {
                     NavigationItem.Cities,
                     NavigationItem.Admin
                 )
-                val currentRoute = navBackStackEntry?.destination?.route
+//                val currentRoute = navBackStackEntry?.destination?.route
 
                 items.forEach { item ->
 
+                    val selected = navBackStackEntry?.destination?.hierarchy?.any {
+//                        Log.d("TEST_TEST", navBackStackEntry?.destination?.hierarchy!!.joinToString(" "))
+                        Log.d("TEST_TEST", it.route.toString() + " " + item.screen.route)
+                        it.route == item.screen.route
+                    } ?: false
+
                     BottomNavigationItem(
-                        selected = currentRoute == item.screen.route,
+//                        selected = currentRoute == item.screen.route,
+                        selected = selected,
                         onClick = {
                             if (item.screen.route == Screen.ROUTE_ONE_PRODUCT) {
                                 navigationState.navigateToProduct()

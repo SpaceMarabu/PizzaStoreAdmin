@@ -118,7 +118,6 @@ fun ImagesScreenContent(
         mutableStateOf(PictureType.PIZZA)
     }
 
-
     val imageState: MutableState<AsyncImagePainter.State> = remember {
         mutableStateOf(AsyncImagePainter.State.Loading(null))
     }

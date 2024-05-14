@@ -115,11 +115,10 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
                     val id = dataFromChildren.child("id").value.toString().toInt()
                     val name = dataFromChildren.child("name").value.toString()
-                    val typeFromSnapshot = dataFromChildren.child("type").value
+                    val typeFromSnapshot = dataFromChildren.child("type").child("type").value
                     val price = dataFromChildren.child("price").value.toString().toInt()
                     val photo = dataFromChildren.child("photo").value.toString()
                     val description = dataFromChildren.child("description").value.toString()
-
                     val typeObject = when (typeFromSnapshot) {
                         ProductType.PIZZA.type -> ProductType.PIZZA
                         ProductType.DESSERT.type -> ProductType.DESSERT
