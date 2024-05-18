@@ -1,6 +1,7 @@
 package com.example.pizzastore.di
 
 import android.app.Application
+import com.example.pizzastoreadmin.di.DataModule
 import com.example.pizzastoreadmin.di.ViewModelModule
 import dagger.BindsInstance
 import dagger.Component

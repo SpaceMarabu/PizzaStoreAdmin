@@ -8,7 +8,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pizzastore.di.getApplicationComponent
 import com.example.pizzastore.presentation.start.StartScreenState
 import com.example.pizzastore.presentation.start.StartScreenViewModel
-import com.example.pizzastoreadmin.presentation.city.cities.CitiesScreen
 import com.example.pizzastoreadmin.presentation.main.MainScreen
 import com.example.pizzastoreadmin.ui.theme.PizzaStoreAdminTheme
 
@@ -34,9 +33,6 @@ class StartActivity : ComponentActivity() {
 
                     StartScreenState.Initial -> {
                         viewModel.changeState(StartScreenState.StartScreenContent)
-//                        ChoseCityScreen {
-//                            viewModel.changeState(StartScreenState.StartScreenContent(it))
-//                        }
                     }
 
                     else -> {}

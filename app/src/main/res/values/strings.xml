@@ -2,4 +2,5 @@
     <string name="app_name">PizzaStoreAdmin</string>
     <string name="cities">cities</string>
     <string name="admin">admin</string>
+    <string name="default_web_client_id">340178925189-kek2f2a6l13175c2msgpo9m7g0pvfsqi.apps.googleusercontent.com</string>
 </resources>

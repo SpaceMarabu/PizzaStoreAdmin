@@ -13,7 +13,12 @@
           "package_name": "com.example.pizzastore"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "340178925189-kek2f2a6l13175c2msgpo9m7g0pvfsqi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD2HtIIG7e9GrYceyPeM5_8WLoUjRlz5IY"
@@ -21,7 +26,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "340178925189-kek2f2a6l13175c2msgpo9m7g0pvfsqi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     },
@@ -32,7 +42,20 @@
           "package_name": "com.example.pizzastoreadmin"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "340178925189-kg3kafv7kj44s2dcd93qbmrac3amapt6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.pizzastoreadmin",
+            "certificate_hash": "6b0187e2d8fe9db0f9b953d43d988e4c52bfd8e2"
+          }
+        },
+        {
+          "client_id": "340178925189-kek2f2a6l13175c2msgpo9m7g0pvfsqi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD2HtIIG7e9GrYceyPeM5_8WLoUjRlz5IY"
@@ -40,7 +63,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "340178925189-kek2f2a6l13175c2msgpo9m7g0pvfsqi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
