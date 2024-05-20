@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
@@ -38,6 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -48,9 +48,9 @@ import com.example.pizzastore.R
 import com.example.pizzastore.di.getApplicationComponent
 import com.example.pizzastoreadmin.presentation.city.onecity.states.OneCityScreenState
 import com.example.pizzastoreadmin.presentation.city.onecity.states.PointViewState
-import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
+import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
 import kotlinx.coroutines.flow.StateFlow
 
 @Composable
@@ -84,6 +84,7 @@ fun OneCityScreen(
     }
 }
 
+//<editor-fold desc="OneCityScreenContent">
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun OneCityScreenContent(
@@ -96,6 +97,12 @@ fun OneCityScreenContent(
     val cityState = viewModel.cityState.collectAsState()
 
     val shouldLeaveScreen = viewModel.shouldLeaveScreenState.collectAsState()
+
+    val screenDp = getScreenWidthDp()
+    val halfScreenDp = screenDp / 2
+
+    val paddingBetweenButtons = 16.dp
+    val paddingStartEnd = 8.dp
 
     when (shouldLeaveScreen.value) {
         is ShouldLeaveScreenState.Error -> {
@@ -119,7 +126,7 @@ fun OneCityScreenContent(
         LazyColumn {
             item {
                 TextFieldCity(
-                    label = "Город",
+                    label = stringResource(R.string.city_label),
                     textIn = cityState.value.city?.name,
                     needCallbackIn = viewModel.needCallback,
                     isError = !cityState.value.isCityNameIsCorrect
@@ -180,12 +187,6 @@ fun OneCityScreenContent(
                 }
             }
             item {
-                val screenDp = getScreenWidthDp()
-                val halfScreenDp = screenDp / 2
-
-                val paddingBetweenButtons = 16.dp
-                val paddingStartEnd = 8.dp
-
                 Row (
                     modifier = Modifier
                         .fillMaxWidth()
@@ -197,7 +198,7 @@ fun OneCityScreenContent(
                         modifier = Modifier
                             .padding(end = paddingBetweenButtons / 2),
                         width = halfScreenDp - (paddingBetweenButtons / 2) - paddingStartEnd,
-                        text = "Добавить точку"
+                        text = stringResource(R.string.add_point_button)
                     ) {
                         viewModel.getNewPoint()
                     }
@@ -205,7 +206,7 @@ fun OneCityScreenContent(
                         modifier = Modifier
                         .padding(start = paddingBetweenButtons),
                         width = halfScreenDp - (paddingBetweenButtons / 2) - paddingStartEnd,
-                        text = "Готово"
+                        text = stringResource(R.string.done_button)
                     ) {
                         viewModel.exitScreen()
                     }
@@ -214,6 +215,7 @@ fun OneCityScreenContent(
         }
     }
 }
+//</editor-fold>
 
 //<editor-fold desc="Кнопка">
 @Composable
@@ -246,27 +248,14 @@ fun ButtonWithText(
 }
 //</editor-fold>
 
-//<editor-fold desc="Разделитель">
-@Composable
-fun DividerList() {
-    Divider(
-        modifier = Modifier
-            .padding(start = 8.dp, top = 8.dp),
-        color = Color.Gray,
-        thickness = 1.dp
-    )
-}
-//</editor-fold>
-
-
 //<editor-fold desc="Поле ввода текста">
 @Composable
 fun TextFieldCity(
+    modifier: Modifier = Modifier,
     label: String,
     textIn: String? = "",
     isError: Boolean,
     needCallbackIn: StateFlow<Boolean>,
-    modifier: Modifier = Modifier,
     textResult: (String) -> Unit
 ) {
 

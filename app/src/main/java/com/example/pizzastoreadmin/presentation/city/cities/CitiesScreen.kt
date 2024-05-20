@@ -29,9 +29,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pizzastore.R
 import com.example.pizzastore.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.presentation.city.cities.states.CitiesScreenState
@@ -72,17 +74,6 @@ fun CitiesScreen(
     }
 }
 
-//<editor-fold desc="ShowToast">
-@Composable
-fun ShowToast(text: String) {
-    Toast.makeText(
-        LocalContext.current,
-        text,
-        Toast.LENGTH_SHORT
-    ).show()
-}
-//</editor-fold>
-
 //<editor-fold desc="Экран со списком городов">
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,12 +89,12 @@ fun ListCitiesScreen(
     val stateHolder = remember {
         mutableStateOf(
             CurrentStates(
-            citiesToDelete = mutableSetOf(),
-            isCitiesToDeleteEmpty = true,
-            isButtonClicked = false,
-            isItemClicked = false,
-            currentCity = null
-        )
+                citiesToDelete = mutableSetOf(),
+                isCitiesToDeleteEmpty = true,
+                isButtonClicked = false,
+                isItemClicked = false,
+                currentCity = null
+            )
         )
 
     }
@@ -139,10 +130,12 @@ fun ListCitiesScreen(
                 isCitiesToDeleteEmpty = true
             )
         }
+
         is WarningState.DeleteIncomplete -> {
             ShowToast(text = currentWarningStateValue.description)
             viewModel.warningCollected()
         }
+
         WarningState.Nothing -> {}
     }
 
@@ -162,7 +155,11 @@ fun ListCitiesScreen(
                     stateHolder.value = currentStateValue.copy(isButtonClicked = true)
                 }) {
                 Text(
-                    text = if (currentStateValue.isCitiesToDeleteEmpty) "ADD" else "DELETE",
+                    text = if (currentStateValue.isCitiesToDeleteEmpty) {
+                        stringResource(R.string.add_button)
+                    } else {
+                        stringResource(R.string.delete_button)
+                    },
                     fontSize = 24.sp
                 )
             }
@@ -199,6 +196,16 @@ fun ListCitiesScreen(
 }
 //</editor-fold>
 
+//<editor-fold desc="ShowToast">
+@Composable
+fun ShowToast(text: String) {
+    Toast.makeText(
+        LocalContext.current,
+        text,
+        Toast.LENGTH_SHORT
+    ).show()
+}
+//</editor-fold>
 
 //<editor-fold desc="Строка с чекбоксом">
 @Composable
@@ -232,7 +239,6 @@ fun CityRow(
     }
 }
 //</editor-fold>
-
 
 //<editor-fold desc="Разделитель">
 @Composable

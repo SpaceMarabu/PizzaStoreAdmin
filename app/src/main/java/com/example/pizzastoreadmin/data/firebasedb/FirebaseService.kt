@@ -1,9 +1,11 @@
 package com.example.pizzastoreadmin.data.firebasedb
 
+import android.net.Uri
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.domain.entity.Product
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
 
 interface FirebaseService {
 
@@ -18,4 +20,12 @@ interface FirebaseService {
     suspend fun addOrEditCity(city: City): DBResponse
 
     suspend fun deleteCity(cities: List<City>): DBResponse
+
+    suspend fun putImageToStorage(name: String, type: String, imageByte: ByteArray): DBResponse
+
+    suspend fun deletePictures(listToDelete: List<Uri>): Boolean
+
+    fun getListUriFlow(): SharedFlow<List<Uri>>
+
+    suspend fun loadPictures(type: String)
 }

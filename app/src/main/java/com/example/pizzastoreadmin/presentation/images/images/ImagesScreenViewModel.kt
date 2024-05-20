@@ -1,14 +1,12 @@
 package com.example.pizzastoreadmin.presentation.images.images
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.usecases.business.DeletePicturesUseCase
 import com.example.pizzastoreadmin.domain.usecases.business.GetListPicturesUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.PostCurrentPictureTypeUseCase
-import com.example.pizzastoreadmin.domain.usecases.service.SetCurrentProductImageUriUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -17,7 +15,6 @@ import javax.inject.Inject
 class ImagesScreenViewModel @Inject constructor(
     private val getListPicturesUseCase: GetListPicturesUseCase,
     private val postCurrentPictureTypeUseCase: PostCurrentPictureTypeUseCase,
-    private val setCurrentProductImageUriUseCase: SetCurrentProductImageUriUseCase,
     private val deleteImageUriUseCase: DeletePicturesUseCase
 ) : ViewModel() {
 
@@ -33,7 +30,7 @@ class ImagesScreenViewModel @Inject constructor(
     init {
         changeScreenState(ImagesScreenState.Content)
         subscribeListPicturesFlow()
-        changeImagesType(PictureType.PIZZA)
+        changeImagesType()
     }
 
     //<editor-fold desc="subscribeListPicturesFlow">
@@ -60,29 +57,25 @@ class ImagesScreenViewModel @Inject constructor(
     )
     //</editor-fold>
 
-    //<editor-fold desc="setProductImageUri">
-    fun setProductImageUri(imageUri: Uri) {
-        viewModelScope.launch {
-            setCurrentProductImageUriUseCase.setUri(imageUri)
-        }
-    }
-    //</editor-fold>
-
+    //<editor-fold desc="deleteImages">
     fun deleteImages(listUri: List<Uri>) {
         viewModelScope.launch {
             _isLoadingContent.emit(true)
         }
         deleteImageUriUseCase.deletePictures(listUri)
     }
+    //</editor-fold>
 
+    //<editor-fold desc="changeScreenState">
     private fun changeScreenState(state: ImagesScreenState) {
         viewModelScope.launch {
             _state.emit(state)
         }
     }
+    //</editor-fold>
 
     //<editor-fold desc="changeImagesType">
-    fun changeImagesType(type: PictureType) {
+    fun changeImagesType(type: PictureType = PictureType.PIZZA) {
         viewModelScope.launch {
             _isLoadingContent.emit(true)
             postCurrentPictureTypeUseCase.postType(type)

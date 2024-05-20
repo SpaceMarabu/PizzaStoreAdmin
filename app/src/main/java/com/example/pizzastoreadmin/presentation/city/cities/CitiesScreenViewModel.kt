@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.City
-import com.example.pizzastoreadmin.domain.usecases.business.AddOrEditCItyUseCase
 import com.example.pizzastoreadmin.domain.usecases.business.DeleteCityUseCase
 import com.example.pizzastoreadmin.domain.usecases.business.GetAllCitiesUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.GetDbResponseUseCase
@@ -19,7 +18,6 @@ import javax.inject.Inject
 
 class CitiesScreenViewModel @Inject constructor(
     private val getCitiesUseCase: GetAllCitiesUseCase,
-    private val addOrEditCityUseCase: AddOrEditCItyUseCase,
     private val deleteCityUseCase: DeleteCityUseCase,
     private val setCurrentCityUseCase: SetCurrentCityUseCase,
     private val getDbResponseUseCase: GetDbResponseUseCase
@@ -74,10 +72,6 @@ class CitiesScreenViewModel @Inject constructor(
         setCurrentCityUseCase.setCity(city)
     }
 
-    private fun addOrEditCity(city: City) {
-        addOrEditCityUseCase.addOrEditCity(city)
-    }
-
     fun deleteCity(cities: List<City>) {
         deleteCityUseCase.deleteCity(cities)
     }
@@ -85,12 +79,6 @@ class CitiesScreenViewModel @Inject constructor(
     fun warningCollected() {
         viewModelScope.launch {
             _warningState.emit(WarningState.Nothing)
-        }
-    }
-
-    fun changeScreenState(state: CitiesScreenState) {
-        viewModelScope.launch {
-            _state.emit(state)
         }
     }
 }

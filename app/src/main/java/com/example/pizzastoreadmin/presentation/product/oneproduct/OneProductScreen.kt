@@ -6,11 +6,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Divider
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
@@ -33,14 +30,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -50,13 +45,13 @@ import com.example.pizzastore.R
 import com.example.pizzastore.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.ProductType
 import com.example.pizzastoreadmin.navigation.Screen
-import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
-import com.example.pizzastoreadmin.presentation.funs.dropdown.DropDownTextField
 import com.example.pizzastoreadmin.presentation.funs.dropdown.DropDownMenuStates
+import com.example.pizzastoreadmin.presentation.funs.dropdown.DropDownTextField
 import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
 import com.example.pizzastoreadmin.presentation.product.oneproduct.states.EditType
 import com.example.pizzastoreadmin.presentation.product.oneproduct.states.OneProductScreenState
+import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
 
 @Composable
 fun OneProductScreen(
@@ -95,6 +90,7 @@ fun OneProductScreen(
     }
 }
 
+//<editor-fold desc="OneProductScreenContent">
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OneProductScreenContent(
@@ -133,11 +129,7 @@ fun OneProductScreenContent(
         .build()
 
     val painter = rememberAsyncImagePainter(
-        model = request,
-        onState = {
-//            imageState.value = it
-            it
-        }
+        model = request
     )
 
     var dropDownMenuStates by remember {
@@ -189,11 +181,10 @@ fun OneProductScreenContent(
                         ),
                     shape = RoundedCornerShape(10.dp),
                     onClick = {
-                        val currentProduct = currentProductState.product
                         viewModel.exitScreen()
                     }) {
                     Text(
-                        text = "DONE",
+                        text = stringResource(id = R.string.done_button),
                         fontSize = 24.sp
                     )
                 }
@@ -266,60 +257,16 @@ fun OneProductScreenContent(
         }
     }
 }
-
-
-//<editor-fold desc="Кнопка">
-@Composable
-fun ButtonWithText(
-    modifier: Modifier = Modifier,
-    text: String,
-    width: Dp,
-    color: Color = Color.Black,
-    onButtonClicked: () -> Unit
-) {
-    Row(
-        modifier = modifier
-            .width(width)
-            .height(40.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(color)
-            .clickable {
-                onButtonClicked()
-            },
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = text,
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
 //</editor-fold>
-
-//<editor-fold desc="Разделитель">
-@Composable
-fun DividerList() {
-    Divider(
-        modifier = Modifier
-            .padding(start = 8.dp, top = 8.dp),
-        color = Color.Gray,
-        thickness = 1.dp
-    )
-}
-//</editor-fold>
-
 
 //<editor-fold desc="Поле ввода текста">
 @Composable
 fun TextFieldProduct(
+    modifier: Modifier = Modifier,
     label: String,
     textIn: String? = "",
     isError: Boolean = false,
     needCallback: Boolean,
-    modifier: Modifier = Modifier,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     textResult: (String) -> Unit
 ) {
@@ -360,5 +307,4 @@ fun TextFieldProduct(
         keyboardOptions = keyboardOptions
     )
 }
-
 //</editor-fold>

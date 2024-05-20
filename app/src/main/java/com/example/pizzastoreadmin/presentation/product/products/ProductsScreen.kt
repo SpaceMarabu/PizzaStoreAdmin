@@ -1,6 +1,5 @@
 package com.example.pizzastoreadmin.presentation.product.products
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -39,12 +38,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pizzastore.R
 import com.example.pizzastore.di.getApplicationComponent
-import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.entity.Product
 import com.example.pizzastoreadmin.domain.entity.ProductType
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
@@ -86,16 +86,6 @@ fun ProductsScreen(
     }
 }
 
-//<editor-fold desc="ShowToast">
-@Composable
-fun ShowToast(text: String) {
-    Toast.makeText(
-        LocalContext.current,
-        text,
-        Toast.LENGTH_SHORT
-    ).show()
-}
-//</editor-fold>
 
 //<editor-fold desc="Экран со списком продуктов">
 @OptIn(ExperimentalMaterial3Api::class)
@@ -189,7 +179,11 @@ fun ListProductsScreen(
                     stateHolder.value = currentStateValue.copy(isButtonClicked = true)
                 }) {
                 Text(
-                    text = if (currentStateValue.isProductsToDeleteEmpty) "ADD" else "DELETE",
+                    text = if (currentStateValue.isProductsToDeleteEmpty) {
+                        stringResource(R.string.add_button)
+                    } else {
+                        stringResource(R.string.delete_button)
+                    },
                     fontSize = 24.sp
                 )
             }
@@ -267,6 +261,16 @@ fun ListProductsScreen(
 }
 //</editor-fold>
 
+//<editor-fold desc="ShowToast">
+@Composable
+fun ShowToast(text: String) {
+    Toast.makeText(
+        LocalContext.current,
+        text,
+        Toast.LENGTH_SHORT
+    ).show()
+}
+//</editor-fold>
 
 //<editor-fold desc="Строка с чекбоксом">
 @Composable
@@ -300,7 +304,6 @@ fun ProductRow(
     }
 }
 //</editor-fold>
-
 
 //<editor-fold desc="Разделитель">
 @Composable

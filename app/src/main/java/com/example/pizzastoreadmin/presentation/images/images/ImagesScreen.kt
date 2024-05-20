@@ -26,7 +26,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -43,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -69,7 +69,6 @@ fun ImagesScreen(
 
     val screenState by viewModel.state.collectAsState()
 
-
     when (screenState) {
 
         ImagesScreenState.Initial -> {}
@@ -92,6 +91,7 @@ fun ImagesScreen(
     }
 }
 
+//<editor-fold desc="ImagesScreenContent">
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ImagesScreenContent(
@@ -148,7 +148,11 @@ fun ImagesScreenContent(
                 }
             ) {
                 Text(
-                    text = if (currentListToDelete.isEmpty()) "ADD" else "DELETE",
+                    text = if (currentListToDelete.isEmpty()) {
+                        stringResource(R.string.add_button)
+                    } else {
+                        stringResource(R.string.delete_button)
+                    },
                     fontSize = 24.sp
                 )
             }
@@ -243,7 +247,6 @@ fun ImagesScreenContent(
                                                     currentListToDelete + index
                                             }
                                         } else {
-//                                            viewModel.setProductImageUri(imageUri)
                                             exitScreen(imageUri.toString())
                                         }
                                     }
@@ -301,6 +304,7 @@ fun ImagesScreenContent(
         }
     }
 }
+//</editor-fold>
 
 
 

@@ -19,7 +19,7 @@ interface PizzaStoreRepository {
 
     suspend fun getListImagesUseCase(): SharedFlow<List<Uri>>
 
-    fun putImageToStorage(name: String, type: String, imageByte: ByteArray)
+    fun putImageToStorageUseCase(name: String, type: String, imageByte: ByteArray)
 
     fun deleteImagesUseCase(listToDelete: List<Uri>)
 

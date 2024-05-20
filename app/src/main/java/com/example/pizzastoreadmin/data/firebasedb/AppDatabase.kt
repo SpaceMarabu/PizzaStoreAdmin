@@ -1,27 +1,28 @@
 package com.example.pizzastoreadmin.data.firebasedb
 
+import android.net.Uri
 import android.util.Log
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.domain.entity.Product
 import com.example.pizzastoreadmin.domain.entity.ProductType
-import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.Firebase
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.storage
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -37,6 +38,8 @@ class AppDatabase : FirebaseService {
 
     private val maxProductIdFlow = MutableStateFlow(-1)
     private val maxCityIdFlow = MutableStateFlow(-1)
+
+    private val listPicturesUriFlow: MutableSharedFlow<List<Uri>> = MutableSharedFlow(replay = 1)
 
     //<editor-fold desc="listProductsFlow">
     private val listProductsFlow = callbackFlow {
@@ -114,6 +117,7 @@ class AppDatabase : FirebaseService {
                         City(
                             id = key,
                             name = value.name,
+                            //filterNotNull - не бесполезный
                             points = value.points.filterNotNull()
                         )
                     )
@@ -138,6 +142,7 @@ class AppDatabase : FirebaseService {
     }
 
     //</editor-fold>
+
     override fun getListProductsFlow(): Flow<List<Product>> = listProductsFlow
 
     //<editor-fold desc="addOrEditProduct">
@@ -157,14 +162,14 @@ class AppDatabase : FirebaseService {
         withContext(Dispatchers.IO) {
             dRefProduct.child(productId)
                 .setValue(currentProduct)
-                .addOnSuccessListener(OnSuccessListener<Void?> {
+                .addOnSuccessListener {
                     deferred.complete(DBResponse.Complete)
-                })
-                .addOnFailureListener(OnFailureListener { e ->
+                }
+                .addOnFailureListener { e ->
                     deferred.complete(
                         DBResponse.Error("Не удалось изменить данные. $e")
                     )
-                })
+                }
             deferred.await()
         }
         return deferred.getCompleted()
@@ -181,9 +186,9 @@ class AppDatabase : FirebaseService {
                 val productId = product.id.toString()
                 dRefProduct.child(productId)
                     .removeValue()
-                    .addOnFailureListener(OnFailureListener { _ ->
+                    .addOnFailureListener { _ ->
                         haveErrors = true
-                    })
+                    }
             }
             deferred.await()
             deferred.complete(
@@ -240,9 +245,9 @@ class AppDatabase : FirebaseService {
                 val cityId = city.id.toString()
                 dRefCities.child(cityId)
                     .removeValue()
-                    .addOnFailureListener(OnFailureListener { _ ->
+                    .addOnFailureListener { _ ->
                         haveErrors = true
-                    })
+                    }
             }
             deferred.complete(
                 if (haveErrors) {
@@ -254,6 +259,124 @@ class AppDatabase : FirebaseService {
             deferred.await()
         }
         return deferred.getCompleted()
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="getListPictures">
+    override suspend fun loadPictures(type: String) {
+        withContext(Dispatchers.IO) {
+            val scope = CoroutineScope(Dispatchers.IO)
+            storageRef
+                .child(type)
+                .listAll()
+                .addOnSuccessListener { result ->
+                    val tempUriList = mutableListOf<Uri>()
+                    scope.launch {
+                        result
+                            .items
+                            .forEach { storageReference ->
+                                val uri = getUriByStorageReference(storageReference)
+                                tempUriList.add(uri)
+                            }
+                        listPicturesUriFlow.emit(tempUriList)
+                    }
+                }
+        }
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="getUriByStorageReference">
+    private suspend fun getUriByStorageReference(storageReference: StorageReference) =
+        withContext(Dispatchers.IO) {
+            val deferred = CompletableDeferred<Uri>()
+            storageReference
+                .downloadUrl
+                .addOnSuccessListener {
+                    if (it != null) {
+                        deferred.complete(it)
+                    }
+                }
+            deferred.await()
+        }
+//</editor-fold>
+
+    //<editor-fold desc="checkAvailabilityName">
+    private suspend fun checkAvailabilityName(name: String, type: String) =
+        withContext(Dispatchers.IO) {
+            var isAvailable = true
+            val regexTemplate = Regex("\\..+")
+            val deferred = CompletableDeferred<Boolean>()
+            storageRef
+                .child(type)
+                .listAll()
+                .addOnSuccessListener { result ->
+                    result.items.forEach { item ->
+                        val nameWithoutExtension = item.name.replace(regexTemplate, "")
+                        if (nameWithoutExtension == name) {
+                            isAvailable = false
+                            return@forEach
+                        }
+                    }
+                    deferred.complete(isAvailable)
+                }
+            deferred.await()
+        }
+//</editor-fold>
+
+    //<editor-fold desc="putImageToStorage">
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override suspend fun putImageToStorage(
+        name: String,
+        type: String,
+        imageByte: ByteArray
+    ): DBResponse {
+        val deferred = CompletableDeferred<DBResponse>()
+        withContext(Dispatchers.IO) {
+            var counter = 1
+            var nameToPut = name
+            var needNextCheck = true
+            while (needNextCheck) {
+                val isAvailableName = checkAvailabilityName(nameToPut, type)
+                if (isAvailableName) {
+                    needNextCheck = false
+                } else {
+                    nameToPut = "${name}${counter++}"
+                }
+            }
+            storageRef
+                .child(type)
+                .child(nameToPut)
+                .putBytes(imageByte)
+                .addOnSuccessListener {
+                    deferred.complete(DBResponse.Complete)
+                }
+                .addOnFailureListener {
+                    deferred.complete(DBResponse.Error(it.toString()))
+                }
+            deferred.await()
+        }
+        return deferred.getCompleted()
+    }
+    //</editor-fold>
+
+    override fun getListUriFlow(): SharedFlow<List<Uri>> = listPicturesUriFlow.asSharedFlow()
+
+    //<editor-fold desc="deletePictures">
+    override suspend fun deletePictures(listToDelete: List<Uri>): Boolean {
+        listToDelete.forEach {
+            val uriString = it.toString()
+            val startSubstring = uriString.indexOf("/product")
+            val endSubstring = uriString.indexOf("?alt")
+            val currentAddressToDelete = uriString
+                .substring(startSubstring, endSubstring)
+                .replace("%2F", "/")
+                .replace("/product", "")
+            CoroutineScope(Dispatchers.IO).launch {
+                storageRef.child(currentAddressToDelete)
+                    .delete()
+            }
+        }
+        return true
     }
     //</editor-fold>
 }
