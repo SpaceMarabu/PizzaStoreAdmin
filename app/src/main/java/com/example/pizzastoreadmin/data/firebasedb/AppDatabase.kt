@@ -262,7 +262,7 @@ class AppDatabase : FirebaseService {
     }
     //</editor-fold>
 
-    //<editor-fold desc="getListPictures">
+    //<editor-fold desc="loadPictures">
     override suspend fun loadPictures(type: String) {
         withContext(Dispatchers.IO) {
             val scope = CoroutineScope(Dispatchers.IO)
@@ -359,7 +359,7 @@ class AppDatabase : FirebaseService {
     }
     //</editor-fold>
 
-    override fun getListUriFlow(): SharedFlow<List<Uri>> = listPicturesUriFlow.asSharedFlow()
+    override fun getListUriFlow() = listPicturesUriFlow.asSharedFlow()
 
     //<editor-fold desc="deletePictures">
     override suspend fun deletePictures(listToDelete: List<Uri>): Boolean {

@@ -63,6 +63,7 @@ class ProductsScreenViewModel @Inject constructor(
     }
     //</editor-fold>
 
+    //<editor-fold desc="loadCities">
     private fun loadCities() {
         _state.value = ProductsScreenState.Loading
         viewModelScope.launch {
@@ -75,6 +76,7 @@ class ProductsScreenViewModel @Inject constructor(
                 }
         }
     }
+    //</editor-fold>
 
     //<editor-fold desc="getAllProductTypes">
     fun getAllProductTypes() = listOf(
@@ -96,6 +98,7 @@ class ProductsScreenViewModel @Inject constructor(
     }
     //</editor-fold>
 
+    //<editor-fold desc="sortListProducts">
     private fun sortListProducts(products: List<Product>): List<Product> {
         val types = getAllProductTypes()
         val resultList = mutableListOf<Product>()
@@ -115,24 +118,25 @@ class ProductsScreenViewModel @Inject constructor(
         }
         return resultList
     }
+    //</editor-fold>
 
+    //<editor-fold desc="setCurrentProduct">
     fun setCurrentProduct(product: Product? = null) {
         setCurrentProductUseCase.setProduct(product)
     }
+    //</editor-fold>
 
+    //<editor-fold desc="deleteProduct">
     fun deleteProduct(products: List<Product>) {
         deleteProductUseCase.deleteProduct(products)
     }
+    //</editor-fold>
 
+    //<editor-fold desc="warningCollected">
     fun warningCollected() {
         viewModelScope.launch {
             _warningState.emit(WarningState.Nothing)
         }
     }
-
-    fun changeScreenState(state: ProductsScreenState) {
-        viewModelScope.launch {
-            _state.emit(state)
-        }
-    }
+    //</editor-fold>
 }
