@@ -1,7 +1,9 @@
-package com.example.pizzastoreadmin.data.firebasedb
+package com.example.pizzastoreadmin.data.remotedb
 
 import android.net.Uri
 import android.util.Log
+import com.example.pizzastoreadmin.data.remotedb.entity.BucketDto
+import com.example.pizzastoreadmin.data.remotedb.entity.OrderDto
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.domain.entity.Product
@@ -21,7 +23,6 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
@@ -32,6 +33,7 @@ class AppDatabase : FirebaseService {
     private val firebaseDatabase = FirebaseDatabase.getInstance()
     private val dRefCities = firebaseDatabase.getReference("cities")
     private val dRefProduct = firebaseDatabase.getReference("product")
+    private val dRefOrder = firebaseDatabase.getReference("order")
 
     private val firebaseStorage = Firebase.storage("gs://pizzastore-b379f.appspot.com")
     private val storageRef = firebaseStorage.reference.child("product")
@@ -49,7 +51,6 @@ class AppDatabase : FirebaseService {
                 val listProducts = mutableListOf<Product>()
                 maxProductIdFlow.value = -1
                 for (dataFromChildren in dataSnapshot.children) {
-                    dataFromChildren.key
                     val key: Int = dataFromChildren.key?.toInt() ?: continue
                     if (maxProductIdFlow.value < key) {
                         maxProductIdFlow.value = key
@@ -143,7 +144,9 @@ class AppDatabase : FirebaseService {
 
     //</editor-fold>
 
+    //<editor-fold desc="getListProductsFlow">
     override fun getListProductsFlow(): Flow<List<Product>> = listProductsFlow
+    //</editor-fold>
 
     //<editor-fold desc="addOrEditProduct">
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -203,7 +206,9 @@ class AppDatabase : FirebaseService {
     }
     //</editor-fold>
 
+    //<editor-fold desc="getListCitiesFlow">
     override fun getListCitiesFlow(): Flow<List<City>> = listCitiesFlow
+    //</editor-fold>
 
     //<editor-fold desc="addOrEditCity">
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -359,7 +364,9 @@ class AppDatabase : FirebaseService {
     }
     //</editor-fold>
 
+    //<editor-fold desc="getListUriFlow">
     override fun getListUriFlow() = listPicturesUriFlow.asSharedFlow()
+    //</editor-fold>
 
     //<editor-fold desc="deletePictures">
     override suspend fun deletePictures(listToDelete: List<Uri>): Boolean {
@@ -379,4 +386,67 @@ class AppDatabase : FirebaseService {
         return true
     }
     //</editor-fold>
+
+    //<editor-fold desc="getListOrdersFlow">
+    override fun getListOrdersFlow() = callbackFlow {
+
+        val postListener = object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                val listOrders = mutableListOf<OrderDto>()
+                for (dataFromChildren in dataSnapshot.children) {
+                    val key: Int = dataFromChildren.key?.toInt() ?: continue
+
+                    val status = dataFromChildren.child("status").value.toString()
+                    val bucket = dataFromChildren
+                        .child("bucket").getValue(BucketDto::class.java) ?: BucketDto()
+                    listOrders.add(
+                        OrderDto(
+                            id = key,
+                            status = status,
+                            bucket = bucket
+                        )
+                    )
+                }
+                val returnList = listOrders.toList()
+                trySend(returnList)
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                Log.w(
+                    "PizzaStoreFirebaseImpl",
+                    "loadCities:onCancelled",
+                    databaseError.toException()
+                )
+            }
+        }
+        dRefOrder.addValueEventListener(postListener)
+
+        awaitClose {
+            dRefOrder.removeEventListener(postListener)
+        }
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="editOrder">
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override suspend fun editOrder(orderDto: OrderDto): DBResponse {
+
+        val deferred = CompletableDeferred<DBResponse>()
+        withContext(Dispatchers.IO) {
+            dRefOrder.child(orderDto.id.toString())
+                .setValue(orderDto)
+                .addOnSuccessListener {
+                    deferred.complete(DBResponse.Complete)
+                }
+                .addOnFailureListener { e ->
+                    deferred.complete(
+                        DBResponse.Error("Что-то пошло не так. $e")
+                    )
+                }
+            deferred.await()
+        }
+        return deferred.getCompleted()
+    }
+    //</editor-fold>
+
 }

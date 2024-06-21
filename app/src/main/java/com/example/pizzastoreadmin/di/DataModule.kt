@@ -1,8 +1,8 @@
 package com.example.pizzastoreadmin.di
 
 import com.example.pizzastore.di.ApplicationScope
-import com.example.pizzastoreadmin.data.firebasedb.AppDatabase
-import com.example.pizzastoreadmin.data.firebasedb.FirebaseService
+import com.example.pizzastoreadmin.data.remotedb.AppDatabase
+import com.example.pizzastoreadmin.data.remotedb.FirebaseService
 import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
 import com.example.pizzastoreadmin.data.repository.PizzaStoreRepositoryImpl
 import dagger.Binds

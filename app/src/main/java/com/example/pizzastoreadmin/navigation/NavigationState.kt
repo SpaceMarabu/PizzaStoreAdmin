@@ -26,22 +26,6 @@ class NavigationState(
         }
     }
 
-    fun navigateWithPopInclusive(route: String) {
-        navHostController.navigate(route) {
-            popUpTo(navHostController.graph.findStartDestination().id) {
-//                saveState = true
-                inclusive = true
-            }
-        }
-    }
-
-    fun navigateWithoutPop(route: String) {
-        navHostController.navigate(route) {
-            restoreState = true
-            launchSingleTop = true
-        }
-    }
-
     fun navigateToProduct(uriString: String = Screen.EMPTY_ARG) {
         val encodedUri = if (uriString != Screen.EMPTY_ARG) {
             URLEncoder.encode(uriString, StandardCharsets.UTF_8.toString())

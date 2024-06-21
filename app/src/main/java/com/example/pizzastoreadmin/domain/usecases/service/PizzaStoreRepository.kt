@@ -1,4 +1,4 @@
-package com.example.pizzastoreadmin.domain.repository
+package com.example.pizzastoreadmin.domain.usecases.service
 
 import android.net.Uri
 import com.example.pizzastoreadmin.domain.entity.Order

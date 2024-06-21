@@ -7,6 +7,7 @@ import com.example.pizzastoreadmin.presentation.city.cities.CitiesScreenViewMode
 import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreenViewModel
 import com.example.pizzastoreadmin.presentation.images.images.ImagesScreenViewModel
 import com.example.pizzastoreadmin.presentation.images.oneimage.OneImageScreenViewModel
+import com.example.pizzastoreadmin.presentation.order.orders.OrdersScreenViewModel
 import com.example.pizzastoreadmin.presentation.product.oneproduct.OneProductScreenViewModel
 import com.example.pizzastoreadmin.presentation.product.products.ProductsScreenViewModel
 import dagger.Binds
@@ -50,5 +51,10 @@ interface ViewModelModule {
     @ViewModelKey(ProductsScreenViewModel::class)
     @Binds
     fun bindProductsScreenViewModel(viewModel: ProductsScreenViewModel): ViewModel
+
+    @IntoMap
+    @ViewModelKey(OrdersScreenViewModel::class)
+    @Binds
+    fun bindOrdersScreenViewModel(viewModel: OrdersScreenViewModel): ViewModel
 
 }

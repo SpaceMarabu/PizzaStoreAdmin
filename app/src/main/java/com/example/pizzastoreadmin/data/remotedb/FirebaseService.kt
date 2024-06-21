@@ -1,6 +1,7 @@
-package com.example.pizzastoreadmin.data.firebasedb
+package com.example.pizzastoreadmin.data.remotedb
 
 import android.net.Uri
+import com.example.pizzastoreadmin.data.remotedb.entity.OrderDto
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.domain.entity.Product
@@ -28,4 +29,8 @@ interface FirebaseService {
     fun getListUriFlow(): SharedFlow<List<Uri>>
 
     suspend fun loadPictures(type: String)
+
+    fun getListOrdersFlow(): Flow<List<OrderDto>>
+
+    suspend fun editOrder(orderDto: OrderDto): DBResponse
 }
