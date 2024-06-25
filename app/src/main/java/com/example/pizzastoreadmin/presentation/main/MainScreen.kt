@@ -24,6 +24,7 @@ import com.example.pizzastoreadmin.presentation.city.cities.CitiesScreen
 import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreen
 import com.example.pizzastoreadmin.presentation.images.images.ImagesScreen
 import com.example.pizzastoreadmin.presentation.images.oneimage.OneImageScreen
+import com.example.pizzastoreadmin.presentation.order.orders.OrdersScreen
 import com.example.pizzastoreadmin.presentation.product.oneproduct.OneProductScreen
 import com.example.pizzastoreadmin.presentation.product.products.ProductsScreen
 
@@ -41,7 +42,8 @@ fun MainScreen() {
 
                 val items = listOf(
                     NavigationItem.Cities,
-                    NavigationItem.Admin
+                    NavigationItem.Admin,
+                    NavigationItem.Orders
                 )
 //                val currentRoute = navBackStackEntry?.destination?.route
 
@@ -121,6 +123,14 @@ fun MainScreen() {
             productsScreenContent = {
                 ProductsScreen(paddingValues = paddingValues) {
                     navigationState.navigateTo(Screen.ROUTE_ONE_PRODUCT)
+                }
+            },
+            oneOrderScreenContent = {
+                
+            },
+            ordersScreenContent = {
+                OrdersScreen(paddingValues = paddingValues) {
+                    
                 }
             }
         )

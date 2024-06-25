@@ -1,8 +1,10 @@
 package com.example.pizzastoreadmin.presentation.order.orders
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Divider
 import androidx.compose.material3.Text
@@ -14,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pizzastore.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.Order
+import com.example.pizzastoreadmin.domain.entity.OrderStatus
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 
 @Composable
@@ -27,16 +30,17 @@ fun OrdersScreen(
 
     val screenState = viewModel.screenState.collectAsState()
 
-
-    when (screenState.value) {
+    when (val currentScreenState = screenState.value) {
 
         is OrderScreenState.Content -> {
-
+            OrdersScreenContent(
+                paddingValues = paddingValues,
+                orders = currentScreenState.orders,
+                viewModel = viewModel
+            )
         }
 
-        OrderScreenState.Initial -> {
-
-        }
+        OrderScreenState.Initial -> {}
 
         OrderScreenState.Loading -> {
             CircularLoading()
@@ -53,11 +57,17 @@ fun OrdersScreenContent(
 ) {
 
     Column {
-        Row {
-            Text(text = )
+        Row (
+            horizontalArrangement = Arrangement.End
+        ){
+            Spacer(modifier = Modifier.weight(1f))
+            Text(text = "Фильтр")
         }
     }
 }
+
+@Composable
+fun FilterMenu(filteredList: List<OrderStatus>)
 
 //<editor-fold desc="Разделитель">
 @Composable

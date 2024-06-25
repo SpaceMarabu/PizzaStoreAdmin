@@ -3,6 +3,7 @@ package com.example.pizzastoreadmin.presentation.order.orders
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
+import com.example.pizzastoreadmin.domain.entity.Order
 import com.example.pizzastoreadmin.domain.entity.OrderStatus
 import com.example.pizzastoreadmin.domain.usecases.business.GetAllOrdersUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.GetDbResponseUseCase
@@ -11,6 +12,7 @@ import com.example.pizzastoreadmin.presentation.product.products.states.WarningS
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,7 +25,8 @@ class OrdersScreenViewModel @Inject constructor(
     private val _screenState = MutableStateFlow<OrderScreenState>(OrderScreenState.Initial)
     val screenState = _screenState.asStateFlow()
 
-    private val
+    private val _currentFilterFlow = MutableStateFlow<List<OrderStatus>>(listOf())
+    val currentFilterFlow = _currentFilterFlow.asStateFlow()
 
     private val _warningState = MutableStateFlow<WarningState>(WarningState.Nothing)
     val warningState = _warningState.asStateFlow()
@@ -57,13 +60,18 @@ class OrdersScreenViewModel @Inject constructor(
 
     //<editor-fold desc="loadCities">
     private fun loadProducts() {
-        _state.value = OrderScreenState.Loading
+        _screenState.value = OrderScreenState.Loading
         viewModelScope.launch {
             getOrdersUseCase
                 .getOrdersFlow()
                 .filter { it.isNotEmpty() }
+                .map { caughtList ->
+                    caughtList.filter {
+                        it.status !in _currentFilterFlow.value
+                    }
+                }
                 .collect {
-                    _state.value = OrderScreenState.Content(it)
+                    _screenState.value = OrderScreenState.Content(it)
                 }
         }
     }
@@ -85,6 +93,19 @@ class OrdersScreenViewModel @Inject constructor(
             OrderStatus.FINISH -> "FINISH"
             OrderStatus.ACCEPT -> "ACCEPT"
         }
+    //</editor-fold>
+
+    //<editor-fold desc="changeFilter">
+    fun changeFilter(filter: List<OrderStatus>) {
+        _currentFilterFlow.value = filter
+        val currentScreenState = _screenState.value
+        if (currentScreenState is OrderScreenState.Content) {
+            val newOrders = currentScreenState.orders.filter {
+                it.status !in filter
+            }
+            _screenState.value = currentScreenState.copy(orders = newOrders)
+        }
+    }
     //</editor-fold>
 
 }

@@ -14,7 +14,9 @@ fun AppNavGraph(
     oneImageScreenContent: @Composable () -> Unit,
     imagesScreenContent: @Composable () -> Unit,
     oneProductScreenContent: @Composable (String?) -> Unit,
-    productsScreenContent: @Composable () -> Unit
+    productsScreenContent: @Composable () -> Unit,
+    oneOrderScreenContent: @Composable () -> Unit,
+    ordersScreenContent: @Composable () -> Unit
 ) {
     NavHost(
         navController = navHostController,
@@ -31,6 +33,10 @@ fun AppNavGraph(
         productScreenNavGraph(
             productsScreenContent = productsScreenContent,
             oneProductScreenContent = oneProductScreenContent
+        )
+        orderScreenNavGraph(
+            ordersScreenContent = ordersScreenContent,
+            oneOrderScreenContent = oneOrderScreenContent
         )
     }
 }

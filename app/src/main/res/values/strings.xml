@@ -8,4 +8,5 @@
     <string name="done_button">DONE</string>
     <string name="add_button">ADD</string>
     <string name="delete_button">DELETE</string>
+    <string name="order">Order</string>
 </resources>

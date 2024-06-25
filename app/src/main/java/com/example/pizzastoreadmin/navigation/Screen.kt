@@ -21,6 +21,9 @@ sealed class Screen(
     }
     object Product : Screen(ROUTE_PRODUCTS)
     object Products : Screen(ROUTE_PRODUCT)
+    object Orders : Screen(ROUTE_ORDERS)
+    object OneOrder : Screen(ROUTE_ONE_ORDER)
+    object Order : Screen(ROUTE_ORDER)
 
 
     companion object {
@@ -40,5 +43,9 @@ sealed class Screen(
         const val ROUTE_ONE_PRODUCT = "one_product/{$KEY_URI_STRING}"
         const val ROUTE_PRODUCTS = "products"
         const val ROUTE_PRODUCT = "product"
+
+        const val ROUTE_ORDERS = "orders"
+        const val ROUTE_ONE_ORDER = "one_order"
+        const val ROUTE_ORDER = "order"
     }
 }

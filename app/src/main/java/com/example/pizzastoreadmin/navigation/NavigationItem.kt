@@ -19,4 +19,10 @@ sealed class NavigationItem(
         titleResId = R.string.admin,
         icon = R.drawable.ic_admin
     )
+
+    object Orders : NavigationItem(
+        screen = Screen.Order,
+        titleResId = R.string.order,
+        icon = R.drawable.ic_order
+    )
 }

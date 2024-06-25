@@ -9,8 +9,7 @@ sealed class OrderScreenState() {
     object Loading : OrderScreenState()
 
     data class Content(
-        val orders: List<Order>,
-        val statusFilter: List<OrderStatus>
+        val orders: List<Order>
     ): OrderScreenState()
 
 }

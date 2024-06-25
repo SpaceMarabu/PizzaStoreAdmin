@@ -39,7 +39,3 @@ fun NavGraphBuilder.productScreenNavGraph(
         }
     }
 }
-
-//val indexSubstring = uriString.indexOf("/o/") + 3
-//val sliceForEncode = uriString.substring(0, indexSubstring)
-//val sliceWithoutEncode = uriString.substring(indexSubstring)
