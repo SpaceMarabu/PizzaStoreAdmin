@@ -1,5 +1,6 @@
 package com.example.pizzastoreadmin.presentation.order.orders
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
@@ -25,7 +26,9 @@ class OrdersScreenViewModel @Inject constructor(
     private val _screenState = MutableStateFlow<OrderScreenState>(OrderScreenState.Initial)
     val screenState = _screenState.asStateFlow()
 
-    private val _currentFilterFlow = MutableStateFlow<List<OrderStatus>>(listOf())
+    private val _sourceOrdersFlow = MutableStateFlow<List<Order>>(listOf())
+
+    private val _currentFilterFlow = MutableStateFlow(FilterState.initFilter())
     val currentFilterFlow = _currentFilterFlow.asStateFlow()
 
     private val _warningState = MutableStateFlow<WarningState>(WarningState.Nothing)
@@ -66,8 +69,10 @@ class OrdersScreenViewModel @Inject constructor(
                 .getOrdersFlow()
                 .filter { it.isNotEmpty() }
                 .map { caughtList ->
+                    _sourceOrdersFlow.value = caughtList
                     caughtList.filter {
-                        it.status !in _currentFilterFlow.value
+                        val currentFilter = _currentFilterFlow.value
+                        !(currentFilter.filterMap[it.status] ?: false)
                     }
                 }
                 .collect {
@@ -96,12 +101,16 @@ class OrdersScreenViewModel @Inject constructor(
     //</editor-fold>
 
     //<editor-fold desc="changeFilter">
-    fun changeFilter(filter: List<OrderStatus>) {
-        _currentFilterFlow.value = filter
+    fun changeFilter(status: OrderStatus, value: Boolean) {
+        val filterStateMap = _currentFilterFlow.value.filterMap.toMutableMap()
+        filterStateMap[status] = value
+        _currentFilterFlow.value = FilterState(filterStateMap)
+        Log.d("TEST_TEST", _currentFilterFlow.value.hashCode().toString())
+        val currentFilterFlowValue = _currentFilterFlow.value
         val currentScreenState = _screenState.value
         if (currentScreenState is OrderScreenState.Content) {
-            val newOrders = currentScreenState.orders.filter {
-                it.status !in filter
+            val newOrders = _sourceOrdersFlow.value.filter {
+                !(currentFilterFlowValue.filterMap[it.status] ?: false)
             }
             _screenState.value = currentScreenState.copy(orders = newOrders)
         }

@@ -51,7 +51,6 @@ fun MainScreen() {
 
                     val selected = navBackStackEntry?.destination?.hierarchy?.any {
 //                        Log.d("TEST_TEST", navBackStackEntry?.destination?.hierarchy!!.joinToString(" "))
-                        Log.d("TEST_TEST", it.route.toString() + " " + item.screen.route)
                         it.route == item.screen.route
                     } ?: false
 
