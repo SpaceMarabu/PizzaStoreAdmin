@@ -48,6 +48,7 @@ import com.example.pizzastore.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.Product
 import com.example.pizzastoreadmin.domain.entity.ProductType
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
+import com.example.pizzastoreadmin.presentation.funs.DividerList
 import com.example.pizzastoreadmin.presentation.product.products.states.CurrentStates
 import com.example.pizzastoreadmin.presentation.product.products.states.ProductsScreenState
 import com.example.pizzastoreadmin.presentation.product.products.states.WarningState
@@ -302,17 +303,5 @@ fun ProductRow(
             fontSize = 24.sp
         )
     }
-}
-//</editor-fold>
-
-//<editor-fold desc="Разделитель">
-@Composable
-fun DividerList() {
-    Divider(
-        modifier = Modifier
-            .padding(start = 8.dp, top = 8.dp),
-        color = Color.Gray,
-        thickness = 1.dp
-    )
 }
 //</editor-fold>

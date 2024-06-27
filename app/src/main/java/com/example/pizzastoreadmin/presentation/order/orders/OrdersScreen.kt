@@ -3,10 +3,12 @@ package com.example.pizzastoreadmin.presentation.order.orders
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -15,7 +17,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Text
@@ -29,21 +30,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pizzastore.R
 import com.example.pizzastore.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.Order
+import com.example.pizzastoreadmin.domain.entity.OrderStatus
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
+import com.example.pizzastoreadmin.presentation.funs.DividerList
 import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
 
 @Composable
 fun OrdersScreen(
     paddingValues: PaddingValues,
-    onAddOrCityClicked: () -> Unit
+    onOrderClicked: () -> Unit
 ) {
 
     val component = getApplicationComponent()
@@ -58,7 +63,9 @@ fun OrdersScreen(
                 paddingValues = paddingValues,
                 orders = currentScreenState.orders,
                 viewModel = viewModel
-            )
+            ) {
+                onOrderClicked()
+            }
         }
 
         OrderScreenState.Initial -> {}
@@ -74,7 +81,8 @@ fun OrdersScreen(
 fun OrdersScreenContent(
     paddingValues: PaddingValues,
     orders: List<Order>,
-    viewModel: OrdersScreenViewModel
+    viewModel: OrdersScreenViewModel,
+    onOrderClicked: () -> Unit
 ) {
 
     var filterExpanded by remember {
@@ -89,76 +97,146 @@ fun OrdersScreenContent(
         RoundedCornerShape(10.dp)
     }
 
-    Column (
+    Column(
         modifier = Modifier
-            .padding(start = 8.dp, top = 8.dp, end = 8.dp)
+            .padding(start = 8.dp, top = 8.dp)
     ) {
-        Row(
-            horizontalArrangement = Arrangement.End
+
+        FilterButton(
+            width = thirdScreenWidth,
+            shape = filterButtonShape
         ) {
-            Spacer(modifier = Modifier.weight(1f))
-            Row(
-                modifier = Modifier
-                    .width(thirdScreenWidth)
-                    .height(25.dp)
-                    .clip(filterButtonShape)
-                    .background(Color.LightGray.copy(alpha = 0.3f)),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+            filterExpanded = !filterExpanded
+        }
+
+        Box {
+
+            if (filterExpanded) {
+                FilterMenu(
+                    filterState = filterState,
+                    viewModel = viewModel,
+                    widthMenu = thirdScreenWidth
+                ) { orderStatus, value ->
+                    viewModel.changeFilter(orderStatus, value)
+                }
+            }
+
+            LazyOrders(
+                paddingValues = paddingValues,
+                orders = orders,
+                viewModel = viewModel
             ) {
-                Text(
-                    modifier = Modifier
-                        .clickable {
-                            filterExpanded = !filterExpanded
-                        },
-                    text = "Статус",
-                    fontSize = 16.sp
-                )
+                viewModel.setOrder(it)
+                onOrderClicked()
             }
 
         }
-        if (filterExpanded) {
+    }
+}
+
+//<editor-fold desc="LazyOrders">
+@Composable
+fun LazyOrders(
+    paddingValues: PaddingValues,
+    orders: List<Order>,
+    viewModel: OrdersScreenViewModel,
+    onOrderClicked: (Order) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier
+            .zIndex(1f)
+            .padding(bottom = paddingValues.calculateBottomPadding()),
+    ) {
+        items(orders) { order ->
             Row(
-                horizontalArrangement = Arrangement.End
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, end = 8.dp)
+                    .clickable {
+                        onOrderClicked(order)
+                    },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Spacer(modifier = Modifier.weight(1f))
-                Row(
+                Text(text = "№ ${order.id}", fontSize = 26.sp)
+                Text(
                     modifier = Modifier
-                        .width(thirdScreenWidth)
-                        .clip(RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp))
-                        .background(Color.LightGray.copy(alpha = 0.3f))
-                ) {
-                    FilterMenu(
-                        filterState = filterState,
-                        viewModel = viewModel,
-                        widthMenu = thirdScreenWidth
-                    )
-                }
+                        .background(getStatusColor(order.status)),
+                    text = viewModel.getOrderStatusDescription(order.status),
+                    fontSize = 20.sp
+                )
             }
+            DividerList()
         }
     }
 }
+//</editor-fold>
+
+//<editor-fold desc="FilterButton">
+@Composable
+fun FilterButton(width: Dp, shape: Shape, onClick: () -> Unit) {
+    Row(
+        horizontalArrangement = Arrangement.End
+    ) {
+        Spacer(modifier = Modifier.weight(1f))
+        Row(
+            modifier = Modifier
+                .padding(end = 8.dp)
+                .width(width)
+                .height(25.dp)
+                .clip(shape)
+                .background(Color.LightGray.copy(alpha = 0.3f)),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                modifier = Modifier
+                    .clickable {
+                        onClick()
+                    },
+                text = "Статус",
+                fontSize = 16.sp
+            )
+        }
+
+    }
+}
+//</editor-fold>
 
 //<editor-fold desc="FilterMenu">
 @Composable
 fun FilterMenu(
     filterState: FilterState,
     viewModel: OrdersScreenViewModel,
-    widthMenu: Dp
+    widthMenu: Dp,
+    onFilterClicked: (OrderStatus, Boolean) -> Unit
 ) {
-    val listFilters = filterState.filterMap.keys.toList()
-    LazyColumn(
+    Row(
         modifier = Modifier
             .padding(end = 8.dp)
+            .zIndex(2f),
+        horizontalArrangement = Arrangement.End
     ) {
-        items(listFilters) { orderStatus ->
-            val isCurrentStatusFiltered = filterState.filterMap[orderStatus] ?: false
-            FilterRow(
-                orderStatusDescription = viewModel.getOrderStatusDescription(orderStatus),
-                isChecked = !isCurrentStatusFiltered,
-                widthElement = widthMenu
-            ) {
-                viewModel.changeFilter(orderStatus, it)
+        Spacer(modifier = Modifier.weight(1f))
+        Row(
+            modifier = Modifier
+                .width(widthMenu)
+                .clip(RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp))
+                .background(Color.White)
+        ) {
+            val listFilters = filterState.filterMap.keys.toList()
+            LazyColumn {
+                items(listFilters) { orderStatus ->
+                    val isCurrentStatusFiltered = filterState.filterMap[orderStatus] ?: false
+                    FilterRow(
+                        orderStatusDescription = viewModel.getOrderStatusDescription(orderStatus),
+                        isChecked = !isCurrentStatusFiltered,
+                        widthElement = widthMenu,
+                        statusColor = getStatusColor(orderStatus)
+                    ) {
+                        onFilterClicked(orderStatus, it)
+                    }
+                }
             }
         }
     }
@@ -171,6 +249,7 @@ fun FilterRow(
     orderStatusDescription: String,
     isChecked: Boolean,
     widthElement: Dp,
+    statusColor: Color,
     onCheckedBox: (Boolean) -> Unit
 ) {
     var isCheckedState by remember {
@@ -179,8 +258,14 @@ fun FilterRow(
 
     Row(
         modifier = Modifier
+            .background(statusColor)
             .width(widthElement)
-            .padding(4.dp),
+            .padding(
+                start = 4.dp,
+                top = 4.dp,
+                bottom = 4.dp,
+                end = 8.dp
+            ),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -193,22 +278,25 @@ fun FilterRow(
             ),
             onCheckedChange = {
                 isCheckedState = it
-                onCheckedBox(isCheckedState)
+                onCheckedBox(!isCheckedState)
             }
         )
-        Text(text = orderStatusDescription, fontSize = 14.sp)
+        Text(
+            text = orderStatusDescription,
+            fontSize = 14.sp
+        )
     }
 }
 //</editor-fold>
 
-//<editor-fold desc="Разделитель">
-@Composable
-fun DividerList() {
-    Divider(
-        modifier = Modifier
-            .padding(start = 8.dp, top = 8.dp),
-        color = Color.Gray,
-        thickness = 1.dp
-    )
+//<editor-fold desc="getStatusColor">
+fun getStatusColor(orderStatus: OrderStatus): Color {
+    return when (orderStatus) {
+        OrderStatus.NEW -> Color.Red.copy(alpha = 0.1f)
+        OrderStatus.PROCESSING -> Color.LightGray.copy(alpha = 0.1f)
+        OrderStatus.FINISH -> Color.Green.copy(alpha = 0.1f)
+        OrderStatus.ACCEPT -> Color.Blue.copy(alpha = 0.1f)
+    }
 }
 //</editor-fold>
+

@@ -19,8 +19,7 @@ import javax.inject.Inject
 
 class OrdersScreenViewModel @Inject constructor(
     private val getOrdersUseCase: GetAllOrdersUseCase,
-    private val setCurrentOrderUseCase: SetCurrentOrderUseCase,
-    private val getDbResponseUseCase: GetDbResponseUseCase
+    private val setCurrentOrderUseCase: SetCurrentOrderUseCase
 ) : ViewModel() {
 
     private val _screenState = MutableStateFlow<OrderScreenState>(OrderScreenState.Initial)
@@ -31,35 +30,9 @@ class OrdersScreenViewModel @Inject constructor(
     private val _currentFilterFlow = MutableStateFlow(FilterState.initFilter())
     val currentFilterFlow = _currentFilterFlow.asStateFlow()
 
-    private val _warningState = MutableStateFlow<WarningState>(WarningState.Nothing)
-    val warningState = _warningState.asStateFlow()
-
     init {
         loadProducts()
-        subscribeDbResponse()
     }
-
-    //<editor-fold desc="subscribeDbResponse">
-    private fun subscribeDbResponse() {
-        viewModelScope.launch {
-            getDbResponseUseCase.getDbResponseFlow().collect {
-                when (it) {
-                    DBResponse.Complete -> {
-                        _warningState.emit(WarningState.DeleteComplete())
-                    }
-
-                    is DBResponse.Error -> {
-                        _warningState.emit(WarningState.DeleteIncomplete())
-                    }
-
-                    DBResponse.Processing -> {
-                        _warningState.emit(WarningState.Nothing)
-                    }
-                }
-            }
-        }
-    }
-    //</editor-fold>
 
     //<editor-fold desc="loadCities">
     private fun loadProducts() {
@@ -69,11 +42,14 @@ class OrdersScreenViewModel @Inject constructor(
                 .getOrdersFlow()
                 .filter { it.isNotEmpty() }
                 .map { caughtList ->
+
                     _sourceOrdersFlow.value = caughtList
                     caughtList.filter {
                         val currentFilter = _currentFilterFlow.value
                         !(currentFilter.filterMap[it.status] ?: false)
                     }
+                        .sortedByDescending { it.id  }
+
                 }
                 .collect {
                     _screenState.value = OrderScreenState.Content(it)
@@ -81,14 +57,6 @@ class OrdersScreenViewModel @Inject constructor(
         }
     }
     //</editor-fold>
-
-    //<editor-fold desc="warningCollected">
-    fun warningCollected() {
-        viewModelScope.launch {
-            _warningState.emit(WarningState.Nothing)
-        }
-    }
-    //</editor-fold>]
 
     //<editor-fold desc="getOrderStatusDescription">
     fun getOrderStatusDescription(statusIn: OrderStatus) =
@@ -105,15 +73,23 @@ class OrdersScreenViewModel @Inject constructor(
         val filterStateMap = _currentFilterFlow.value.filterMap.toMutableMap()
         filterStateMap[status] = value
         _currentFilterFlow.value = FilterState(filterStateMap)
-        Log.d("TEST_TEST", _currentFilterFlow.value.hashCode().toString())
         val currentFilterFlowValue = _currentFilterFlow.value
         val currentScreenState = _screenState.value
         if (currentScreenState is OrderScreenState.Content) {
-            val newOrders = _sourceOrdersFlow.value.filter {
-                !(currentFilterFlowValue.filterMap[it.status] ?: false)
-            }
+            val newOrders = _sourceOrdersFlow.value
+                .filter {
+                    !(currentFilterFlowValue.filterMap[it.status] ?: false)
+                }
+                .sortedByDescending { it.id }
+
             _screenState.value = currentScreenState.copy(orders = newOrders)
         }
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="setOrder">
+    fun setOrder(order: Order) {
+        setCurrentOrderUseCase.setOrder(order)
     }
     //</editor-fold>
 

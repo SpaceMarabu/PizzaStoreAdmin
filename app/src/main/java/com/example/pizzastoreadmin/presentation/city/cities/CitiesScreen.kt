@@ -42,6 +42,7 @@ import com.example.pizzastoreadmin.presentation.city.cities.states.CitiesScreenS
 import com.example.pizzastoreadmin.presentation.city.cities.states.CurrentStates
 import com.example.pizzastoreadmin.presentation.city.cities.states.WarningState
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
+import com.example.pizzastoreadmin.presentation.funs.DividerList
 
 @Composable
 fun CitiesScreen(
@@ -242,17 +243,5 @@ fun CityRow(
             fontSize = 24.sp
         )
     }
-}
-//</editor-fold>
-
-//<editor-fold desc="Разделитель">
-@Composable
-fun DividerList() {
-    Divider(
-        modifier = Modifier
-            .padding(start = 8.dp, top = 8.dp),
-        color = Color.Gray,
-        thickness = 1.dp
-    )
 }
 //</editor-fold>

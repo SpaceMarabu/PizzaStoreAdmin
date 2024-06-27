@@ -125,11 +125,11 @@ fun MainScreen() {
                 }
             },
             oneOrderScreenContent = {
-                
+
             },
             ordersScreenContent = {
                 OrdersScreen(paddingValues = paddingValues) {
-                    
+                    navigationState.navigateThrowHierarchy(Screen.ROUTE_ONE_ORDER)
                 }
             }
         )
