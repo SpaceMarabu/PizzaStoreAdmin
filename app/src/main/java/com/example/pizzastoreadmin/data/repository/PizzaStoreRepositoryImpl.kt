@@ -38,7 +38,6 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
     private val listProductsStateFlow = MutableStateFlow<List<Product>>(listOf())
 
-
     init {
         CoroutineScope(Dispatchers.IO).launch {
             subscribePicturesTypeFlow()

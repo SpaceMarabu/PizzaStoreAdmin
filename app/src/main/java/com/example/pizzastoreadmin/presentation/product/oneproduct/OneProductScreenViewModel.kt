@@ -274,7 +274,6 @@ class OneProductScreenViewModel @Inject constructor(
     }
     //</editor-fold>
 
-
     //<editor-fold desc="changeScreenState">
     private fun changeScreenState(state: OneProductScreenState) {
         viewModelScope.launch {

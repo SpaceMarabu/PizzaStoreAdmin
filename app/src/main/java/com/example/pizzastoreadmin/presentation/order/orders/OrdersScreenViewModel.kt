@@ -1,15 +1,11 @@
 package com.example.pizzastoreadmin.presentation.order.orders
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.Order
 import com.example.pizzastoreadmin.domain.entity.OrderStatus
 import com.example.pizzastoreadmin.domain.usecases.business.GetAllOrdersUseCase
-import com.example.pizzastoreadmin.domain.usecases.service.GetDbResponseUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.SetCurrentOrderUseCase
-import com.example.pizzastoreadmin.presentation.product.products.states.WarningState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
@@ -31,11 +27,11 @@ class OrdersScreenViewModel @Inject constructor(
     val currentFilterFlow = _currentFilterFlow.asStateFlow()
 
     init {
-        loadProducts()
+        loadOrders()
     }
 
     //<editor-fold desc="loadCities">
-    private fun loadProducts() {
+    private fun loadOrders() {
         _screenState.value = OrderScreenState.Loading
         viewModelScope.launch {
             getOrdersUseCase
