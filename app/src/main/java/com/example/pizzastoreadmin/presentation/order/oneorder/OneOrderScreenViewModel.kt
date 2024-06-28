@@ -7,6 +7,7 @@ import com.example.pizzastoreadmin.domain.entity.OrderStatus
 import com.example.pizzastoreadmin.domain.usecases.business.EditOrderUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.GetCurrentOrderUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.GetDbResponseUseCase
+import com.example.pizzastoreadmin.presentation.order.sharedstate.FilterState
 import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,6 +26,13 @@ class OneOrderScreenViewModel @Inject constructor(
     private val _shouldLeaveScreenState: MutableStateFlow<ShouldLeaveScreenState> =
         MutableStateFlow(ShouldLeaveScreenState.Processing)
     val shouldLeaveScreenState = _shouldLeaveScreenState.asStateFlow()
+
+    val listOrderStatuses = listOf<OrderStatus>(
+        OrderStatus.NEW,
+        OrderStatus.PROCESSING,
+        OrderStatus.FINISH,
+        OrderStatus.ACCEPT
+    )
 
     init {
         getOrder()

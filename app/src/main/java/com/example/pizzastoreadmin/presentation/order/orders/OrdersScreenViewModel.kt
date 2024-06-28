@@ -6,9 +6,9 @@ import com.example.pizzastoreadmin.domain.entity.Order
 import com.example.pizzastoreadmin.domain.entity.OrderStatus
 import com.example.pizzastoreadmin.domain.usecases.business.GetAllOrdersUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.SetCurrentOrderUseCase
+import com.example.pizzastoreadmin.presentation.order.sharedstate.FilterState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -30,13 +30,12 @@ class OrdersScreenViewModel @Inject constructor(
         loadOrders()
     }
 
-    //<editor-fold desc="loadCities">
+    //<editor-fold desc="loadOrders">
     private fun loadOrders() {
         _screenState.value = OrderScreenState.Loading
         viewModelScope.launch {
             getOrdersUseCase
                 .getOrdersFlow()
-                .filter { it.isNotEmpty() }
                 .map { caughtList ->
 
                     _sourceOrdersFlow.value = caughtList

@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,9 +27,9 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     private val mapper: RemoteMapper
 ) : PizzaStoreRepository {
 
-    private val currentProduct: MutableStateFlow<Product> = MutableStateFlow(Product())
-    private val currentCity: MutableStateFlow<City> = MutableStateFlow(City())
-    private val currentOrder: MutableStateFlow<Order?> = MutableStateFlow(null)
+    private val currentProduct = MutableStateFlow(Product())
+    private val currentCity = MutableStateFlow(City())
+    private val currentOrder = MutableStateFlow(Order())
 
     private val dbResponseFlow: MutableStateFlow<DBResponse> =
         MutableStateFlow(DBResponse.Processing)
@@ -197,19 +198,12 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
     //<editor-fold desc="getOrdersUseCase">
     override fun getOrdersUseCase(): Flow<List<Order>> =
-        firebaseService
-            .getListOrdersFlow()
-            .map {listOrdersDto ->
-                val products = listProductsStateFlow.value
-                val orderList = mutableListOf<Order>()
-                listOrdersDto.forEach {orderDto ->
-                    val order = mapper.mapOrderDtoToEntity(orderDto, products)
-                    if (order != null) {
-                        orderList.add(order)
-                    }
+        firebaseService.getListOrdersFlow()
+            .combine(listProductsStateFlow) { ordersDto, products ->
+                ordersDto.mapNotNull { orderDto ->
+                    mapper.mapOrderDtoToEntity(orderDto, products)
                 }
-                orderList
-        }
+            }
     //</editor-fold>
 
     //<editor-fold desc="editOrderUseCase">

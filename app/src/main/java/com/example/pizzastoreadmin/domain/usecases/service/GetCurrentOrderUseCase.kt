@@ -9,7 +9,7 @@ class GetCurrentOrderUseCase  @Inject constructor(
     private val repository: PizzaStoreRepository
 ) {
 
-    fun getOrder(): StateFlow<Order?> {
+    fun getOrder(): StateFlow<Order> {
         return repository.getCurrentOrderUseCase()
     }
 }

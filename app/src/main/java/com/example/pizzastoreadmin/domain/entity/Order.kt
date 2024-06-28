@@ -5,9 +5,9 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class Order(
-    val id: Int,
-    val status: OrderStatus,
-    val bucket: Bucket
+    val id: Int = DEFAULT_ID,
+    val status: OrderStatus = OrderStatus.NEW,
+    val bucket: Bucket = Bucket()
 ) : Parcelable {
     companion object {
         const val DEFAULT_ID = -1

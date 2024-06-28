@@ -31,12 +31,12 @@ import kotlinx.coroutines.withContext
 class AppDatabase : FirebaseService {
 
     private val firebaseDatabase = FirebaseDatabase.getInstance()
-    private val dRefCities = firebaseDatabase.getReference("cities")
-    private val dRefProduct = firebaseDatabase.getReference("product")
-    private val dRefOrder = firebaseDatabase.getReference("order")
+    private val dRefCities = firebaseDatabase.getReference(CITIES_REFERENCE)
+    private val dRefProduct = firebaseDatabase.getReference(PRODUCT_REFERENCE)
+    private val dRefOrder = firebaseDatabase.getReference(ORDER_REFERENCE)
 
-    private val firebaseStorage = Firebase.storage("gs://pizzastore-b379f.appspot.com")
-    private val storageRef = firebaseStorage.reference.child("product")
+    private val firebaseStorage = Firebase.storage(STORAGE_REFERENCE)
+    private val storageRef = firebaseStorage.reference.child(PRODUCT_REFERENCE)
 
     private val maxProductIdFlow = MutableStateFlow(-1)
     private val maxCityIdFlow = MutableStateFlow(-1)
@@ -448,5 +448,12 @@ class AppDatabase : FirebaseService {
         return deferred.getCompleted()
     }
     //</editor-fold>
+
+    companion object {
+        private const val CITIES_REFERENCE = "cities"
+        private const val PRODUCT_REFERENCE = "product"
+        private const val ORDER_REFERENCE = "order"
+        private const val STORAGE_REFERENCE = "gs://pizzastore-b379f.appspot.com"
+    }
 
 }

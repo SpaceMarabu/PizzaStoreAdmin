@@ -52,7 +52,7 @@ interface PizzaStoreRepository {
 
     fun setCurrentOrderUseCase(order: Order)
 
-    fun getCurrentOrderUseCase(): StateFlow<Order?>
+    fun getCurrentOrderUseCase(): StateFlow<Order>
     //</editor-fold>
 
 }

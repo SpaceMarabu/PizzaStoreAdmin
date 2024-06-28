@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Text
@@ -44,6 +43,8 @@ import com.example.pizzastoreadmin.domain.entity.OrderStatus
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 import com.example.pizzastoreadmin.presentation.funs.DividerList
 import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
+import com.example.pizzastoreadmin.presentation.order.sharedfun.getStatusColor
+import com.example.pizzastoreadmin.presentation.order.sharedstate.FilterState
 
 @Composable
 fun OrdersScreen(
@@ -289,14 +290,4 @@ fun FilterRow(
 }
 //</editor-fold>
 
-//<editor-fold desc="getStatusColor">
-fun getStatusColor(orderStatus: OrderStatus): Color {
-    return when (orderStatus) {
-        OrderStatus.NEW -> Color.Red.copy(alpha = 0.1f)
-        OrderStatus.PROCESSING -> Color.LightGray.copy(alpha = 0.1f)
-        OrderStatus.FINISH -> Color.Green.copy(alpha = 0.1f)
-        OrderStatus.ACCEPT -> Color.Blue.copy(alpha = 0.1f)
-    }
-}
-//</editor-fold>
 
