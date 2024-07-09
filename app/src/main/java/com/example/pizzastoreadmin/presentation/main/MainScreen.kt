@@ -1,6 +1,5 @@
 package com.example.pizzastoreadmin.presentation.main
 
-import android.util.Log
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
@@ -15,7 +14,6 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import com.example.pizzastoreadmin.navigation.AppNavGraph
 import com.example.pizzastoreadmin.navigation.NavigationItem
 import com.example.pizzastoreadmin.navigation.Screen
@@ -24,6 +22,7 @@ import com.example.pizzastoreadmin.presentation.city.cities.CitiesScreen
 import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreen
 import com.example.pizzastoreadmin.presentation.images.images.ImagesScreen
 import com.example.pizzastoreadmin.presentation.images.oneimage.OneImageScreen
+import com.example.pizzastoreadmin.presentation.order.oneorder.OneOrderScreen
 import com.example.pizzastoreadmin.presentation.order.orders.OrdersScreen
 import com.example.pizzastoreadmin.presentation.product.oneproduct.OneProductScreen
 import com.example.pizzastoreadmin.presentation.product.products.ProductsScreen
@@ -125,7 +124,9 @@ fun MainScreen() {
                 }
             },
             oneOrderScreenContent = {
-
+                OneOrderScreen(paddingValues = paddingValues) {
+                    navigationState.navigateThrowHierarchy(Screen.ROUTE_ORDERS)
+                }
             },
             ordersScreenContent = {
                 OrdersScreen(paddingValues = paddingValues) {

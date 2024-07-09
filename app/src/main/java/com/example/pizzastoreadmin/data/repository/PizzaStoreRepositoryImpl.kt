@@ -1,11 +1,11 @@
 package com.example.pizzastoreadmin.data.repository
 
 import android.net.Uri
-import com.example.pizzastoreadmin.domain.entity.Order
 import com.example.pizzastoreadmin.data.mappers.RemoteMapper
 import com.example.pizzastoreadmin.data.remotedb.FirebaseService
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.City
+import com.example.pizzastoreadmin.domain.entity.Order
 import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.entity.Product
 import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -210,7 +209,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     override fun editOrderUseCase(order: Order) {
         val orderDto = mapper.mapOrderToOrderDto(order)
         startDbProcess {
-            firebaseService.editOrder(orderDto)
+            dbResponseFlow.emit(firebaseService.editOrder(orderDto))
         }
     }
 

@@ -2,6 +2,8 @@ package com.example.pizzastoreadmin.presentation.order.orders
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,8 +30,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -110,7 +117,17 @@ fun OrdersScreenContent(
             filterExpanded = !filterExpanded
         }
 
-        Box {
+        Box(
+            modifier = Modifier
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = { filterExpanded = false }
+                    )
+                    detectDragGestures(onDrag = { _, _ ->
+                        filterExpanded = false
+                    })
+                }
+        ) {
 
             if (filterExpanded) {
                 FilterMenu(
@@ -125,12 +142,15 @@ fun OrdersScreenContent(
             LazyOrders(
                 paddingValues = paddingValues,
                 orders = orders,
-                viewModel = viewModel
-            ) {
-                viewModel.setOrder(it)
-                onOrderClicked()
-            }
-
+                viewModel = viewModel,
+                onDragList = {
+                    filterExpanded = false
+                },
+                onOrderClicked = {
+                    viewModel.setOrder(it)
+                    onOrderClicked()
+                }
+            )
         }
     }
 }
@@ -141,12 +161,26 @@ fun LazyOrders(
     paddingValues: PaddingValues,
     orders: List<Order>,
     viewModel: OrdersScreenViewModel,
-    onOrderClicked: (Order) -> Unit
+    onOrderClicked: (Order) -> Unit,
+    onDragList: () -> Unit
 ) {
+
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (available.y != 0f) {
+                    onDragList()
+                }
+                return Offset.Zero
+            }
+        }
+    }
+
     LazyColumn(
         modifier = Modifier
             .zIndex(1f)
-            .padding(bottom = paddingValues.calculateBottomPadding()),
+            .padding(bottom = paddingValues.calculateBottomPadding())
+            .nestedScroll(nestedScrollConnection)
     ) {
         items(orders) { order ->
             Row(
@@ -289,5 +323,6 @@ fun FilterRow(
     }
 }
 //</editor-fold>
+
 
 
