@@ -1,10 +1,13 @@
 package com.example.pizzastoreadmin.di
 
+import android.app.Application
+import com.example.pizzastoreadmin.data.localdb.PizzaDao
 import com.example.pizzastore.di.ApplicationScope
+import com.example.pizzastoreadmin.data.localdb.LocalDatabase
 import com.example.pizzastoreadmin.data.remotedb.AppDatabase
 import com.example.pizzastoreadmin.data.remotedb.FirebaseService
-import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
 import com.example.pizzastoreadmin.data.repository.PizzaStoreRepositoryImpl
+import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -22,6 +25,14 @@ interface DataModule {
         @Provides
         fun provideFirebase() : FirebaseService {
             return  AppDatabase()
+        }
+
+        @ApplicationScope
+        @Provides
+        fun providePizzaDao(
+            application: Application
+        ): PizzaDao {
+            return LocalDatabase.getInstance(application).pizzaDao()
         }
     }
 

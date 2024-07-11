@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material.Divider
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pizzastore.R
-import com.example.pizzastore.di.getApplicationComponent
+import com.example.pizzastoreadmin.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.presentation.city.cities.states.CitiesScreenState
 import com.example.pizzastoreadmin.presentation.city.cities.states.CurrentStates

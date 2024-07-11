@@ -42,7 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.pizzastore.R
-import com.example.pizzastore.di.getApplicationComponent
+import com.example.pizzastoreadmin.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.ProductType
 import com.example.pizzastoreadmin.navigation.Screen
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading

@@ -144,6 +144,46 @@ class AppDatabase : FirebaseService {
 
     //</editor-fold>
 
+    //<editor-fold desc="getListOrdersFlow">
+    override fun getListOrdersFlow() = callbackFlow {
+
+        val postListener = object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                val listOrders = mutableListOf<OrderDto>()
+                for (dataFromChildren in dataSnapshot.children) {
+                    val key: Int = dataFromChildren.key?.toInt() ?: continue
+
+                    val status = dataFromChildren.child("status").value.toString()
+                    val bucket = dataFromChildren
+                        .child("bucket").getValue(BucketDto::class.java) ?: BucketDto()
+                    listOrders.add(
+                        OrderDto(
+                            id = key,
+                            status = status,
+                            bucket = bucket
+                        )
+                    )
+                }
+                val returnList = listOrders.toList()
+                trySend(returnList)
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                Log.w(
+                    "PizzaStoreFirebaseImpl",
+                    "loadCities:onCancelled",
+                    databaseError.toException()
+                )
+            }
+        }
+        dRefOrder.addValueEventListener(postListener)
+
+        awaitClose {
+            dRefOrder.removeEventListener(postListener)
+        }
+    }
+    //</editor-fold>
+
     //<editor-fold desc="getListProductsFlow">
     override fun getListProductsFlow(): Flow<List<Product>> = listProductsFlow
     //</editor-fold>
@@ -384,46 +424,6 @@ class AppDatabase : FirebaseService {
             }
         }
         return true
-    }
-    //</editor-fold>
-
-    //<editor-fold desc="getListOrdersFlow">
-    override fun getListOrdersFlow() = callbackFlow {
-
-        val postListener = object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val listOrders = mutableListOf<OrderDto>()
-                for (dataFromChildren in dataSnapshot.children) {
-                    val key: Int = dataFromChildren.key?.toInt() ?: continue
-
-                    val status = dataFromChildren.child("status").value.toString()
-                    val bucket = dataFromChildren
-                        .child("bucket").getValue(BucketDto::class.java) ?: BucketDto()
-                    listOrders.add(
-                        OrderDto(
-                            id = key,
-                            status = status,
-                            bucket = bucket
-                        )
-                    )
-                }
-                val returnList = listOrders.toList()
-                trySend(returnList)
-            }
-
-            override fun onCancelled(databaseError: DatabaseError) {
-                Log.w(
-                    "PizzaStoreFirebaseImpl",
-                    "loadCities:onCancelled",
-                    databaseError.toException()
-                )
-            }
-        }
-        dRefOrder.addValueEventListener(postListener)
-
-        awaitClose {
-            dRefOrder.removeEventListener(postListener)
-        }
     }
     //</editor-fold>
 

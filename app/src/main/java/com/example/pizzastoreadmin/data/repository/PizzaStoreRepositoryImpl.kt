@@ -1,6 +1,10 @@
 package com.example.pizzastoreadmin.data.repository
 
 import android.net.Uri
+import com.example.pizzastoreadmin.data.localdb.PizzaDao
+import com.example.pizzastoreadmin.data.localdb.entity.products.ListProductsDbModel
+import com.example.pizzastoreadmin.data.localdb.entity.products.ProductDbModel
+import com.example.pizzastoreadmin.data.mappers.LocalMapper
 import com.example.pizzastoreadmin.data.mappers.RemoteMapper
 import com.example.pizzastoreadmin.data.remotedb.FirebaseService
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
@@ -16,14 +20,18 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
 class PizzaStoreRepositoryImpl @Inject constructor(
     private val firebaseService: FirebaseService,
-    private val mapper: RemoteMapper
+    private val pizzaDao: PizzaDao,
+    private val remoteMapper: RemoteMapper,
+    private val localMapper: LocalMapper
 ) : PizzaStoreRepository {
 
     private val currentProduct = MutableStateFlow(Product())
@@ -35,8 +43,6 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
     private val typeFlow: MutableStateFlow<PictureType?> = MutableStateFlow(null)
     private val currentPictureUriFlow: MutableStateFlow<Uri?> = MutableStateFlow(null)
-
-    private val listProductsStateFlow = MutableStateFlow<List<Product>>(listOf())
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
@@ -108,6 +114,14 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     //<editor-fold desc="getProductsUseCase">
     override fun getProductsUseCase(): Flow<List<Product>> =
         firebaseService.getListProductsFlow()
+    //</editor-fold>
+
+    //<editor-fold desc="getOrdersUseCase">
+    override fun getOrdersUseCase(): Flow<List<Order>> {
+        pizzaDao.getOrders().map { listOrdersDbModel ->
+
+        }
+    }
     //</editor-fold>
 
     //<editor-fold desc="setCurrentCityUseCase">
@@ -187,27 +201,23 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
     //<editor-fold desc="subscribeListProducts">
     private suspend fun subscribeListProducts() {
-            firebaseService
-                .getListProductsFlow()
-                .collect {
-                    listProductsStateFlow.value = it
+        firebaseService
+            .getListProductsFlow()
+            .collect { products ->
+                val productsModelList = mutableListOf<ProductDbModel>()
+                products.forEach { currentProduct ->
+                    val productModel = localMapper.mapProductToDbModel(currentProduct)
+                    productsModelList.add(productModel)
                 }
-    }
-    //</editor-fold>
-
-    //<editor-fold desc="getOrdersUseCase">
-    override fun getOrdersUseCase(): Flow<List<Order>> =
-        firebaseService.getListOrdersFlow()
-            .combine(listProductsStateFlow) { ordersDto, products ->
-                ordersDto.mapNotNull { orderDto ->
-                    mapper.mapOrderDtoToEntity(orderDto, products)
-                }
+                val productsModel = ListProductsDbModel(productsModelList)
+                pizzaDao.addProducts(productsModel)
             }
+    }
     //</editor-fold>
 
     //<editor-fold desc="editOrderUseCase">
     override fun editOrderUseCase(order: Order) {
-        val orderDto = mapper.mapOrderToOrderDto(order)
+        val orderDto = remoteMapper.mapOrderToOrderDto(order)
         startDbProcess {
             dbResponseFlow.emit(firebaseService.editOrder(orderDto))
         }

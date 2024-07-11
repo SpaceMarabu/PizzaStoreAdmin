@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
-import com.example.pizzastore.di.getApplicationComponent
+import com.example.pizzastoreadmin.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.presentation.city.cities.ShowToast
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading

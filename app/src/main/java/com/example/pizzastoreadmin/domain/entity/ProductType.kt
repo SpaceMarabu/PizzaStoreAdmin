@@ -20,5 +20,15 @@ sealed class ProductType(
         private const val TYPE_STARTER = "starter"
         private const val TYPE_DESSERT = "dessert"
         private const val TYPE_DRINK = "drink"
+
+        fun fromString(type: String): ProductType {
+            return when (type) {
+                TYPE_PIZZA -> PIZZA
+                TYPE_ROLL -> DESSERT
+                TYPE_STARTER -> STARTER
+                TYPE_DRINK -> DRINK
+                else -> ROLL
+            }
+        }
     }
 }

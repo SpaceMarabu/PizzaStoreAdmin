@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.pizzastore.di.getApplicationComponent
+import com.example.pizzastoreadmin.di.getApplicationComponent
 import com.example.pizzastore.presentation.start.StartScreenState
 import com.example.pizzastore.presentation.start.StartScreenViewModel
 import com.example.pizzastoreadmin.presentation.main.MainScreen

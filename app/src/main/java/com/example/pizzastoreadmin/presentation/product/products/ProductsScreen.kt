@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -44,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pizzastore.R
-import com.example.pizzastore.di.getApplicationComponent
+import com.example.pizzastoreadmin.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.Product
 import com.example.pizzastoreadmin.domain.entity.ProductType
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
