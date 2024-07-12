@@ -32,5 +32,7 @@ interface FirebaseService {
 
     fun getListOrdersFlow(): Flow<List<OrderDto>>
 
+    suspend fun getListOrdersOneTime(): List<OrderDto>
+
     suspend fun editOrder(orderDto: OrderDto): DBResponse
 }

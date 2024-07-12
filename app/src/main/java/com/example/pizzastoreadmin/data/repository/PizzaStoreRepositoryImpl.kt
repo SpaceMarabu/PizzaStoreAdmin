@@ -1,6 +1,9 @@
 package com.example.pizzastoreadmin.data.repository
 
 import android.net.Uri
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.WorkManager
 import com.example.pizzastoreadmin.data.localdb.PizzaDao
 import com.example.pizzastoreadmin.data.localdb.entity.products.ListProductsDbModel
 import com.example.pizzastoreadmin.data.localdb.entity.products.ProductDbModel
@@ -8,6 +11,8 @@ import com.example.pizzastoreadmin.data.mappers.LocalMapper
 import com.example.pizzastoreadmin.data.mappers.RemoteMapper
 import com.example.pizzastoreadmin.data.remotedb.FirebaseService
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
+import com.example.pizzastoreadmin.data.workers.LoadOrdersWorker
+import com.example.pizzastoreadmin.di.PizzaStoreAdminApplication
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.domain.entity.Order
 import com.example.pizzastoreadmin.domain.entity.PictureType
@@ -16,18 +21,20 @@ import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 
 class PizzaStoreRepositoryImpl @Inject constructor(
+    private val application: PizzaStoreAdminApplication,
     private val firebaseService: FirebaseService,
     private val pizzaDao: PizzaDao,
     private val remoteMapper: RemoteMapper,
@@ -51,6 +58,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
         CoroutineScope(Dispatchers.IO).launch {
             subscribeListProducts()
         }
+        subscribeOrdersUpdates()
     }
 
     //<editor-fold desc="postPicturesType">
@@ -116,13 +124,74 @@ class PizzaStoreRepositoryImpl @Inject constructor(
         firebaseService.getListProductsFlow()
     //</editor-fold>
 
-    //<editor-fold desc="getOrdersUseCase">
-    override fun getOrdersUseCase(): Flow<List<Order>> {
-        pizzaDao.getOrders().map { listOrdersDbModel ->
+//    //<editor-fold desc="getOrdersUseCase">
+//    @OptIn(ExperimentalCoroutinesApi::class)
+//    override fun getOrdersUseCase(): Flow<List<Order>> {
+//        return pizzaDao.getOrders().map ordersFlow@{ listOrdersDbModel ->
+//
+//            val orders = mutableListOf<Order>()
+//            val deferred = CompletableDeferred(orders)
+//
+////            withContext(Dispatchers.IO) {
+//            pizzaDao.getProducts().collect { productsModelList ->
+//
+//                val products = mutableListOf<Product>()
+//                productsModelList?.products?.forEach { currentProductModel ->
+//                    val currentProduct = localMapper.dbModelToProduct(currentProductModel)
+//                    products.add(currentProduct)
+//                }
+//
+//                listOrdersDbModel?.orders?.forEach { orderModel ->
+//                    val currentOrder = localMapper.mapOrderDbModelToEntity(orderModel, products)
+//                    if (currentOrder != null) {
+//                        orders.add(currentOrder)
+//                    }
+//                }
+//
+////                    deferred.complete(orders)
+//                return@collect
+//            }
+//
+////                deferred.await()
+////            }
+//
+//
+//            orders.toList()
+//
+////            deferred.getCompleted()
+//
+//        }
+//    }
+//    //</editor-fold>
 
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getOrdersUseCase(): Flow<List<Order>> {
+        return pizzaDao.getOrders().flatMapConcat { listOrdersDbModel ->
+            val orders = mutableListOf<Order>()
+
+            // Используем flow для коллекции продуктов и их преобразования
+            val productsFlow = pizzaDao.getProducts().map { productsModelList ->
+                val products = mutableListOf<Product>()
+                productsModelList?.products?.forEach { currentProductModel ->
+                    val currentProduct = localMapper.dbModelToProduct(currentProductModel)
+                    products.add(currentProduct)
+                }
+                products
+            }
+
+            // Создаем новый flow, который обрабатывает заказы и продукты
+            productsFlow.map { products ->
+                listOrdersDbModel?.orders?.forEach { orderModel ->
+                    val currentOrder = localMapper.mapOrderDbModelToEntity(orderModel, products)
+                    if (currentOrder != null) {
+                        orders.add(currentOrder)
+                    }
+                }
+                orders.toList()
+            }
         }
     }
-    //</editor-fold>
 
     //<editor-fold desc="setCurrentCityUseCase">
     override fun setCurrentCityUseCase(city: City?) {
@@ -233,5 +302,15 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
     //<editor-fold desc="getCurrentOrderUseCase">
     override fun getCurrentOrderUseCase() = currentOrder.asStateFlow()
+    //</editor-fold>
+
+    //<editor-fold desc="subscribeOrdersUpdates">
+    private fun subscribeOrdersUpdates() {
+        WorkManager.getInstance(application).enqueueUniqueWork(
+            LoadOrdersWorker.NAME,
+            ExistingWorkPolicy.REPLACE,
+            LoadOrdersWorker.makeRequest()
+        )
+    }
     //</editor-fold>
 }

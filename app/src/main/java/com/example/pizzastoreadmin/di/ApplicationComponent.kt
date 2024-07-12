@@ -1,9 +1,8 @@
-package com.example.pizzastore.di
+package com.example.pizzastoreadmin.di
 
 import android.app.Application
-import com.example.pizzastoreadmin.di.DataModule
-import com.example.pizzastoreadmin.di.PizzaStoreAdminApplication
-import com.example.pizzastoreadmin.di.ViewModelModule
+import com.example.pizzastore.di.ApplicationScope
+import com.example.pizzastore.di.ViewModelFactory
 import dagger.BindsInstance
 import dagger.Component
 
@@ -11,7 +10,8 @@ import dagger.Component
 @Component(
     modules = [
         DataModule::class,
-        ViewModelModule::class
+        ViewModelModule::class,
+        AppModule::class
     ]
 )
 interface ApplicationComponent {
@@ -26,7 +26,6 @@ interface ApplicationComponent {
 
         fun create(
             @BindsInstance application: Application
-//            @BindsInstance context: Context
         ): ApplicationComponent
     }
 }

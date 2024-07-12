@@ -2,6 +2,7 @@ package com.example.pizzastoreadmin.data.workers
 
 import android.content.Context
 import androidx.work.CoroutineWorker
+import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkerParameters
 import com.example.pizzastoreadmin.data.localdb.PizzaDao
 import com.example.pizzastoreadmin.data.localdb.entity.orders.ListOrdersDbModel
@@ -12,6 +13,7 @@ import com.example.pizzastoreadmin.data.mappers.RemoteMapper
 import com.example.pizzastoreadmin.data.remotedb.FirebaseService
 import com.example.pizzastoreadmin.domain.entity.Order
 import com.example.pizzastoreadmin.domain.entity.Product
+import kotlinx.coroutines.delay
 
 class LoadOrdersWorker(
     context: Context,
@@ -22,44 +24,97 @@ class LoadOrdersWorker(
     private val localMapper: LocalMapper
 ) : CoroutineWorker(context, workerParameters) {
 
+//    override suspend fun doWork(): Result {
+//        firebaseService.getListOrdersFlow()
+//            .collect { listOrdersDto ->
+//                var productsDbModel: List<ProductDbModel>
+//                val productsList = mutableListOf<Product>()
+//                pizzaDao.getProducts().collect daoCollect@{ collectedProductList ->
+//
+//                    if (collectedProductList != null) {
+//                        productsDbModel = collectedProductList.products
+//                    } else {
+//                        return@daoCollect
+//                    }
+//
+//                    productsDbModel.forEach { productDbModel ->
+//                        val currentProduct = localMapper.dbModelToProduct(productDbModel)
+//                        productsList.add(currentProduct)
+//                    }
+//
+//                    val listOrders = mutableListOf<Order>()
+//                    listOrdersDto.forEach { orderDtoFromList ->
+//                        val currentOrder = remoteMapper.mapOrderDtoToEntity(
+//                            orderDtoFromList,
+//                            productsList
+//                        )
+//                        if (currentOrder != null) {
+//                            listOrders.add(currentOrder)
+//                        }
+//                    }
+//
+//                    val listModelOrders = mutableListOf<OrderDbModel>()
+//                    listOrders.forEach { orderFromList ->
+//                        val currentOrder = localMapper.mapOrderToOrderModel(orderFromList)
+//                        listModelOrders.add(currentOrder)
+//                    }
+//                    pizzaDao.addOrders(ListOrdersDbModel(listModelOrders))
+//                }
+//            }
+//
+//        return Result.success()
+//    }
+
     override suspend fun doWork(): Result {
-        firebaseService.getListOrdersFlow()
-            .collect { listOrdersDto ->
-                var productsDbModel = listOf<ProductDbModel>()
-                val productsList = mutableListOf<Product>()
-                pizzaDao.getProducts().collect daoCollect@{ collectedProductList ->
+        while (true) {
+            val ordersFromRemoteDb = firebaseService.getListOrdersOneTime()
+            val ordersFromLocalDb = pizzaDao.getOrdersNoFlow()
+            if (ordersFromLocalDb?.orders != ordersFromRemoteDb) {
+                val listProducts = mutableListOf<Product>()
+                var productsDbModel: List<ProductDbModel>
+                val productsListModel = pizzaDao.getProductsOneTime()
 
-                    if (collectedProductList != null) {
-                        productsDbModel = collectedProductList.products
-                    } else {
-                        return@daoCollect
-                    }
-
-                    productsDbModel.forEach { productDbModel ->
-                        val currentProduct = localMapper.dbModelToProduct(productDbModel)
-                        productsList.add(currentProduct)
-                    }
-
-                    val listOrders = mutableListOf<Order>()
-                    listOrdersDto.forEach { orderDtoFromList ->
-                        val currentOrder = remoteMapper.mapOrderDtoToEntity(
-                            orderDtoFromList,
-                            productsList
-                        )
-                        if (currentOrder != null) {
-                            listOrders.add(currentOrder)
-                        }
-                    }
-
-                    val listModelOrders = mutableListOf<OrderDbModel>()
-                    listOrders.forEach { orderFromList ->
-                        val currentOrder = localMapper.mapOrderToOrderModel(orderFromList)
-                        listModelOrders.add(currentOrder)
-                    }
-                    pizzaDao.addOrders(ListOrdersDbModel(listModelOrders))
+                if (productsListModel != null) {
+                    productsDbModel = productsListModel.products
+                } else {
+                    continue
                 }
-            }
 
-        return Result.success()
+                productsDbModel.forEach { productDbModel ->
+                    val currentProduct = localMapper.dbModelToProduct(productDbModel)
+                    listProducts.add(currentProduct)
+                }
+
+                val listOrders = mutableListOf<Order>()
+                ordersFromRemoteDb.forEach { orderDtoFromList ->
+                    val currentOrder = remoteMapper.mapOrderDtoToEntity(
+                        orderDtoFromList,
+                        listProducts
+                    )
+                    if (currentOrder != null) {
+                        listOrders.add(currentOrder)
+                    }
+                }
+
+                val listModelOrders = mutableListOf<OrderDbModel>()
+                listOrders.forEach { orderFromList ->
+                    val currentOrder = localMapper.mapOrderToOrderModel(orderFromList)
+                    listModelOrders.add(currentOrder)
+                }
+                pizzaDao.addOrders(ListOrdersDbModel(listModelOrders))
+                delay(10000)
+            }
+        }
+    }
+
+    companion object {
+
+        const val NAME = "RefreshDataWorker"
+
+        fun makeRequest() =
+            OneTimeWorkRequest.Builder(
+                LoadOrdersWorker::class.java
+            ).build()
+
     }
 }

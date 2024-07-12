@@ -184,6 +184,34 @@ class AppDatabase : FirebaseService {
     }
     //</editor-fold>
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override suspend fun getListOrdersOneTime(): List<OrderDto> {
+
+        val deferred = CompletableDeferred<List<OrderDto>>()
+        withContext(Dispatchers.IO) {
+            dRefOrder.get().addOnSuccessListener { dataSnapshot ->
+                val listOrders = mutableListOf<OrderDto>()
+                for (dataFromChildren in dataSnapshot.children) {
+                    val key: Int = dataFromChildren.key?.toInt() ?: continue
+
+                    val status = dataFromChildren.child("status").value.toString()
+                    val bucket = dataFromChildren
+                        .child("bucket").getValue(BucketDto::class.java) ?: BucketDto()
+                    listOrders.add(
+                        OrderDto(
+                            id = key,
+                            status = status,
+                            bucket = bucket
+                        )
+                    )
+                }
+                deferred.complete(listOrders.toList())
+            }
+            deferred.await()
+        }
+        return deferred.getCompleted()
+    }
+
     //<editor-fold desc="getListProductsFlow">
     override fun getListProductsFlow(): Flow<List<Product>> = listProductsFlow
     //</editor-fold>

@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import com.example.pizzastoreadmin.data.localdb.entity.orders.ListOrdersDbModel
 import com.example.pizzastoreadmin.data.localdb.entity.products.ListProductsDbModel
 
-@Database(entities = [ListOrdersDbModel::class, ListProductsDbModel::class], version = 2, exportSchema = false)
+@Database(entities = [ListOrdersDbModel::class, ListProductsDbModel::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class LocalDatabase : RoomDatabase() {
 

@@ -23,4 +23,10 @@ interface PizzaDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addProducts(productsDbModel: ListProductsDbModel)
 
+    @Query("SELECT * FROM orders LIMIT 1")
+    fun getOrdersNoFlow(): ListOrdersDbModel?
+
+    @Query("SELECT * FROM products LIMIT 1")
+    fun getProductsOneTime(): ListProductsDbModel?
+
 }

@@ -4,10 +4,6 @@ import android.app.Application
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.work.Configuration
-import com.example.pizzastore.di.ApplicationComponent
-import com.example.pizzastore.di.DaggerApplicationComponent
-import com.example.pizzastoreadmin.data.mappers.RemoteMapper
-import com.example.pizzastoreadmin.data.remotedb.FirebaseService
 import com.example.pizzastoreadmin.data.workers.RefreshDataWorkerFactory
 import javax.inject.Inject
 
