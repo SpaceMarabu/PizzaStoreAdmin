@@ -9,13 +9,13 @@ sealed class NavigationItem(
 ) {
 
     object Cities : NavigationItem(
-        screen = Screen.Cities,
+        screen = Screen.City,
         titleResId = R.string.cities,
         icon = R.drawable.ic_city
     )
 
     object Admin : NavigationItem(
-        screen = Screen.Products,
+        screen = Screen.Product,
         titleResId = R.string.admin,
         icon = R.drawable.ic_admin
     )

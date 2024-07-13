@@ -113,13 +113,15 @@ fun OneCityScreenContent(
                 Toast.LENGTH_LONG
             ).show()
         }
+
         ShouldLeaveScreenState.Exit -> {
             onExitLet()
         }
+
         ShouldLeaveScreenState.Processing -> {}
     }
 
-    Scaffold (
+    Scaffold(
         modifier = Modifier
             .padding(bottom = paddingValues.calculateBottomPadding())
     ) { _ ->
@@ -151,7 +153,8 @@ fun OneCityScreenContent(
                                 top = 8.dp,
                                 start = 16.dp
                             ),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = "${index + 1}.",
@@ -160,7 +163,7 @@ fun OneCityScreenContent(
                         Icon(
                             modifier = Modifier
                                 .padding(end = 16.dp)
-                                .size(35.dp)
+                                .size(25.dp)
                                 .clickable {
                                     viewModel.deletePoint(index)
                                 },
@@ -187,7 +190,7 @@ fun OneCityScreenContent(
                 }
             }
             item {
-                Row (
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = paddingStartEnd, top = 32.dp, end = paddingStartEnd),
@@ -204,7 +207,7 @@ fun OneCityScreenContent(
                     }
                     ButtonWithText(
                         modifier = Modifier
-                        .padding(start = paddingBetweenButtons),
+                            .padding(start = paddingBetweenButtons),
                         width = halfScreenDp - (paddingBetweenButtons / 2) - paddingStartEnd,
                         text = stringResource(R.string.done_button)
                     ) {
@@ -276,8 +279,7 @@ fun TextFieldCity(
             .padding(
                 start = 8.dp,
                 end = 8.dp
-            )
-        ,
+            ),
         isError = errorState,
         label = { Text(text = label) },
         value = text,

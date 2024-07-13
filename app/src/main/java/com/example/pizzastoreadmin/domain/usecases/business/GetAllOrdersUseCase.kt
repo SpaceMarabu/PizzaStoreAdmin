@@ -9,7 +9,7 @@ class GetAllOrdersUseCase  @Inject constructor(
     private val repository: PizzaStoreRepository
 ) {
 
-    fun getOrdersFlow(): Flow<List<Order>> {
+    suspend fun getOrdersFlow(): Flow<List<Order>> {
         return repository.getOrdersUseCase()
     }
 }

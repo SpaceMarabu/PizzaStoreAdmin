@@ -184,6 +184,7 @@ class AppDatabase : FirebaseService {
     }
     //</editor-fold>
 
+    //<editor-fold desc="getListOrdersOneTime">
     @OptIn(ExperimentalCoroutinesApi::class)
     override suspend fun getListOrdersOneTime(): List<OrderDto> {
 
@@ -211,6 +212,7 @@ class AppDatabase : FirebaseService {
         }
         return deferred.getCompleted()
     }
+    //</editor-fold>
 
     //<editor-fold desc="getListProductsFlow">
     override fun getListProductsFlow(): Flow<List<Product>> = listProductsFlow

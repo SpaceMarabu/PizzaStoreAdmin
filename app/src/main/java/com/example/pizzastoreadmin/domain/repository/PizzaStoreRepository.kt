@@ -30,7 +30,7 @@ interface PizzaStoreRepository {
 
     fun deleteProductsUseCase(products: List<Product>)
 
-    fun getOrdersUseCase(): Flow<List<Order>>
+    suspend fun getOrdersUseCase(): Flow<List<Order>>
 
     fun editOrderUseCase(order: Order)
 

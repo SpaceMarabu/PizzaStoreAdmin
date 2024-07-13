@@ -1,115 +1,73 @@
 package com.example.pizzastoreadmin.data.workers
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
+import android.content.Context.NOTIFICATION_SERVICE
+import android.os.Build
+import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkerParameters
+import com.example.pizzastore.R
 import com.example.pizzastoreadmin.data.localdb.PizzaDao
-import com.example.pizzastoreadmin.data.localdb.entity.orders.ListOrdersDbModel
-import com.example.pizzastoreadmin.data.localdb.entity.orders.OrderDbModel
-import com.example.pizzastoreadmin.data.localdb.entity.products.ProductDbModel
-import com.example.pizzastoreadmin.data.mappers.LocalMapper
-import com.example.pizzastoreadmin.data.mappers.RemoteMapper
 import com.example.pizzastoreadmin.data.remotedb.FirebaseService
-import com.example.pizzastoreadmin.domain.entity.Order
-import com.example.pizzastoreadmin.domain.entity.Product
 import kotlinx.coroutines.delay
 
 class LoadOrdersWorker(
-    context: Context,
-    private val workerParameters: WorkerParameters,
+    private val context: Context,
+    workerParameters: WorkerParameters,
     private val firebaseService: FirebaseService,
-    private val pizzaDao: PizzaDao,
-    private val remoteMapper: RemoteMapper,
-    private val localMapper: LocalMapper
+    private val pizzaDao: PizzaDao
 ) : CoroutineWorker(context, workerParameters) {
-
-//    override suspend fun doWork(): Result {
-//        firebaseService.getListOrdersFlow()
-//            .collect { listOrdersDto ->
-//                var productsDbModel: List<ProductDbModel>
-//                val productsList = mutableListOf<Product>()
-//                pizzaDao.getProducts().collect daoCollect@{ collectedProductList ->
-//
-//                    if (collectedProductList != null) {
-//                        productsDbModel = collectedProductList.products
-//                    } else {
-//                        return@daoCollect
-//                    }
-//
-//                    productsDbModel.forEach { productDbModel ->
-//                        val currentProduct = localMapper.dbModelToProduct(productDbModel)
-//                        productsList.add(currentProduct)
-//                    }
-//
-//                    val listOrders = mutableListOf<Order>()
-//                    listOrdersDto.forEach { orderDtoFromList ->
-//                        val currentOrder = remoteMapper.mapOrderDtoToEntity(
-//                            orderDtoFromList,
-//                            productsList
-//                        )
-//                        if (currentOrder != null) {
-//                            listOrders.add(currentOrder)
-//                        }
-//                    }
-//
-//                    val listModelOrders = mutableListOf<OrderDbModel>()
-//                    listOrders.forEach { orderFromList ->
-//                        val currentOrder = localMapper.mapOrderToOrderModel(orderFromList)
-//                        listModelOrders.add(currentOrder)
-//                    }
-//                    pizzaDao.addOrders(ListOrdersDbModel(listModelOrders))
-//                }
-//            }
-//
-//        return Result.success()
-//    }
 
     override suspend fun doWork(): Result {
         while (true) {
             val ordersFromRemoteDb = firebaseService.getListOrdersOneTime()
             val ordersFromLocalDb = pizzaDao.getOrdersNoFlow()
-            if (ordersFromLocalDb?.orders != ordersFromRemoteDb) {
-                val listProducts = mutableListOf<Product>()
-                var productsDbModel: List<ProductDbModel>
-                val productsListModel = pizzaDao.getProductsOneTime()
-
-                if (productsListModel != null) {
-                    productsDbModel = productsListModel.products
-                } else {
-                    continue
-                }
-
-                productsDbModel.forEach { productDbModel ->
-                    val currentProduct = localMapper.dbModelToProduct(productDbModel)
-                    listProducts.add(currentProduct)
-                }
-
-                val listOrders = mutableListOf<Order>()
-                ordersFromRemoteDb.forEach { orderDtoFromList ->
-                    val currentOrder = remoteMapper.mapOrderDtoToEntity(
-                        orderDtoFromList,
-                        listProducts
-                    )
-                    if (currentOrder != null) {
-                        listOrders.add(currentOrder)
-                    }
-                }
-
-                val listModelOrders = mutableListOf<OrderDbModel>()
-                listOrders.forEach { orderFromList ->
-                    val currentOrder = localMapper.mapOrderToOrderModel(orderFromList)
-                    listModelOrders.add(currentOrder)
-                }
-                pizzaDao.addOrders(ListOrdersDbModel(listModelOrders))
-                delay(10000)
+            val sizeListOrdersRemoteDb = ordersFromRemoteDb.size
+            val sizeListOrdersLocalDb = ordersFromLocalDb?.orders?.size
+            if (sizeListOrdersLocalDb != sizeListOrdersRemoteDb) {
+                showNotification()
             }
+            delay(60000)
         }
     }
+
+    private fun showNotification() {
+        val notificationManager = getNotificationManager()
+        val notification = getNotification(notificationManager)
+        notificationManager.notify(1, notification)
+    }
+
+    private fun getNotification(notificationManager: NotificationManager): Notification {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationChannel = NotificationChannel(
+                CHANNEL_ID,
+                CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+            notificationManager.createNotificationChannel(notificationChannel)
+        }
+        return NotificationCompat.Builder(context, CHANNEL_ID)
+            .setContentTitle("Внимание!")
+            .setContentText("Возможно новый заказ!")
+            .setSmallIcon(R.drawable.ic_order)
+            .setOnlyAlertOnce(true)
+            .build()
+    }
+
+    private fun getNotificationManager() =
+        context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
     companion object {
 
         const val NAME = "RefreshDataWorker"
+
+        private const val CHANNEL_ID = "channel_id"
+        private const val CHANNEL_NAME = "orders_notification"
 
         fun makeRequest() =
             OneTimeWorkRequest.Builder(

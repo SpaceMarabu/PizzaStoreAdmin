@@ -5,6 +5,8 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkManager
 import com.example.pizzastoreadmin.data.localdb.PizzaDao
+import com.example.pizzastoreadmin.data.localdb.entity.orders.ListOrdersDbModel
+import com.example.pizzastoreadmin.data.localdb.entity.orders.OrderDbModel
 import com.example.pizzastoreadmin.data.localdb.entity.products.ListProductsDbModel
 import com.example.pizzastoreadmin.data.localdb.entity.products.ProductDbModel
 import com.example.pizzastoreadmin.data.mappers.LocalMapper
@@ -124,74 +126,49 @@ class PizzaStoreRepositoryImpl @Inject constructor(
         firebaseService.getListProductsFlow()
     //</editor-fold>
 
-//    //<editor-fold desc="getOrdersUseCase">
-//    @OptIn(ExperimentalCoroutinesApi::class)
-//    override fun getOrdersUseCase(): Flow<List<Order>> {
-//        return pizzaDao.getOrders().map ordersFlow@{ listOrdersDbModel ->
-//
-//            val orders = mutableListOf<Order>()
-//            val deferred = CompletableDeferred(orders)
-//
-////            withContext(Dispatchers.IO) {
-//            pizzaDao.getProducts().collect { productsModelList ->
-//
-//                val products = mutableListOf<Product>()
-//                productsModelList?.products?.forEach { currentProductModel ->
-//                    val currentProduct = localMapper.dbModelToProduct(currentProductModel)
-//                    products.add(currentProduct)
-//                }
-//
-//                listOrdersDbModel?.orders?.forEach { orderModel ->
-//                    val currentOrder = localMapper.mapOrderDbModelToEntity(orderModel, products)
-//                    if (currentOrder != null) {
-//                        orders.add(currentOrder)
-//                    }
-//                }
-//
-////                    deferred.complete(orders)
-//                return@collect
-//            }
-//
-////                deferred.await()
-////            }
-//
-//
-//            orders.toList()
-//
-////            deferred.getCompleted()
-//
-//        }
-//    }
-//    //</editor-fold>
+    //<editor-fold desc="getOrdersUseCase">
+    override suspend fun getOrdersUseCase(): Flow<List<Order>> =
+        firebaseService.getListOrdersFlow()
+            .map { ordersDto ->
 
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getOrdersUseCase(): Flow<List<Order>> {
-        return pizzaDao.getOrders().flatMapConcat { listOrdersDbModel ->
-            val orders = mutableListOf<Order>()
-
-            // Используем flow для коллекции продуктов и их преобразования
-            val productsFlow = pizzaDao.getProducts().map { productsModelList ->
+                val productsDbModel = pizzaDao.getProductsOneTime()
                 val products = mutableListOf<Product>()
-                productsModelList?.products?.forEach { currentProductModel ->
+                productsDbModel?.products?.forEach { currentProductModel ->
                     val currentProduct = localMapper.dbModelToProduct(currentProductModel)
                     products.add(currentProduct)
                 }
-                products
-            }
 
-            // Создаем новый flow, который обрабатывает заказы и продукты
-            productsFlow.map { products ->
-                listOrdersDbModel?.orders?.forEach { orderModel ->
-                    val currentOrder = localMapper.mapOrderDbModelToEntity(orderModel, products)
+                val orders = mutableListOf<Order>()
+                ordersDto.forEach { orderDto ->
+                    val currentOrder = remoteMapper.mapOrderDtoToEntity(orderDto, products)
                     if (currentOrder != null) {
                         orders.add(currentOrder)
                     }
                 }
-                orders.toList()
+                addOrdersToLocalDb(orders)
+                orders
+
             }
+    //</editor-fold>
+
+    //<editor-fold desc="addOrdersToLocalDb">
+    private suspend fun addOrdersToLocalDb(orders: List<Order>) {
+        val listProducts = mutableListOf<Product>()
+        val productsListModel = pizzaDao.getProductsOneTime()
+
+        productsListModel?.products?.forEach { productDbModel ->
+            val currentProduct = localMapper.dbModelToProduct(productDbModel)
+            listProducts.add(currentProduct)
         }
+
+        val listModelOrders = mutableListOf<OrderDbModel>()
+        orders.forEach { orderFromList ->
+            val currentOrder = localMapper.mapOrderToOrderModel(orderFromList)
+            listModelOrders.add(currentOrder)
+        }
+        pizzaDao.addOrders(ListOrdersDbModel(listModelOrders))
     }
+    //</editor-fold>
 
     //<editor-fold desc="setCurrentCityUseCase">
     override fun setCurrentCityUseCase(city: City?) {

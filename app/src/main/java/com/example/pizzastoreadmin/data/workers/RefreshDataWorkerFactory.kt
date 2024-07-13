@@ -5,16 +5,12 @@ import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import com.example.pizzastoreadmin.data.localdb.PizzaDao
-import com.example.pizzastoreadmin.data.mappers.LocalMapper
-import com.example.pizzastoreadmin.data.mappers.RemoteMapper
 import com.example.pizzastoreadmin.data.remotedb.FirebaseService
 import javax.inject.Inject
 
 class RefreshDataWorkerFactory @Inject constructor(
     private val firebaseService: FirebaseService,
-    private val pizzaDao: PizzaDao,
-    private val remoteMapper: RemoteMapper,
-    private val localMapper: LocalMapper
+    private val pizzaDao: PizzaDao
 ): WorkerFactory() {
 
     override fun createWorker(
@@ -26,9 +22,7 @@ class RefreshDataWorkerFactory @Inject constructor(
             appContext,
             workerParameters,
             firebaseService,
-            pizzaDao,
-            remoteMapper,
-            localMapper
+            pizzaDao
         )
     }
 }

@@ -24,9 +24,9 @@ interface PizzaDao {
     suspend fun addProducts(productsDbModel: ListProductsDbModel)
 
     @Query("SELECT * FROM orders LIMIT 1")
-    fun getOrdersNoFlow(): ListOrdersDbModel?
+    suspend fun getOrdersNoFlow(): ListOrdersDbModel?
 
     @Query("SELECT * FROM products LIMIT 1")
-    fun getProductsOneTime(): ListProductsDbModel?
+    suspend fun getProductsOneTime(): ListProductsDbModel?
 
 }
