@@ -1,9 +1,5 @@
 package com.example.pizzastoreadmin.presentation.order.orders
 
-import android.Manifest
-import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -26,7 +22,6 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,46 +60,13 @@ fun OrdersScreen(
 ) {
 
     val component = getApplicationComponent()
-    val viewModel: OrdersScreenViewModel = viewModel(factory = component.getViewModelFactory())
+    val viewModel: OrdersScreenUDFVM = viewModel(factory = component.getViewModelFactory())
 
-    val screenState = viewModel.screenState.collectAsState()
-
-    when (val currentScreenState = screenState.value) {
-
-        is OrderScreenState.Content -> {
-            OrdersScreenContent(
-                paddingValues = paddingValues,
-                orders = currentScreenState.orders,
-                viewModel = viewModel
-            ) {
-                onOrderClicked()
-            }
-        }
-
-        OrderScreenState.Initial -> {}
-
-        OrderScreenState.Loading -> {
-            CircularLoading()
-        }
-
-    }
-}
-
-@Composable
-fun OrdersScreenContent(
-    paddingValues: PaddingValues,
-    orders: List<Order>,
-    viewModel: OrdersScreenViewModel,
-    onOrderClicked: () -> Unit
-) {
-
-    var filterExpanded by remember {
-        mutableStateOf(false)
-    }
-    val filterState by viewModel.currentFilterFlow.collectAsState()
+    val model = viewModel.model.collectAsState()
+    val currentModelValue = model.value
 
     val thirdScreenWidth = getScreenWidthDp() / 3
-    val filterButtonShape = if (filterExpanded) {
+    val filterButtonShape = if (currentModelValue.statusIsExpanded) {
         RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp)
     } else {
         RoundedCornerShape(10.dp)
@@ -119,62 +81,89 @@ fun OrdersScreenContent(
             width = thirdScreenWidth,
             shape = filterButtonShape
         ) {
-            filterExpanded = !filterExpanded
+            viewModel.onStatusClick()
         }
-
         Box(
             modifier = Modifier
                 .pointerInput(Unit) {
                     detectTapGestures(
-                        onTap = { filterExpanded = false }
+                        onTap = { viewModel.onClickNothing() }
                     )
-                    detectDragGestures(onDrag = { _, _ ->
-                        filterExpanded = false
-                    })
+                    detectDragGestures(onDrag = { _, _ -> viewModel.onClickNothing() })
                 }
         ) {
 
-            if (filterExpanded) {
+            if (currentModelValue.statusIsExpanded) {
                 FilterMenu(
-                    filterState = filterState,
-                    viewModel = viewModel,
+                    filterState = currentModelValue.filterList,
                     widthMenu = thirdScreenWidth
                 ) { orderStatus, value ->
-                    viewModel.changeFilter(orderStatus, value)
+                    viewModel.onStatusItemClick(orderStatus)
                 }
             }
 
-            LazyOrders(
-                paddingValues = paddingValues,
-                orders = orders,
-                viewModel = viewModel,
-                onDragList = {
-                    filterExpanded = false
-                },
-                onOrderClicked = {
-                    viewModel.setOrder(it)
-                    onOrderClicked()
+            when (val currentState = model.value.screenState) {
+
+                is OrderListStore.State.OrderListState.Content -> {
+                    OrdersScreenContent(
+                        paddingValues = paddingValues,
+                        orders = currentState.orders,
+                        onOrderClicked = {
+                            viewModel.onOrderClick(it)
+                            onOrderClicked()
+                        },
+                        onClickNothing = { viewModel.onClickNothing() }
+                    )
                 }
-            )
+
+                OrderListStore.State.OrderListState.Loading -> {
+                    CircularLoading()
+                }
+
+                else -> {}
+            }
+
         }
     }
+
+
 }
+
+//<editor-fold desc="OrdersScreenContent">
+@Composable
+fun OrdersScreenContent(
+    paddingValues: PaddingValues,
+    orders: List<Order>,
+    onClickNothing: () -> Unit,
+    onOrderClicked: (Order) -> Unit
+) {
+    LazyOrders(
+        paddingValues = paddingValues,
+        orders = orders,
+        onClickNothing = {
+            onClickNothing()
+        },
+        onOrderClicked = {
+            onOrderClicked(it)
+        }
+    )
+}
+//</editor-fold>
 
 //<editor-fold desc="LazyOrders">
 @Composable
 fun LazyOrders(
     paddingValues: PaddingValues,
     orders: List<Order>,
-    viewModel: OrdersScreenViewModel,
     onOrderClicked: (Order) -> Unit,
-    onDragList: () -> Unit
+    onClickNothing: () -> Unit
 ) {
 
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 if (available.y != 0f) {
-                    onDragList()
+                    onClickNothing()
                 }
                 return Offset.Zero
             }
@@ -202,7 +191,7 @@ fun LazyOrders(
                 Text(
                     modifier = Modifier
                         .background(getStatusColor(order.status)),
-                    text = viewModel.getOrderStatusDescription(order.status),
+                    text = order.status.name,
                     fontSize = 20.sp
                 )
             }
@@ -247,7 +236,6 @@ fun FilterButton(width: Dp, shape: Shape, onClick: () -> Unit) {
 @Composable
 fun FilterMenu(
     filterState: FilterState,
-    viewModel: OrdersScreenViewModel,
     widthMenu: Dp,
     onFilterClicked: (OrderStatus, Boolean) -> Unit
 ) {
@@ -269,7 +257,7 @@ fun FilterMenu(
                 items(listFilters) { orderStatus ->
                     val isCurrentStatusFiltered = filterState.filterMap[orderStatus] ?: false
                     FilterRow(
-                        orderStatusDescription = viewModel.getOrderStatusDescription(orderStatus),
+                        orderStatusDescription = orderStatus.name,
                         isChecked = !isCurrentStatusFiltered,
                         widthElement = widthMenu,
                         statusColor = getStatusColor(orderStatus)
