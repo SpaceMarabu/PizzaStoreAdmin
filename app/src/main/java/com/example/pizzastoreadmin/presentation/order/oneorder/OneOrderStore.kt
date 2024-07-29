@@ -45,12 +45,13 @@ interface OneOrderStore : Store<Intent, State, Label> {
             ) : OneOrderState
 
             object Error : OneOrderState
-
-            object EditingSuccess : OneOrderState
         }
     }
 
-    sealed interface Label
+    sealed interface Label {
+
+        object EditingSuccess : Label
+    }
 }
 
 class OneOrderStoreFactory @Inject constructor(
@@ -89,8 +90,6 @@ class OneOrderStoreFactory @Inject constructor(
         object Error : Msg
 
         data class ChangeStatus(val status: OrderStatus) : Msg
-
-        object EditingSuccess : Msg
 
         object StatusClick : Msg
 
@@ -173,7 +172,7 @@ class OneOrderStoreFactory @Inject constructor(
                 }
 
                 Action.SuccessOrderEditing -> {
-                    dispatch(Msg.EditingSuccess)
+                    publish(Label.EditingSuccess)
                 }
             }
         }
@@ -204,10 +203,6 @@ class OneOrderStoreFactory @Inject constructor(
 
                 Msg.StartLoading -> {
                     this.copy(screenState = OneOrderState.Loading)
-                }
-
-                Msg.EditingSuccess -> {
-                    this.copy(screenState = OneOrderState.EditingSuccess)
                 }
 
                 Msg.StatusClick -> {

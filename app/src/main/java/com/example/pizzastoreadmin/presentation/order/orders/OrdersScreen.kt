@@ -22,6 +22,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,8 +51,9 @@ import com.example.pizzastoreadmin.domain.entity.OrderStatus
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 import com.example.pizzastoreadmin.presentation.funs.DividerList
 import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
-import com.example.pizzastoreadmin.presentation.order.sharedfun.getStatusColor
-import com.example.pizzastoreadmin.presentation.order.sharedstate.FilterState
+import com.example.pizzastoreadmin.presentation.order.utils.FilterState
+import com.example.pizzastoreadmin.presentation.order.utils.LabelEvents
+import com.example.pizzastoreadmin.presentation.order.utils.getStatusColor
 
 @Composable
 fun OrdersScreen(
@@ -61,6 +63,16 @@ fun OrdersScreen(
 
     val component = getApplicationComponent()
     val viewModel: OrdersScreenUDFVM = viewModel(factory = component.getViewModelFactory())
+
+    LaunchedEffect(key1 = Unit) {
+        viewModel.labelEvents.collect{
+            when(it) {
+                LabelEvents.LeaveScreen -> {
+                    leaveScreen()
+                }
+            }
+        }
+    }
 
     val model = viewModel.model.collectAsState()
     val currentModelValue = model.value

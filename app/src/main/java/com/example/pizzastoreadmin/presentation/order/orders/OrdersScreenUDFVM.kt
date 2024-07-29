@@ -1,11 +1,16 @@
 package com.example.pizzastoreadmin.presentation.order.orders
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import com.example.pizzastoreadmin.domain.entity.Order
 import com.example.pizzastoreadmin.domain.entity.OrderStatus
+import com.example.pizzastoreadmin.presentation.order.utils.LabelEvents
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class OrdersScreenUDFVM @Inject constructor(
@@ -13,6 +18,20 @@ class OrdersScreenUDFVM @Inject constructor(
 ) : ViewModel() {
 
     private val store = storeFactory.create()
+
+    val labelEvents = MutableSharedFlow<LabelEvents>()
+
+    init {
+        viewModelScope.launch {
+            store.labels.collect {
+                when (it) {
+                    OrderListStore.Label.LeaveToOrder -> {
+                        labelEvents.emit(LabelEvents.LeaveScreen)
+                    }
+                }
+            }
+        }
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val model: StateFlow<OrderListStore.State> = store.stateFlow

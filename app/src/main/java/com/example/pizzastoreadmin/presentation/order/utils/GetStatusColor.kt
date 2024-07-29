@@ -1,4 +1,4 @@
-package com.example.pizzastoreadmin.presentation.order.sharedfun
+package com.example.pizzastoreadmin.presentation.order.utils
 
 import androidx.compose.ui.graphics.Color
 import com.example.pizzastoreadmin.domain.entity.OrderStatus

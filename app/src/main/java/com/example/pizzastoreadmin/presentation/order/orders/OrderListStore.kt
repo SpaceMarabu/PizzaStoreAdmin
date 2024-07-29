@@ -12,7 +12,7 @@ import com.example.pizzastoreadmin.domain.usecases.service.SetCurrentOrderUseCas
 import com.example.pizzastoreadmin.presentation.order.orders.OrderListStore.Intent
 import com.example.pizzastoreadmin.presentation.order.orders.OrderListStore.Label
 import com.example.pizzastoreadmin.presentation.order.orders.OrderListStore.State
-import com.example.pizzastoreadmin.presentation.order.sharedstate.FilterState
+import com.example.pizzastoreadmin.presentation.order.utils.FilterState
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -49,7 +49,9 @@ interface OrderListStore : Store<Intent, State, Label> {
         }
     }
 
-    sealed interface Label
+    sealed interface Label {
+        object LeaveToOrder : Label
+    }
 }
 
 class OrderListStoreFactory @Inject constructor(
@@ -89,8 +91,6 @@ class OrderListStoreFactory @Inject constructor(
         object StatusClicked : Msg
 
         object ClickNothing : Msg
-
-        object LeaveScreen : Msg
     }
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
@@ -117,7 +117,7 @@ class OrderListStoreFactory @Inject constructor(
             when (intent) {
                 is Intent.OrderClicked -> {
                     setCurrentOrderUseCase.setOrder(intent.order)
-                    dispatch(Msg.LeaveScreen)
+                    publish(Label.LeaveToOrder)
                 }
 
                 Intent.StatusClicked -> {
@@ -202,10 +202,6 @@ class OrderListStoreFactory @Inject constructor(
 
                 Msg.ClickNothing -> {
                     this.copy(statusIsExpanded = false)
-                }
-
-                Msg.LeaveScreen -> {
-                    this.copy(screenState = State.OrderListState.LeaveScreen)
                 }
             }
     }

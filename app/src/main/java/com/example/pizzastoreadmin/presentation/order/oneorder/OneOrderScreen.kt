@@ -23,11 +23,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,8 +51,8 @@ import com.example.pizzastoreadmin.domain.entity.OrderStatus
 import com.example.pizzastoreadmin.domain.entity.Product
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
-import com.example.pizzastoreadmin.presentation.order.sharedfun.getStatusColor
-import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
+import com.example.pizzastoreadmin.presentation.order.utils.LabelEvents
+import com.example.pizzastoreadmin.presentation.order.utils.getStatusColor
 
 @Composable
 fun OneOrderScreen(
@@ -64,7 +63,18 @@ fun OneOrderScreen(
     val component = getApplicationComponent()
     val viewModel: OneOrderScreenViewModel = viewModel(factory = component.getViewModelFactory())
 
+    LaunchedEffect(key1 = Unit) {
+        viewModel.labelEvents.collect {
+            when(it) {
+                LabelEvents.LeaveScreen -> {
+                    leaveScreen()
+                }
+            }
+        }
+    }
+
     val model by viewModel.model.collectAsState()
+
 
     when (val currentState = model.screenState) {
         is OneOrderStore.State.OneOrderState.Content -> {
@@ -87,9 +97,9 @@ fun OneOrderScreen(
             )
         }
 
-        OneOrderStore.State.OneOrderState.EditingSuccess -> {
-            leaveScreen()
-        }
+//        OneOrderStore.State.OneOrderState.EditingSuccess -> {
+//            leaveScreen()
+//        }
 
         OneOrderStore.State.OneOrderState.Loading -> {
             CircularLoading()

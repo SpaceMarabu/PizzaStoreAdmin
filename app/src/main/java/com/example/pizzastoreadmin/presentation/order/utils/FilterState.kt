@@ -1,4 +1,4 @@
-package com.example.pizzastoreadmin.presentation.order.sharedstate
+package com.example.pizzastoreadmin.presentation.order.utils
 
 import com.example.pizzastoreadmin.domain.entity.OrderStatus
 
