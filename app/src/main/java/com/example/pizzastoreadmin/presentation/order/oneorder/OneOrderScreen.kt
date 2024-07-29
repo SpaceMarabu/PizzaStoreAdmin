@@ -64,53 +64,64 @@ fun OneOrderScreen(
     val component = getApplicationComponent()
     val viewModel: OneOrderScreenViewModel = viewModel(factory = component.getViewModelFactory())
 
-    val screenState = viewModel.screenState.collectAsState()
-    val callbackScreenState = viewModel.shouldLeaveScreenState.collectAsState()
+    val model by viewModel.model.collectAsState()
 
-    when (callbackScreenState.value) {
+    when (val currentState = model.screenState) {
+        is OneOrderStore.State.OneOrderState.Content -> {
+            Content(
+                paddingValues = paddingValues,
+                order = currentState.order,
+                statusMenuExpanded = currentState.isStatusExpanded,
+                onStatusClicked = {
+                    viewModel.onStatusClick()
+                },
+                onStatusItemClicked = {
+                    viewModel.onStatusItemClick(it)
+                },
+                onStatusNeedToClose = {
+                    viewModel.onStatusNeedClose()
+                },
+                onDoneClicked = {
+                    viewModel.onDoneClick()
+                }
+            )
+        }
 
-        ShouldLeaveScreenState.Exit -> {
+        OneOrderStore.State.OneOrderState.EditingSuccess -> {
             leaveScreen()
+        }
+
+        OneOrderStore.State.OneOrderState.Loading -> {
+            CircularLoading()
         }
 
         else -> {}
     }
 
-    when (val currentScreenState = screenState.value) {
-
-        is OneOrderScreenState.Content -> {
-            OrdersScreenContent(
-                paddingValues = paddingValues,
-                order = currentScreenState.order,
-                viewModel = viewModel
-            )
-        }
-
-        OneOrderScreenState.Initial -> {}
-
-        OneOrderScreenState.Loading -> {
-            CircularLoading()
-        }
-    }
 }
 
+//<editor-fold desc="Content">
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OrdersScreenContent(
+private fun Content(
     paddingValues: PaddingValues,
     order: Order,
-    viewModel: OneOrderScreenViewModel
+    statusMenuExpanded: Boolean,
+    onStatusClicked: () -> Unit,
+    onStatusItemClicked: (OrderStatus) -> Unit,
+    onStatusNeedToClose: () -> Unit,
+    onDoneClicked: () -> Unit
 ) {
-    var currentOrderState by remember {
-        mutableStateOf(order.status)
-    }
-    var statusMenuExpanded by remember {
-        mutableStateOf(false)
-    }
 
     val thirdScreenWidth = getScreenWidthDp() / 3
 
-    val statuses = viewModel.listOrderStatuses
+    val statuses = listOf(
+        OrderStatus.NEW,
+        OrderStatus.PROCESSING,
+        OrderStatus.FINISH,
+        OrderStatus.ACCEPT
+    )
+
     val bucket = order.bucket.order
     val products = bucket.keys.toList()
 
@@ -130,8 +141,8 @@ fun OrdersScreenContent(
             ),
         floatingActionButton = {
             DoneButton {
-                viewModel.editOrderStatus(currentOrderState)
-                statusMenuExpanded = false
+                onStatusNeedToClose()
+                onDoneClicked()
             }
         }
     ) {
@@ -140,14 +151,14 @@ fun OrdersScreenContent(
                 widthMenu = thirdScreenWidth,
                 order = order,
                 statusButtonShape = statusButtonShape,
-                currentOrderState = currentOrderState,
+                currentOrderState = order.status,
                 statusMenuExpanded = statusMenuExpanded,
                 statuses = statuses,
                 onNewStatusClicked = { status ->
-                    currentOrderState = status
+                    onStatusItemClicked(status)
                 },
-                onStatusClicked = { statusMenuExpandedCallback ->
-                    statusMenuExpanded = statusMenuExpandedCallback
+                onStatusClicked = {
+                    onStatusClicked()
                 }
             )
             Column {
@@ -156,24 +167,25 @@ fun OrdersScreenContent(
                     products = products,
                     bucket = bucket
                 ) {
-                    statusMenuExpanded = false
+                    onStatusNeedToClose()
                 }
             }
         }
 
     }
 }
+//</editor-fold>
 
 //<editor-fold desc="RowOrderNumberWithStatus">
 @Composable
-fun RowOrderNumberWithStatus(
+private fun RowOrderNumberWithStatus(
     widthMenu: Dp,
     order: Order,
     statusButtonShape: Shape,
     currentOrderState: OrderStatus,
     statusMenuExpanded: Boolean,
     statuses: List<OrderStatus>,
-    onStatusClicked: (Boolean) -> Unit,
+    onStatusClicked: () -> Unit,
     onNewStatusClicked: (OrderStatus) -> Unit
 ) {
     Row(
@@ -194,7 +206,7 @@ fun RowOrderNumberWithStatus(
                 .clip(statusButtonShape)
                 .background(getStatusColor(currentOrderState))
                 .clickable {
-                    onStatusClicked(!statusMenuExpanded)
+                    onStatusClicked()
                 },
         ) {
             Text(
@@ -224,7 +236,7 @@ fun RowOrderNumberWithStatus(
 
 //<editor-fold desc="FilterMenu">
 @Composable
-fun StatusesMenu(
+private fun StatusesMenu(
     widthMenu: Dp,
     statuses: List<OrderStatus>,
     onStatusClicked: (OrderStatus) -> Unit
@@ -280,10 +292,10 @@ fun StatusesMenu(
 
 //<editor-fold desc="LazyBucket">
 @Composable
-fun LazyBucket(
+private fun LazyBucket(
     products: List<Product>,
     bucket: Map<Product, Int>,
-    onDragList : () -> Unit
+    onDragList: () -> Unit
 ) {
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
@@ -328,7 +340,7 @@ fun LazyBucket(
 
 //<editor-fold desc="DoneButton">
 @Composable
-fun DoneButton(onClick : () -> Unit) {
+private fun DoneButton(onClick: () -> Unit) {
     FloatingActionButton(
         modifier = Modifier
             .width(100.dp)

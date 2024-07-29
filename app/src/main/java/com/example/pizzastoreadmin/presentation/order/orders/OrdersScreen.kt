@@ -56,7 +56,7 @@ import com.example.pizzastoreadmin.presentation.order.sharedstate.FilterState
 @Composable
 fun OrdersScreen(
     paddingValues: PaddingValues,
-    onOrderClicked: () -> Unit
+    leaveScreen: () -> Unit
 ) {
 
     val component = getApplicationComponent()
@@ -110,7 +110,6 @@ fun OrdersScreen(
                         orders = currentState.orders,
                         onOrderClicked = {
                             viewModel.onOrderClick(it)
-                            onOrderClicked()
                         },
                         onClickNothing = { viewModel.onClickNothing() }
                     )
@@ -118,6 +117,10 @@ fun OrdersScreen(
 
                 OrderListStore.State.OrderListState.Loading -> {
                     CircularLoading()
+                }
+
+                OrderListStore.State.OrderListState.LeaveScreen -> {
+                    leaveScreen()
                 }
 
                 else -> {}

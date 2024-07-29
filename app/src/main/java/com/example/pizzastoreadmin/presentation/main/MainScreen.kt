@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.pizzastoreadmin.navigation.AppNavGraph
 import com.example.pizzastoreadmin.navigation.NavigationItem
@@ -59,7 +60,7 @@ fun MainScreen() {
                 items.forEach { item ->
 
                     val selected = navBackStackEntry?.destination?.hierarchy?.any {
-                        Log.d("BackStackLog", "BackStack: ${it.route} == ${item.screen.route}")
+//                        Log.d("BackStackLog", "BackStack: ${it.route} == ${item.screen.route}")
                         it.route == item.screen.route
                     } ?: false
 

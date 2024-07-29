@@ -44,13 +44,12 @@ interface OrderListStore : Store<Intent, State, Label> {
             object Initial : OrderListState
 
             data class Content(val orders: List<Order>) : OrderListState
+
+            object LeaveScreen : OrderListState
         }
     }
 
-    sealed interface Label {
-
-        data class OrderClicked(val order: Order) : Label
-    }
+    sealed interface Label
 }
 
 class OrderListStoreFactory @Inject constructor(
@@ -90,6 +89,8 @@ class OrderListStoreFactory @Inject constructor(
         object StatusClicked : Msg
 
         object ClickNothing : Msg
+
+        object LeaveScreen : Msg
     }
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
@@ -116,7 +117,7 @@ class OrderListStoreFactory @Inject constructor(
             when (intent) {
                 is Intent.OrderClicked -> {
                     setCurrentOrderUseCase.setOrder(intent.order)
-                    publish(Label.OrderClicked(intent.order))
+                    dispatch(Msg.LeaveScreen)
                 }
 
                 Intent.StatusClicked -> {
@@ -201,6 +202,10 @@ class OrderListStoreFactory @Inject constructor(
 
                 Msg.ClickNothing -> {
                     this.copy(statusIsExpanded = false)
+                }
+
+                Msg.LeaveScreen -> {
+                    this.copy(screenState = State.OrderListState.LeaveScreen)
                 }
             }
     }
