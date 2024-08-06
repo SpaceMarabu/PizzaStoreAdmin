@@ -3,11 +3,11 @@ package com.example.pizzastoreadmin.di
 import androidx.lifecycle.ViewModel
 import com.example.pizzastore.di.ViewModelKey
 import com.example.pizzastore.presentation.start.StartScreenViewModel
-import com.example.pizzastoreadmin.presentation.city.cities.CitiesScreenViewModel
+import com.example.pizzastoreadmin.presentation.city.cities.CitiesScreenUDFVM
 import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreenViewModel
 import com.example.pizzastoreadmin.presentation.images.images.ImagesScreenViewModel
 import com.example.pizzastoreadmin.presentation.images.oneimage.OneImageScreenViewModel
-import com.example.pizzastoreadmin.presentation.order.oneorder.OneOrderScreenViewModel
+import com.example.pizzastoreadmin.presentation.order.oneorder.OneOrderScreenUDFVM
 import com.example.pizzastoreadmin.presentation.order.orders.OrdersScreenUDFVM
 import com.example.pizzastoreadmin.presentation.product.oneproduct.OneProductScreenViewModel
 import com.example.pizzastoreadmin.presentation.product.products.ProductsScreenViewModel
@@ -24,9 +24,9 @@ interface ViewModelModule {
     fun bindStartViewModel(viewModel: StartScreenViewModel): ViewModel
 
     @IntoMap
-    @ViewModelKey(CitiesScreenViewModel::class)
+    @ViewModelKey(CitiesScreenUDFVM::class)
     @Binds
-    fun bindCitiesScreenViewModel(viewModel: CitiesScreenViewModel): ViewModel
+    fun bindCitiesScreenViewModel(viewModel: CitiesScreenUDFVM): ViewModel
 
     @IntoMap
     @ViewModelKey(OneCityScreenViewModel::class)
@@ -59,8 +59,8 @@ interface ViewModelModule {
     fun bindOrdersScreenViewModel(viewModel: OrdersScreenUDFVM): ViewModel
 
     @IntoMap
-    @ViewModelKey(OneOrderScreenViewModel::class)
+    @ViewModelKey(OneOrderScreenUDFVM::class)
     @Binds
-    fun bindOneOrderScreenViewModel(viewModel: OneOrderScreenViewModel): ViewModel
+    fun bindOneOrderScreenViewModel(viewModel: OneOrderScreenUDFVM): ViewModel
 
 }

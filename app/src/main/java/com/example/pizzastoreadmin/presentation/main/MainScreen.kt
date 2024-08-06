@@ -2,15 +2,16 @@ package com.example.pizzastoreadmin.presentation.main
 
 import android.Manifest
 import android.os.Build
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.BottomNavigation
-import androidx.compose.material.BottomNavigationItem
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -18,11 +19,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.pizzastoreadmin.navigation.AppNavGraph
 import com.example.pizzastoreadmin.navigation.NavigationItem
@@ -49,7 +50,7 @@ fun MainScreen() {
 
     Scaffold(
         bottomBar = {
-            BottomNavigation {
+            NavigationBar {
 
                 val items = listOf(
                     NavigationItem.Cities,
@@ -60,11 +61,10 @@ fun MainScreen() {
                 items.forEach { item ->
 
                     val selected = navBackStackEntry?.destination?.hierarchy?.any {
-//                        Log.d("BackStackLog", "BackStack: ${it.route} == ${item.screen.route}")
                         it.route == item.screen.route
                     } ?: false
 
-                    BottomNavigationItem(
+                    NavigationBarItem(
                         selected = selected,
                         onClick = {
                             if (item.screen.route == Screen.ROUTE_ONE_PRODUCT) {
@@ -76,13 +76,17 @@ fun MainScreen() {
                         icon = {
                             Icon(
                                 modifier = Modifier
-                                    .padding(8.dp),
+                                    .padding(8.dp)
+                                    .size(40.dp),
                                 imageVector = ImageVector.vectorResource(item.icon),
                                 contentDescription = null
                             )
                         },
-                        selectedContentColor = MaterialTheme.colors.onPrimary,
-                        unselectedContentColor = MaterialTheme.colors.onSecondary
+                        colors = NavigationBarItemDefaults.colors().copy(
+                            selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSecondary,
+                            selectedIndicatorColor = Color.Transparent
+                        )
                     )
                 }
             }

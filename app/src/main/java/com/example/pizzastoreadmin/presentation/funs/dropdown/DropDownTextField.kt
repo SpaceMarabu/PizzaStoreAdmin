@@ -3,12 +3,12 @@ package com.example.pizzastoreadmin.presentation.funs.dropdown
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ExposedDropdownMenuBox
-import androidx.compose.material.ExposedDropdownMenuDefaults
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -17,7 +17,7 @@ import com.example.pizzastoreadmin.domain.entity.ObjectWithType
 import com.example.pizzastoreadmin.presentation.funs.getOutlinedTextFieldColors
 
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropDownTextField(
     dropDownMenuStates: DropDownMenuStates,
@@ -41,6 +41,7 @@ fun DropDownTextField(
                     top = 8.dp,
                     end = 8.dp
                 ),
+
             shape = MaterialTheme.shapes.small.copy(CornerSize(10.dp)),
             readOnly = true,
             value = dropDownMenuStates.selectedOption.type,
@@ -68,10 +69,12 @@ fun DropDownTextField(
                             selectedOption = selectionOption
                         )
                         onOptionOrOutsideClicked(currentStates)
+                    },
+                    text = {
+                        Text(text = selectionOption.type)
+
                     }
-                ) {
-                    Text(text = selectionOption.type)
-                }
+                )
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.example.pizzastoreadmin.presentation.product.products
 
+import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -19,9 +20,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.FloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -88,6 +90,7 @@ fun ProductsScreen(
 
 
 //<editor-fold desc="Экран со списком продуктов">
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListProductsScreen(
@@ -174,6 +177,7 @@ fun ListProductsScreen(
                         border = BorderStroke(1.dp, Color.Black),
                         shape = RoundedCornerShape(10.dp)
                     ),
+                containerColor = MaterialTheme.colorScheme.primary,
                 shape = RoundedCornerShape(10.dp),
                 onClick = {
                     stateHolder.value = currentStateValue.copy(isButtonClicked = true)

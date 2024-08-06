@@ -1,13 +1,10 @@
 package com.example.pizzastoreadmin.data.repository
 
 import android.net.Uri
-import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkManager
 import com.example.pizzastoreadmin.data.localdb.PizzaDao
-import com.example.pizzastoreadmin.data.localdb.entity.orders.ListOrdersDbModel
 import com.example.pizzastoreadmin.data.localdb.entity.orders.OrderDbModel
-import com.example.pizzastoreadmin.data.localdb.entity.products.ListProductsDbModel
 import com.example.pizzastoreadmin.data.localdb.entity.products.ProductDbModel
 import com.example.pizzastoreadmin.data.mappers.LocalMapper
 import com.example.pizzastoreadmin.data.mappers.RemoteMapper
@@ -23,15 +20,12 @@ import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 
@@ -133,7 +127,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 
                 val productsDbModel = pizzaDao.getProductsOneTime()
                 val products = mutableListOf<Product>()
-                productsDbModel?.products?.forEach { currentProductModel ->
+                productsDbModel?.forEach { currentProductModel ->
                     val currentProduct = localMapper.dbModelToProduct(currentProductModel)
                     products.add(currentProduct)
                 }
@@ -156,7 +150,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
         val listProducts = mutableListOf<Product>()
         val productsListModel = pizzaDao.getProductsOneTime()
 
-        productsListModel?.products?.forEach { productDbModel ->
+        productsListModel?.forEach { productDbModel ->
             val currentProduct = localMapper.dbModelToProduct(productDbModel)
             listProducts.add(currentProduct)
         }
@@ -166,7 +160,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
             val currentOrder = localMapper.mapOrderToOrderModel(orderFromList)
             listModelOrders.add(currentOrder)
         }
-        pizzaDao.addOrders(ListOrdersDbModel(listModelOrders))
+        pizzaDao.addOrders(listModelOrders)
     }
     //</editor-fold>
 
@@ -255,8 +249,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
                     val productModel = localMapper.mapProductToDbModel(currentProduct)
                     productsModelList.add(productModel)
                 }
-                val productsModel = ListProductsDbModel(productsModelList)
-                pizzaDao.addProducts(productsModel)
+                pizzaDao.addProducts(productsModelList)
             }
     }
     //</editor-fold>

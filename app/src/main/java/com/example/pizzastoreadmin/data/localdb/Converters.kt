@@ -12,10 +12,10 @@ import java.lang.reflect.Type
 object Converters {
 
     @TypeConverter
-    fun fromOrdersList(orders: List<OrderDbModel?>?): String? {
-        if (orders == null) {
-            return null
-        }
+    fun fromOrdersList(orders: List<OrderDbModel>): String {
+//        if (orders == null) {
+//            return null
+//        }
         val gson = Gson()
         val type: Type = object :
             TypeToken<List<OrderDbModel?>?>() {}.type

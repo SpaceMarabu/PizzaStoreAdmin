@@ -1,5 +1,6 @@
 package com.example.pizzastoreadmin.presentation.product.oneproduct
 
+import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -17,11 +18,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.FloatingActionButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -91,6 +93,7 @@ fun OneProductScreen(
 }
 
 //<editor-fold desc="OneProductScreenContent">
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OneProductScreenContent(
@@ -190,7 +193,7 @@ fun OneProductScreenContent(
                 }
             }
         }
-    ) { _ ->
+    ) {
         Column {
 
             Box(
@@ -294,12 +297,8 @@ fun TextFieldProduct(
             errorState = false
             text = it
         },
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            unfocusedBorderColor = Color.LightGray,
+        colors = OutlinedTextFieldDefaults.colors().copy(
             unfocusedLabelColor = Color.LightGray,
-            backgroundColor = Color.White,
-            textColor = Color.Black,
-            focusedBorderColor = Color.Black,
             focusedLabelColor = Color.Black,
             cursorColor = Color.Gray
         ),

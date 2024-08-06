@@ -1,5 +1,6 @@
 package com.example.pizzastoreadmin.presentation.city.onecity
 
+import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -18,11 +19,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -85,6 +87,7 @@ fun OneCityScreen(
 }
 
 //<editor-fold desc="OneCityScreenContent">
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun OneCityScreenContent(
@@ -124,7 +127,7 @@ fun OneCityScreenContent(
     Scaffold(
         modifier = Modifier
             .padding(bottom = paddingValues.calculateBottomPadding())
-    ) { _ ->
+    ) {
         LazyColumn {
             item {
                 TextFieldCity(
@@ -252,6 +255,7 @@ fun ButtonWithText(
 //</editor-fold>
 
 //<editor-fold desc="Поле ввода текста">
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TextFieldCity(
     modifier: Modifier = Modifier,
@@ -287,12 +291,8 @@ fun TextFieldCity(
             errorState = false
             text = it
         },
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            unfocusedBorderColor = Color.LightGray,
+        colors = OutlinedTextFieldDefaults.colors().copy(
             unfocusedLabelColor = Color.LightGray,
-            backgroundColor = Color.White,
-            textColor = Color.Black,
-            focusedBorderColor = Color.Black,
             focusedLabelColor = Color.Black,
             cursorColor = Color.Gray
         ),

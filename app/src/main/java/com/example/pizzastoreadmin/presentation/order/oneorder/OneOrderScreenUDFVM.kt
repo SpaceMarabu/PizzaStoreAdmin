@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class OneOrderScreenViewModel @Inject constructor(
+class OneOrderScreenUDFVM @Inject constructor(
     storeFactory: OneOrderStoreFactory
 ) : ViewModel(){
 
