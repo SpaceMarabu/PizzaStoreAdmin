@@ -62,7 +62,7 @@ fun OrdersScreen(
 ) {
 
     val component = getApplicationComponent()
-    val viewModel: OrdersScreenUDFVM = viewModel(factory = component.getViewModelFactory())
+    val viewModel: OrdersScreenUpdater = viewModel(factory = component.getViewModelFactory())
 
     LaunchedEffect(key1 = Unit) {
         viewModel.labelEvents.collect{

@@ -19,21 +19,16 @@ private val DarkColorPalette = darkColorScheme(
 @SuppressLint("ConflictingOnColor")
 private val LightColorPalette = lightColorScheme(
     primary = Color.White,
-    secondary = Color.White,
+    secondary = Color.Gray,
     onPrimary = Black900,
     onSecondary = Black500
 )
 
 @Composable
 fun PizzaStoreAdminTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    val colors = if (darkTheme) {
-        DarkColorPalette
-    } else {
-        LightColorPalette
-    }
 
     MaterialTheme(
-        colorScheme = colors,
+        colorScheme = LightColorPalette,
         typography = Typography,
         shapes = Shapes,
         content = content

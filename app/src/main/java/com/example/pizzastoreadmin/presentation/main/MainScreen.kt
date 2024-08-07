@@ -98,7 +98,7 @@ fun MainScreen() {
             navHostController = navigationState.navHostController,
             citiesScreenContent = {
                 CitiesScreen(paddingValues) {
-                    navigationState.navigateThrowHierarchy(Screen.ROUTE_ONE_CITY)
+                    navigationState.navigateTo(Screen.ROUTE_ONE_CITY)
                 }
             },
             oneCityScreenContent = {

@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class OrdersScreenUDFVM @Inject constructor(
+class OrdersScreenUpdater @Inject constructor(
     storeFactory: OrderListStoreFactory,
 ) : ViewModel() {
 

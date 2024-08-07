@@ -1,8 +1,6 @@
 package com.example.pizzastoreadmin.presentation.city.cities
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -38,6 +36,7 @@ import com.example.pizzastoreadmin.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 import com.example.pizzastoreadmin.presentation.funs.DividerList
+import com.example.pizzastoreadmin.presentation.funs.showToastWarn
 
 @Composable
 fun CitiesScreen(
@@ -46,13 +45,13 @@ fun CitiesScreen(
 ) {
 
     val component = getApplicationComponent()
-    val viewModel: CitiesScreenUDFVM = viewModel(factory = component.getViewModelFactory())
+    val viewModel: CitiesScreenUpdater = viewModel(factory = component.getViewModelFactory())
 
     val screenState by viewModel.model.collectAsState()
 
     val currentContext = LocalContext.current
     val deletingSuccessText = stringResource(R.string.success_deleting)
-    val deletingFailedText = stringResource(R.string.deleting_failed)
+    val deletingFailedText = stringResource(R.string.failed)
 
     LaunchedEffect(key1 = Unit) {
         viewModel.labelEvents.collect {
@@ -96,9 +95,7 @@ fun CitiesScreen(
     }
 }
 
-fun showToastWarn(context: Context, text: String) {
-    Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
-}
+
 
 //<editor-fold desc="Экран со списком городов">
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")

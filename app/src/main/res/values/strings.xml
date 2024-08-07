@@ -11,5 +11,7 @@
     <string name="order">Order</string>
     <string name="bucket_string">Корзина:</string>
     <string name="success_deleting">Удалено успешно!</string>
-    <string name="deleting_failed">Что-то пошло не так</string>
+    <string name="failed">Что-то пошло не так</string>
+    <string name="pizza_store_address">Адрес Пиццерии</string>
+    <string name="pizza_store_geocode">Геометка пиццерии</string>
 </resources>

@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class CitiesScreenUDFVM @Inject constructor(
+class CitiesScreenUpdater @Inject constructor(
     storeFactory: CitiesStoreFactory,
 ) : ViewModel() {
 
