@@ -1,5 +1,6 @@
 package com.example.pizzastoreadmin.presentation.city.onecity
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
@@ -16,6 +17,11 @@ class OneCityScreenUpdater @Inject constructor(
 ) : ViewModel() {
 
    val store = storeFactory.create()
+
+    override fun onCleared() {
+        super.onCleared()
+        Log.d("TEST_CLEAR", "done")
+    }
 
     private val _labelEvents = MutableSharedFlow<LabelEvents>()
     val labelEvents = _labelEvents.asSharedFlow()

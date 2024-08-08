@@ -173,6 +173,7 @@ class CitiesStoreFactory @Inject constructor(
                     val currentButtonState = getState().buttonState
                     when (currentButtonState) {
                         State.ButtonState.Add -> {
+                            setCurrentCityUseCase.setCity(null)
                             publish(Label.AddCity)
                         }
 

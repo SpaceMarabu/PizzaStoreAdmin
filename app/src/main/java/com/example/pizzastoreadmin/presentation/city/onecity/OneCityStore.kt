@@ -326,7 +326,7 @@ class OneCityStoreFactory @Inject constructor(
             count: Int
         ): State.TextFieldValuesValid {
             val initialListValidation: MutableList<Boolean> = mutableListOf()
-            repeat(count) { i ->
+            repeat(count) {
                 initialListValidation.add(true)
             }
             return State.TextFieldValuesValid(
