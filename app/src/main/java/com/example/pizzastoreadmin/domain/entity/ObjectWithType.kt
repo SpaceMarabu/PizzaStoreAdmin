@@ -1,5 +1,3 @@
 package com.example.pizzastoreadmin.domain.entity
 
-interface ObjectWithType {
-    val type: String
-}
+open class ObjectWithType(open val type: String)

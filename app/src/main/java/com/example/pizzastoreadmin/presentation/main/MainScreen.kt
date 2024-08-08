@@ -56,6 +56,7 @@ fun MainScreen() {
     val navBackStackEntry by navigationState.navHostController.currentBackStackEntryAsState()
 
     val screenWidthPx = getScreenWidthDp().dpToPx()
+    val customBorderColor = MaterialTheme.colorScheme.onPrimary
 
     Scaffold(
         bottomBar = {
@@ -63,7 +64,7 @@ fun MainScreen() {
                 modifier = Modifier
                     .drawBehind {
                         drawLine(
-                            color = Color.Black,
+                            color = customBorderColor,
                             start = Offset(0f, 0f),
                             end = Offset(screenWidthPx, 0f),
                             strokeWidth = 2.dp.toPx()

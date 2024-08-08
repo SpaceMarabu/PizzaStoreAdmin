@@ -47,6 +47,8 @@ import com.example.pizzastore.domain.entity.Point
 import com.example.pizzastoreadmin.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
+import com.example.pizzastoreadmin.presentation.funs.getOutlinedColors
+import com.example.pizzastoreadmin.presentation.funs.getOutlinedTextFieldColors
 import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
 import com.example.pizzastoreadmin.presentation.funs.showToastWarn
 
@@ -278,13 +280,7 @@ fun TextFieldCity(
         onValueChange = {
             textResult(it)
         },
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-            unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-            focusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-            cursorColor = MaterialTheme.colorScheme.onSecondary,
-            focusedSupportingTextColor = MaterialTheme.colorScheme.onPrimary,
-        ).copy(focusedIndicatorColor = MaterialTheme.colorScheme.onPrimary),
+        colors = getOutlinedColors(),
         shape = MaterialTheme.shapes.small.copy(CornerSize(10.dp))
     )
 }

@@ -1,7 +1,6 @@
 package com.example.pizzastoreadmin.presentation.product.oneproduct
 
 import android.annotation.SuppressLint
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,12 +20,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,15 +44,18 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.pizzastore.R
 import com.example.pizzastoreadmin.di.getApplicationComponent
+import com.example.pizzastoreadmin.domain.entity.ObjectWithType
+import com.example.pizzastoreadmin.domain.entity.Product
 import com.example.pizzastoreadmin.domain.entity.ProductType
 import com.example.pizzastoreadmin.navigation.Screen
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 import com.example.pizzastoreadmin.presentation.funs.dropdown.DropDownMenuStates
 import com.example.pizzastoreadmin.presentation.funs.dropdown.DropDownTextField
+import com.example.pizzastoreadmin.presentation.funs.dropdown.DropDownTextFieldNew
+import com.example.pizzastoreadmin.presentation.funs.getOutlinedColors
 import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
+import com.example.pizzastoreadmin.presentation.funs.showToastWarn
 import com.example.pizzastoreadmin.presentation.product.oneproduct.states.EditType
-import com.example.pizzastoreadmin.presentation.product.oneproduct.states.OneProductScreenState
-import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
 
 @Composable
 fun OneProductScreen(
@@ -64,29 +66,56 @@ fun OneProductScreen(
 ) {
 
     val component = getApplicationComponent()
-    val viewModel: OneProductScreenViewModel = viewModel(factory = component.getViewModelFactory())
+    val updater: OneProductScreenUpdater = viewModel(factory = component.getViewModelFactory())
 
-    val screenState = viewModel.state.collectAsState()
+    val model by updater.model.collectAsState()
 
+    val currentContext = LocalContext.current
+    val deletingFailedText = stringResource(R.string.failed)
 
-    when (screenState.value) {
+    LaunchedEffect(key1 = Unit) {
+        updater.labelEvents.collect {
+            when (it) {
+                LabelEvent.ErrorRepositoryResponse -> {
+                    showToastWarn(currentContext, deletingFailedText)
+                }
 
-        OneProductScreenState.Initial -> {}
+                LabelEvent.ExitScreen -> {
+                    onExitLet()
+                }
 
-        is OneProductScreenState.Content -> {
-            OneProductScreenContent(
-                paddingValues = paddingValues,
-                viewModel = viewModel,
-                photoUriString = photoUriString,
-                needPhotoUri = {
+                LabelEvent.PictureClick -> {
                     needPhotoUri()
                 }
-            ) {
-                onExitLet()
             }
         }
+    }
 
-        OneProductScreenState.Loading -> {
+
+    when (val contentState = model.contentState) {
+
+        is OneProductStore.State.ContentState.Content -> {
+            OneProductScreenContent(
+                paddingValues = paddingValues,
+                product = contentState.product,
+                listProductTypes = model.listProductTypes,
+                isDropDownExpanded = model.isDropDownExpanded,
+                photoUriString = photoUriString,
+                onPictureClick = {
+                    updater.clickPicture()
+                },
+                onDoneClick = { updater.doneClick() },
+                onDropDownClick = { updater.clickDropDown() },
+                onProductTypeSelected = { updater.clickType(it) },
+                onNameChange = { updater.changeProductName(it) },
+                onPriceChange = { updater.changeProductPrice(it) },
+                onDescriptionChange = { updater.changeDescription(it) }
+            )
+        }
+
+        OneProductStore.State.ContentState.Error -> {}
+        OneProductStore.State.ContentState.Initial -> {}
+        OneProductStore.State.ContentState.Loading -> {
             CircularLoading()
         }
     }
@@ -94,19 +123,21 @@ fun OneProductScreen(
 
 //<editor-fold desc="OneProductScreenContent">
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OneProductScreenContent(
     paddingValues: PaddingValues,
-    viewModel: OneProductScreenViewModel,
+    product: Product,
+    listProductTypes: List<ProductType>,
+    isDropDownExpanded: Boolean,
     photoUriString: String?,
-    needPhotoUri: () -> Unit,
-    onExitLet: () -> Unit
+    onPictureClick: () -> Unit,
+    onDoneClick: () -> Unit,
+    onDropDownClick: () -> Unit,
+    onProductTypeSelected: (ProductType) -> Unit,
+    onNameChange: (String) -> Unit,
+    onPriceChange: (String) -> Unit,
+    onDescriptionChange: (String) -> Unit
 ) {
-
-    val shouldLeaveScreen = viewModel.shouldLeaveScreenState.collectAsState()
-    val currentProductState by viewModel.currentProduct.collectAsState()
-    val needCallback by viewModel.needCallback.collectAsState()
 
     val screenWidthDp = getScreenWidthDp()
     val edgeOfBoxPicture = 300.dp
@@ -119,7 +150,7 @@ fun OneProductScreenContent(
                     (photoUriString != null && photoUriString.contains(Screen.KEY_URI_STRING))
                     || photoUriString == null
                 )
-                    currentProductState.product.photo
+                    product.photo
                         ?: R.drawable.pic_hungry_cat
                 else
                     photoUriString
@@ -135,62 +166,25 @@ fun OneProductScreenContent(
         model = request
     )
 
-    var dropDownMenuStates by remember {
-        mutableStateOf(
-            DropDownMenuStates(
-                isProductMenuExpanded = false,
-                selectedOption = currentProductState.product.type
-            )
-        )
-    }
-
-    if (needCallback) {
-        viewModel.editProduct(EditType.PHOTO, imageSource.toString())
-        viewModel.editProduct(dropDownMenuStates.selectedOption as ProductType)
-    }
-
-    when (shouldLeaveScreen.value) {
-        is ShouldLeaveScreenState.Error -> {
-            val currentLeaveState = shouldLeaveScreen.value as ShouldLeaveScreenState.Error
-            Toast.makeText(
-                LocalContext.current,
-                currentLeaveState.description,
-                Toast.LENGTH_LONG
-            ).show()
-        }
-
-        ShouldLeaveScreenState.Exit -> {
-            onExitLet()
-        }
-
-        ShouldLeaveScreenState.Processing -> {}
-    }
-
     Scaffold(
         modifier = Modifier
             .padding(bottom = paddingValues.calculateBottomPadding()),
         floatingActionButton = {
-            if (
-                currentProductState.isNameValid
-                && currentProductState.isPriceValid
-                && currentProductState.isPhotoIsNotEmpty
-            ) {
-                FloatingActionButton(
-                    modifier = Modifier
-                        .width(100.dp)
-                        .border(
-                            border = BorderStroke(1.dp, Color.Black),
-                            shape = RoundedCornerShape(10.dp)
-                        ),
-                    shape = RoundedCornerShape(10.dp),
-                    onClick = {
-                        viewModel.exitScreen()
-                    }) {
-                    Text(
-                        text = stringResource(id = R.string.done_button),
-                        fontSize = 24.sp
-                    )
-                }
+            FloatingActionButton(
+                modifier = Modifier
+                    .width(100.dp)
+                    .border(
+                        border = BorderStroke(1.dp, Color.Black),
+                        shape = RoundedCornerShape(10.dp)
+                    ),
+                shape = RoundedCornerShape(10.dp),
+                onClick = {
+                    onDoneClick()
+                }) {
+                Text(
+                    text = stringResource(id = R.string.done_button),
+                    fontSize = 24.sp
+                )
             }
         }
     ) {
@@ -212,8 +206,7 @@ fun OneProductScreenContent(
                         shape = RoundedCornerShape(10.dp)
                     )
                     .clickable {
-                        needPhotoUri()
-                        viewModel.needCallbackScreen()
+                        onPictureClick()
                     }
             ) {
                 Image(
@@ -223,38 +216,36 @@ fun OneProductScreenContent(
                 )
             }
 
-            DropDownTextField(
-                dropDownMenuStates = dropDownMenuStates,
-                options = viewModel.getAllProductTypes()
-            ) { menuStatesResult ->
-                dropDownMenuStates = menuStatesResult
-            }
+            DropDownTextFieldNew(
+                isDropDownExpanded = isDropDownExpanded,
+                options = listProductTypes,
+                selectedOption = product.type,
+                onOptionClicked = { onProductTypeSelected(it as ProductType) },
+                onDropDownClicked = { onDropDownClick() }
+            )
 
             TextFieldProduct(
                 label = "Name",
-                textIn = currentProductState.product.name,
-                needCallback = needCallback,
-                isError = !currentProductState.isNameValid
+                textIn = product.name,
+//                isError = !currentProductState.isNameValid
             ) {
-                viewModel.editProduct(EditType.NAME, it)
+                onNameChange(it)
             }
 
             TextFieldProduct(
                 label = "Price",
-                textIn = currentProductState.product.price.toString(),
-                needCallback = needCallback,
-                isError = !currentProductState.isPriceValid,
+                textIn = product.price.toString(),
+//                isError = !currentProductState.isPriceValid,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             ) {
-                viewModel.editProduct(EditType.PRICE, it)
+                onPriceChange(it)
             }
 
             TextFieldProduct(
                 label = "Description",
-                textIn = currentProductState.product.description,
-                needCallback = needCallback
+                textIn = product.description,
             ) {
-                viewModel.editProduct(EditType.DESCRIPTION, it)
+                onDescriptionChange(it)
             }
 
         }
@@ -267,21 +258,11 @@ fun OneProductScreenContent(
 fun TextFieldProduct(
     modifier: Modifier = Modifier,
     label: String,
-    textIn: String? = "",
+    textIn: String = "",
     isError: Boolean = false,
-    needCallback: Boolean,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     textResult: (String) -> Unit
 ) {
-
-    var text by remember(textIn) { mutableStateOf(textIn ?: "") }
-    var errorState by remember(isError) {
-        mutableStateOf(isError)
-    }
-
-    if (needCallback) {
-        textResult(text)
-    }
 
     OutlinedTextField(
         modifier = modifier
@@ -290,18 +271,13 @@ fun TextFieldProduct(
                 start = 8.dp,
                 end = 8.dp
             ),
-        isError = errorState,
+        isError = isError,
         label = { Text(text = label) },
-        value = text,
+        value = textIn,
         onValueChange = {
-            errorState = false
-            text = it
+            textResult(it)
         },
-        colors = OutlinedTextFieldDefaults.colors().copy(
-            unfocusedLabelColor = Color.LightGray,
-            focusedLabelColor = Color.Black,
-            cursorColor = Color.Gray
-        ),
+        colors = getOutlinedColors(),
         shape = MaterialTheme.shapes.small.copy(CornerSize(10.dp)),
         keyboardOptions = keyboardOptions
     )

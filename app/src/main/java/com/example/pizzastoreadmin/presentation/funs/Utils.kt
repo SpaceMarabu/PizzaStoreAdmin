@@ -2,6 +2,9 @@ package com.example.pizzastoreadmin.presentation.funs
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -20,3 +23,12 @@ fun Modifier.oneSidedBorder(borderWidth: Dp, leftPoint: Offset, rightPoint: Offs
         drawLine(color = Color.Black, start = leftPoint, end = rightPoint, strokeWidth = 1f)
     }
 )
+
+@Composable
+fun getOutlinedColors() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+    unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+    focusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+    cursorColor = MaterialTheme.colorScheme.onSecondary,
+    focusedSupportingTextColor = MaterialTheme.colorScheme.onPrimary,
+).copy(focusedIndicatorColor = MaterialTheme.colorScheme.onPrimary)
