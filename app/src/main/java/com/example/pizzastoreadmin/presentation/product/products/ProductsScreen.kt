@@ -16,23 +16,23 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,10 +50,7 @@ import com.example.pizzastoreadmin.domain.entity.Product
 import com.example.pizzastoreadmin.domain.entity.ProductType
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 import com.example.pizzastoreadmin.presentation.funs.DividerList
-import com.example.pizzastoreadmin.presentation.product.products.states.CurrentStates
-import com.example.pizzastoreadmin.presentation.product.products.states.ProductsScreenState
-import com.example.pizzastoreadmin.presentation.product.products.states.WarningState
-import kotlinx.coroutines.launch
+import com.example.pizzastoreadmin.presentation.funs.showToastWarn
 
 @Composable
 fun ProductsScreen(
@@ -62,109 +59,100 @@ fun ProductsScreen(
 ) {
 
     val component = getApplicationComponent()
-    val viewModel: ProductsScreenViewModel = viewModel(factory = component.getViewModelFactory())
+    val updater: ProductsScreenUpdater = viewModel(factory = component.getViewModelFactory())
 
-    val screenState = viewModel.state.collectAsState()
+    val model by updater.model.collectAsState()
 
+    val currentContext = LocalContext.current
+    val deletingSuccessText = stringResource(R.string.success_deleting)
+    val deletingFailedText = stringResource(R.string.failed)
 
-    when (screenState.value) {
+    val lazyListState = rememberLazyListState()
 
-        is ProductsScreenState.Initial -> {}
+    val clickedType: MutableState<ProductType?> = remember {
+        mutableStateOf(null)
+    }
 
-        is ProductsScreenState.Content -> {
-            val currentScreenState = screenState.value as ProductsScreenState.Content
-            ListProductsScreen(
-                products = currentScreenState.products,
-                viewModel = viewModel,
-                paddingValues = paddingValues
-            ) {
-                onAddOrCityClicked()
+    LaunchedEffect(key1 = Unit) {
+        updater.labelEvents.collect {
+            when (it) {
+                LabelEvent.DeleteComplete -> {
+                    showToastWarn(currentContext, deletingSuccessText)
+                }
+
+                LabelEvent.DeleteFailed -> {
+                    showToastWarn(currentContext, deletingFailedText)
+                }
+
+                LabelEvent.AddOrEditProduct -> {
+                    onAddOrCityClicked()
+                }
+
+                is LabelEvent.TypeClicked -> {
+                    clickedType.value = it.type
+                }
             }
         }
+    }
 
-        ProductsScreenState.Loading -> {
+    if (clickedType.value != null) {
+        LaunchedEffect(key1 = clickedType) {
+            val indexType = model.typeIndexes[clickedType.value]
+            lazyListState.animateScrollToItem(index = indexType ?: 0)
+            clickedType.value = null
+        }
+    }
+
+    val buttonText = when (model.buttonState) {
+        ProductStore.State.ButtonState.Add -> stringResource(id = R.string.add_button)
+        ProductStore.State.ButtonState.Delete -> stringResource(id = R.string.delete_button)
+    }
+
+
+    when (val currentContentState = model.contentState) {
+
+        is ProductStore.State.ContentState.Content -> {
+            ListProductsScreen(
+                products = currentContentState.products,
+                clickedType = model.currentSelectedProductType,
+                listProductTypes = model.productTypes,
+                buttonText = buttonText,
+                paddingValues = paddingValues,
+                lazyListState = lazyListState,
+                onButtonClick = { updater.buttonClick() },
+                onProductTypeClick = { updater.typeClick(it) },
+                onSelectProductClick = { updater.selectProduct(it) },
+                onUnselectProductClick = { updater.unselectProduct(it) },
+                onProductClick = { updater.productClick(it) }
+            )
+        }
+
+        ProductStore.State.ContentState.Error -> {}
+        ProductStore.State.ContentState.Initial -> {}
+        ProductStore.State.ContentState.Loading -> {
             CircularLoading()
         }
     }
+
 }
 
 
 //<editor-fold desc="Экран со списком продуктов">
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListProductsScreen(
     products: List<Product>,
-    viewModel: ProductsScreenViewModel,
+    clickedType: ProductType,
+    listProductTypes: List<ProductType>,
+    buttonText: String,
     paddingValues: PaddingValues,
-    onAddOrProductClicked: () -> Unit
+    lazyListState: LazyListState,
+    onButtonClick: () -> Unit,
+    onProductClick: (Product) -> Unit,
+    onSelectProductClick: (Product) -> Unit,
+    onUnselectProductClick: (Product) -> Unit,
+    onProductTypeClick: (ProductType) -> Unit
 ) {
-
-    val warningState = viewModel.warningState.collectAsState()
-
-    val indexMapForScroll by viewModel.typesMap.collectAsState()
-
-    val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
-
-    val listTypes = viewModel.getAllProductTypes()
-
-    var clickedType: ProductType by remember {
-        mutableStateOf(ProductType.PIZZA)
-    }
-
-    val stateHolder = remember {
-        mutableStateOf(
-            CurrentStates(
-                productsToDelete = mutableSetOf(),
-                isProductsToDeleteEmpty = true,
-                isButtonClicked = false,
-                isItemClicked = false,
-                currentProduct = null
-            )
-        )
-
-    }
-    val currentStateValue = stateHolder.value
-
-    if (currentStateValue.isButtonClicked) {
-        if (!currentStateValue.isProductsToDeleteEmpty) {
-            SideEffect {
-                viewModel.deleteProduct(currentStateValue.productsToDelete.toList())
-            }
-        } else {
-            SideEffect {
-                viewModel.setCurrentProduct()
-            }
-            onAddOrProductClicked()
-        }
-        stateHolder.value = currentStateValue.copy(isButtonClicked = false)
-    }
-    if (currentStateValue.isItemClicked) {
-        SideEffect {
-            viewModel.setCurrentProduct(currentStateValue.currentProduct)
-        }
-        onAddOrProductClicked()
-        stateHolder.value = currentStateValue.copy(isItemClicked = false)
-    }
-
-    when (val currentWarningStateValue = warningState.value) {
-        is WarningState.DeleteComplete -> {
-            ShowToast(text = currentWarningStateValue.description)
-            viewModel.warningCollected()
-            stateHolder.value = currentStateValue.copy(
-                productsToDelete = mutableSetOf(),
-                isProductsToDeleteEmpty = true
-            )
-        }
-
-        is WarningState.DeleteIncomplete -> {
-            ShowToast(text = currentWarningStateValue.description)
-            viewModel.warningCollected()
-        }
-
-        WarningState.Nothing -> {}
-    }
 
     Scaffold(
         modifier = Modifier
@@ -180,14 +168,10 @@ fun ListProductsScreen(
                 containerColor = MaterialTheme.colorScheme.primary,
                 shape = RoundedCornerShape(10.dp),
                 onClick = {
-                    stateHolder.value = currentStateValue.copy(isButtonClicked = true)
+                    onButtonClick()
                 }) {
                 Text(
-                    text = if (currentStateValue.isProductsToDeleteEmpty) {
-                        stringResource(R.string.add_button)
-                    } else {
-                        stringResource(R.string.delete_button)
-                    },
+                    text = buttonText,
                     fontSize = 24.sp
                 )
             }
@@ -198,7 +182,7 @@ fun ListProductsScreen(
                 modifier = Modifier
                     .padding(top = 16.dp)
             ) {
-                items(items = listTypes) { productType ->
+                items(items = listProductTypes) { productType ->
                     Row(
                         modifier = Modifier
                             .padding(start = 8.dp)
@@ -206,16 +190,14 @@ fun ListProductsScreen(
                             .width(150.dp)
                             .height(40.dp)
                             .background(
-                                if (clickedType == productType)
+                                if (clickedType == productType) {
                                     Color.LightGray
-                                else Color.LightGray.copy(alpha = 0.3f)
+                                } else {
+                                    Color.LightGray.copy(alpha = 0.3f)
+                                }
                             )
                             .clickable {
-                                clickedType = productType
-                                coroutineScope.launch {
-                                    val indexType = indexMapForScroll[clickedType]
-                                    listState.animateScrollToItem(index = indexType ?: 0)
-                                }
+                                onProductTypeClick(productType)
                             },
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
@@ -232,30 +214,21 @@ fun ListProductsScreen(
                 modifier = Modifier
                     .padding(top = 8.dp)
             )
-            LazyColumn (
-                state = listState
+            LazyColumn(
+                state = lazyListState
             ) {
                 items(items = products) { product ->
                     ProductRow(
                         product = product,
                         onClick = {
-                            stateHolder.value = currentStateValue
-                                .copy(
-                                    isItemClicked = true,
-                                    currentProduct = product
-                                )
+                            onProductClick(product)
                         }
                     ) { isBoxChecked ->
                         if (isBoxChecked) {
-                            currentStateValue.productsToDelete.add(product)
+                            onSelectProductClick(product)
                         } else {
-                            currentStateValue.productsToDelete.removeIf { it.id == product.id }
+                            onUnselectProductClick(product)
                         }
-                        stateHolder.value = currentStateValue
-                            .copy(
-                                productsToDelete = currentStateValue.productsToDelete,
-                                isProductsToDeleteEmpty = currentStateValue.productsToDelete.size == 0
-                            )
                     }
                     DividerList()
                 }

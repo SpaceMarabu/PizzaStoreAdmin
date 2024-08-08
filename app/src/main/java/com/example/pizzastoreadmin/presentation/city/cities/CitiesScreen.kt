@@ -45,16 +45,16 @@ fun CitiesScreen(
 ) {
 
     val component = getApplicationComponent()
-    val viewModel: CitiesScreenUpdater = viewModel(factory = component.getViewModelFactory())
+    val updater: CitiesScreenUpdater = viewModel(factory = component.getViewModelFactory())
 
-    val screenState by viewModel.model.collectAsState()
+    val screenState by updater.model.collectAsState()
 
     val currentContext = LocalContext.current
     val deletingSuccessText = stringResource(R.string.success_deleting)
     val deletingFailedText = stringResource(R.string.failed)
 
     LaunchedEffect(key1 = Unit) {
-        viewModel.labelEvents.collect {
+        updater.labelEvents.collect {
             when (it) {
                 LabelEvents.DeleteComplete -> {
                     showToastWarn(currentContext, deletingSuccessText)
@@ -80,10 +80,10 @@ fun CitiesScreen(
                 selectedCitiesList = screenState.selectedCities,
                 buttonState = screenState.buttonState,
                 paddingValues = paddingValues,
-                onButtonClick = { viewModel.buttonClick() },
-                onSelectCity = { viewModel.selectCity(it) },
-                onUnselectCity = { viewModel.unselectCity(it) },
-                onCityClick = { viewModel.cityClick(it) }
+                onButtonClick = { updater.buttonClick() },
+                onSelectCity = { updater.selectCity(it) },
+                onUnselectCity = { updater.unselectCity(it) },
+                onCityClick = { updater.cityClick(it) }
             )
         }
 

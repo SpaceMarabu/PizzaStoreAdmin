@@ -10,7 +10,7 @@ import com.example.pizzastoreadmin.presentation.images.oneimage.OneImageScreenVi
 import com.example.pizzastoreadmin.presentation.order.oneorder.OneOrderScreenUpdater
 import com.example.pizzastoreadmin.presentation.order.orders.OrdersScreenUpdater
 import com.example.pizzastoreadmin.presentation.product.oneproduct.OneProductScreenViewModel
-import com.example.pizzastoreadmin.presentation.product.products.ProductsScreenViewModel
+import com.example.pizzastoreadmin.presentation.product.products.ProductsScreenUpdater
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
@@ -49,9 +49,9 @@ interface ViewModelModule {
     fun bindProductScreenViewModel(viewModel: OneProductScreenViewModel): ViewModel
 
     @IntoMap
-    @ViewModelKey(ProductsScreenViewModel::class)
+    @ViewModelKey(ProductsScreenUpdater::class)
     @Binds
-    fun bindProductsScreenViewModel(viewModel: ProductsScreenViewModel): ViewModel
+    fun bindProductsScreenViewModel(viewModel: ProductsScreenUpdater): ViewModel
 
     @IntoMap
     @ViewModelKey(OrdersScreenUpdater::class)

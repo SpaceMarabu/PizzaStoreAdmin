@@ -4,8 +4,10 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -19,18 +21,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.pizzastore.presentation.funs.dpToPx
 import com.example.pizzastoreadmin.navigation.AppNavGraph
 import com.example.pizzastoreadmin.navigation.NavigationItem
 import com.example.pizzastoreadmin.navigation.Screen
 import com.example.pizzastoreadmin.navigation.rememberNavigationState
 import com.example.pizzastoreadmin.presentation.city.cities.CitiesScreen
 import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreen
+import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
 import com.example.pizzastoreadmin.presentation.images.images.ImagesScreen
 import com.example.pizzastoreadmin.presentation.images.oneimage.OneImageScreen
 import com.example.pizzastoreadmin.presentation.order.oneorder.OneOrderScreen
@@ -48,9 +55,21 @@ fun MainScreen() {
 
     val navBackStackEntry by navigationState.navHostController.currentBackStackEntryAsState()
 
+    val screenWidthPx = getScreenWidthDp().dpToPx()
+
     Scaffold(
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                modifier = Modifier
+                    .drawBehind {
+                        drawLine(
+                            color = Color.Black,
+                            start = Offset(0f, 0f),
+                            end = Offset(screenWidthPx, 0f),
+                            strokeWidth = 2.dp.toPx()
+                        )
+                    }
+            ) {
 
                 val items = listOf(
                     NavigationItem.Cities,
