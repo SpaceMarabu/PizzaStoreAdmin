@@ -16,10 +16,9 @@ import dagger.Component
 )
 interface ApplicationComponent {
 
-    fun getViewModelFactory(): ViewModelFactory
-
     fun inject(application: PizzaStoreAdminApplication)
 
+    fun getViewModelFactory(): ViewModelFactory
 
     @Component.Factory
     interface Factory {

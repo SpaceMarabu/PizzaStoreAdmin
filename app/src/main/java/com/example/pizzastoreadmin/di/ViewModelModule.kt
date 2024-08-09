@@ -3,14 +3,14 @@ package com.example.pizzastoreadmin.di
 import androidx.lifecycle.ViewModel
 import com.example.pizzastore.di.ViewModelKey
 import com.example.pizzastore.presentation.start.StartScreenViewModel
-import com.example.pizzastoreadmin.presentation.city.cities.CitiesScreenViewModel
-import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreenViewModel
+import com.example.pizzastoreadmin.presentation.city.cities.CitiesScreenUpdater
+import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreenUpdater
 import com.example.pizzastoreadmin.presentation.images.images.ImagesScreenViewModel
 import com.example.pizzastoreadmin.presentation.images.oneimage.OneImageScreenViewModel
-import com.example.pizzastoreadmin.presentation.order.oneorder.OneOrderScreenViewModel
-import com.example.pizzastoreadmin.presentation.order.orders.OrdersScreenUDFVM
-import com.example.pizzastoreadmin.presentation.product.oneproduct.OneProductScreenViewModel
-import com.example.pizzastoreadmin.presentation.product.products.ProductsScreenViewModel
+import com.example.pizzastoreadmin.presentation.order.oneorder.OneOrderScreenUpdater
+import com.example.pizzastoreadmin.presentation.order.orders.OrdersScreenUpdater
+import com.example.pizzastoreadmin.presentation.product.oneproduct.OneProductScreenUpdater
+import com.example.pizzastoreadmin.presentation.product.products.ProductsScreenUpdater
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
@@ -24,14 +24,14 @@ interface ViewModelModule {
     fun bindStartViewModel(viewModel: StartScreenViewModel): ViewModel
 
     @IntoMap
-    @ViewModelKey(CitiesScreenViewModel::class)
+    @ViewModelKey(CitiesScreenUpdater::class)
     @Binds
-    fun bindCitiesScreenViewModel(viewModel: CitiesScreenViewModel): ViewModel
+    fun bindCitiesScreenViewModel(viewModel: CitiesScreenUpdater): ViewModel
 
     @IntoMap
-    @ViewModelKey(OneCityScreenViewModel::class)
+    @ViewModelKey(OneCityScreenUpdater::class)
     @Binds
-    fun bindOneCityScreenViewModel(viewModel: OneCityScreenViewModel): ViewModel
+    fun bindOneCityScreenViewModel(viewModel: OneCityScreenUpdater): ViewModel
 
     @IntoMap
     @ViewModelKey(OneImageScreenViewModel::class)
@@ -44,23 +44,23 @@ interface ViewModelModule {
     fun bindImagesScreenViewModel(viewModel: ImagesScreenViewModel): ViewModel
 
     @IntoMap
-    @ViewModelKey(OneProductScreenViewModel::class)
+    @ViewModelKey(OneProductScreenUpdater::class)
     @Binds
-    fun bindProductScreenViewModel(viewModel: OneProductScreenViewModel): ViewModel
+    fun bindProductScreenViewModel(viewModel: OneProductScreenUpdater): ViewModel
 
     @IntoMap
-    @ViewModelKey(ProductsScreenViewModel::class)
+    @ViewModelKey(ProductsScreenUpdater::class)
     @Binds
-    fun bindProductsScreenViewModel(viewModel: ProductsScreenViewModel): ViewModel
+    fun bindProductsScreenViewModel(viewModel: ProductsScreenUpdater): ViewModel
 
     @IntoMap
-    @ViewModelKey(OrdersScreenUDFVM::class)
+    @ViewModelKey(OrdersScreenUpdater::class)
     @Binds
-    fun bindOrdersScreenViewModel(viewModel: OrdersScreenUDFVM): ViewModel
+    fun bindOrdersScreenViewModel(viewModel: OrdersScreenUpdater): ViewModel
 
     @IntoMap
-    @ViewModelKey(OneOrderScreenViewModel::class)
+    @ViewModelKey(OneOrderScreenUpdater::class)
     @Binds
-    fun bindOneOrderScreenViewModel(viewModel: OneOrderScreenViewModel): ViewModel
+    fun bindOneOrderScreenViewModel(viewModel: OneOrderScreenUpdater): ViewModel
 
 }

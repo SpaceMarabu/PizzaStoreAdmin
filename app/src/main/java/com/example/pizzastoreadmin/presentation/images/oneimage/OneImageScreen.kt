@@ -1,5 +1,6 @@
 package com.example.pizzastoreadmin.presentation.images.oneimage
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,9 +19,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.FloatingActionButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -40,12 +41,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.pizzastoreadmin.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.PictureType
-import com.example.pizzastoreadmin.presentation.city.cities.ShowToast
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 import com.example.pizzastoreadmin.presentation.funs.dropdown.DropDownMenuStates
 import com.example.pizzastoreadmin.presentation.funs.dropdown.DropDownTextField
 import com.example.pizzastoreadmin.presentation.funs.getOutlinedTextFieldColors
 import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
+import com.example.pizzastoreadmin.presentation.product.products.ShowToast
 import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
 
 @Composable
@@ -79,6 +80,7 @@ fun OneImageScreen(
     }
 }
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OneImageScreenContent(
@@ -141,6 +143,7 @@ fun OneImageScreenContent(
                             shape = RoundedCornerShape(10.dp)
                         ),
                     shape = RoundedCornerShape(10.dp),
+                    containerColor = MaterialTheme.colorScheme.primary,
                     onClick = {
                         val currentUri = currentScreenContentStates.imageUri
                         if (currentUri != null) {

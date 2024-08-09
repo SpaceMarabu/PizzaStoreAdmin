@@ -1,5 +1,6 @@
 package com.example.pizzastoreadmin.presentation.images.images
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -24,9 +25,10 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.FloatingActionButton
-import androidx.compose.material.Icon
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -92,6 +94,7 @@ fun ImagesScreen(
 }
 
 //<editor-fold desc="ImagesScreenContent">
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ImagesScreenContent(
@@ -133,6 +136,7 @@ fun ImagesScreenContent(
                         border = BorderStroke(1.dp, Color.Black),
                         shape = RoundedCornerShape(10.dp)
                     ),
+                containerColor = MaterialTheme.colorScheme.primary,
                 shape = RoundedCornerShape(10.dp),
                 onClick = {
                     if (currentListToDelete.isEmpty()) {

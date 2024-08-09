@@ -27,7 +27,7 @@ class LoadOrdersWorker(
             val ordersFromRemoteDb = firebaseService.getListOrdersOneTime()
             val ordersFromLocalDb = pizzaDao.getOrdersNoFlow()
             val sizeListOrdersRemoteDb = ordersFromRemoteDb.size
-            val sizeListOrdersLocalDb = ordersFromLocalDb?.orders?.size
+            val sizeListOrdersLocalDb = ordersFromLocalDb?.size
             if (sizeListOrdersLocalDb != sizeListOrdersRemoteDb) {
                 showNotification()
             }

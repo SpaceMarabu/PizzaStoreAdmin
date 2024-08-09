@@ -28,7 +28,6 @@ class NavigationState(
     fun navigateThrowHierarchy(route: String) {
         navHostController.navigate(route) {
             popUpTo(navHostController.graph.findStartDestination().id) {
-                inclusive = true
                 saveState = true
             }
             launchSingleTop = true

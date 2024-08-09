@@ -5,10 +5,14 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.example.pizzastoreadmin.data.localdb.entity.orders.ListOrdersDbModel
-import com.example.pizzastoreadmin.data.localdb.entity.products.ListProductsDbModel
+import com.example.pizzastoreadmin.data.localdb.entity.orders.OrderDbModel
+import com.example.pizzastoreadmin.data.localdb.entity.products.ProductDbModel
 
-@Database(entities = [ListOrdersDbModel::class, ListProductsDbModel::class], version = 3, exportSchema = false)
+@Database(
+    entities = [OrderDbModel::class, ProductDbModel::class],
+    version = 3,
+    exportSchema = false
+)
 @TypeConverters(Converters::class)
 abstract class LocalDatabase : RoomDatabase() {
 

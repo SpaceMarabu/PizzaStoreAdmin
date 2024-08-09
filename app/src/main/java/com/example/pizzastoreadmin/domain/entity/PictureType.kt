@@ -2,7 +2,7 @@ package com.example.pizzastoreadmin.domain.entity
 
 sealed class PictureType(
     override val type: String
-): ObjectWithType {
+): ObjectWithType(type) {
 
     object PIZZA : PictureType(TYPE_PIZZA)
     object ROLL : PictureType(TYPE_ROLL)

@@ -1,6 +1,6 @@
 package com.example.pizzastoreadmin.presentation.city.onecity
 
-import android.widget.Toast
+import android.annotation.SuppressLint
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -18,19 +18,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,13 +43,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pizzastore.R
+import com.example.pizzastore.domain.entity.Point
 import com.example.pizzastoreadmin.di.getApplicationComponent
-import com.example.pizzastoreadmin.presentation.city.onecity.states.OneCityScreenState
-import com.example.pizzastoreadmin.presentation.city.onecity.states.PointViewState
+import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
+import com.example.pizzastoreadmin.presentation.funs.getOutlinedColors
+import com.example.pizzastoreadmin.presentation.funs.getOutlinedTextFieldColors
 import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
-import com.example.pizzastoreadmin.presentation.sharedstates.ShouldLeaveScreenState
-import kotlinx.coroutines.flow.StateFlow
+import com.example.pizzastoreadmin.presentation.funs.showToastWarn
 
 @Composable
 fun OneCityScreen(
@@ -60,43 +59,69 @@ fun OneCityScreen(
 ) {
 
     val component = getApplicationComponent()
-    val viewModel: OneCityScreenViewModel = viewModel(factory = component.getViewModelFactory())
+    val updater: OneCityScreenUpdater = viewModel(factory = component.getViewModelFactory())
 
-    val screenState = viewModel.state.collectAsState()
+    val model by updater.model.collectAsState()
 
+    val editingFailedText = stringResource(id = R.string.failed)
+    val currentContext = LocalContext.current
 
-    when (screenState.value) {
+    LaunchedEffect(key1 = Unit) {
+        updater.labelEvents.collect {
+            when (it) {
 
-        OneCityScreenState.Initial -> {}
+                LabelEvents.ErrorRepositoryResponse -> {
+                    showToastWarn(currentContext, editingFailedText)
+                }
 
-        is OneCityScreenState.Content -> {
-            OneCityScreenContent(
-                paddingValues = paddingValues,
-                viewModel = viewModel
-            ) {
-                onExitLet()
+                LabelEvents.Exit -> {
+                    onExitLet()
+                }
             }
         }
+    }
 
-        OneCityScreenState.Loading -> {
+
+    when (val contentState = model.contentState) {
+
+        is OneCityStore.State.ContentState.Content -> {
+            OneCityScreenContent(
+                paddingValues = paddingValues,
+                city = contentState.city,
+                cityNameFieldValid = model.textFieldValuesValid.cityNameCorrect,
+                pointsFieldValid = model.textFieldValuesValid.pointsValuesCorrect,
+                onRemoveClick = { updater.removePointClick(it) },
+                onDoneClick = { updater.doneClick()},
+                onEditCityName = { updater.changeCityName(it) },
+                onEditPoint = { updater.changePoint(it) },
+                onGetNewPointClick = { updater.addPointClick() }
+            )
+        }
+
+        OneCityStore.State.ContentState.Error -> {}
+        OneCityStore.State.ContentState.Initial -> {}
+        OneCityStore.State.ContentState.Loading -> {
             CircularLoading()
         }
     }
 }
 
+
 //<editor-fold desc="OneCityScreenContent">
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun OneCityScreenContent(
     paddingValues: PaddingValues,
-    viewModel: OneCityScreenViewModel,
-    onExitLet: () -> Unit
+    city: City,
+    cityNameFieldValid: Boolean,
+    pointsFieldValid: List<Boolean>,
+    onEditCityName: (String) -> Unit,
+    onEditPoint: (Point) -> Unit,
+    onGetNewPointClick: () -> Unit,
+    onRemoveClick: (Point) -> Unit,
+    onDoneClick: () -> Unit
 ) {
-
-    val listPoints = viewModel.listPoints.collectAsState()
-    val cityState = viewModel.cityState.collectAsState()
-
-    val shouldLeaveScreen = viewModel.shouldLeaveScreenState.collectAsState()
 
     val screenDp = getScreenWidthDp()
     val halfScreenDp = screenDp / 2
@@ -104,47 +129,30 @@ fun OneCityScreenContent(
     val paddingBetweenButtons = 16.dp
     val paddingStartEnd = 8.dp
 
-    when (shouldLeaveScreen.value) {
-        is ShouldLeaveScreenState.Error -> {
-            val currentLeaveState = shouldLeaveScreen.value as ShouldLeaveScreenState.Error
-            Toast.makeText(
-                LocalContext.current,
-                currentLeaveState.description,
-                Toast.LENGTH_LONG
-            ).show()
-        }
-
-        ShouldLeaveScreenState.Exit -> {
-            onExitLet()
-        }
-
-        ShouldLeaveScreenState.Processing -> {}
-    }
-
     Scaffold(
         modifier = Modifier
             .padding(bottom = paddingValues.calculateBottomPadding())
-    ) { _ ->
+    ) {
         LazyColumn {
             item {
                 TextFieldCity(
                     label = stringResource(R.string.city_label),
-                    textIn = cityState.value.city?.name,
-                    needCallbackIn = viewModel.needCallback,
-                    isError = !cityState.value.isCityNameIsCorrect
+                    textIn = city.name,
+                    isError = !cityNameFieldValid
                 ) {
-                    viewModel.editCityName(it)
+                    onEditCityName(it)
                 }
             }
             items(
-                items = listPoints.value,
-                key = { item: PointViewState -> item.point.id }) { pointViewState ->
-
-                val index = listPoints.value.indexOf(pointViewState)
-                val point = pointViewState.point
+                items = city.points,
+                key = { it.id }) { point ->
 
                 Column(
-                    modifier = Modifier.animateItemPlacement(animationSpec = tween(durationMillis = 500))
+                    modifier = Modifier.animateItemPlacement(
+                        animationSpec = tween(
+                            durationMillis = 500
+                        )
+                    )
                 ) {
                     Row(
                         modifier = Modifier
@@ -157,7 +165,7 @@ fun OneCityScreenContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "${index + 1}.",
+                            text = "${point.id}.",
                             fontSize = 20.sp
                         )
                         Icon(
@@ -165,27 +173,25 @@ fun OneCityScreenContent(
                                 .padding(end = 16.dp)
                                 .size(25.dp)
                                 .clickable {
-                                    viewModel.deletePoint(index)
+                                    onRemoveClick(point)
                                 },
                             imageVector = ImageVector.vectorResource(id = R.drawable.ic_cross),
                             contentDescription = null
                         )
                     }
                     TextFieldCity(
-                        label = "Адрес Пиццерии",
+                        label = stringResource(R.string.pizza_store_address),
                         textIn = point.address,
-                        needCallbackIn = viewModel.needCallback,
-                        isError = !pointViewState.isAddressValid
+                        isError = !pointsFieldValid[point.id - 1]
                     ) { text ->
-                        viewModel.editPoint(index = index, address = text)
+                        onEditPoint(point.copy(address = text))
                     }
                     TextFieldCity(
-                        label = "Геометка пиццерии",
+                        label = stringResource(R.string.pizza_store_geocode),
                         textIn = point.coords,
-                        needCallbackIn = viewModel.needCallback,
-                        isError = !pointViewState.isGeopointValid
+                        isError = !pointsFieldValid[point.id - 1]
                     ) { text ->
-                        viewModel.editPoint(index = index, coords = text)
+                        onEditPoint(point.copy(coords = text))
                     }
                 }
             }
@@ -203,7 +209,7 @@ fun OneCityScreenContent(
                         width = halfScreenDp - (paddingBetweenButtons / 2) - paddingStartEnd,
                         text = stringResource(R.string.add_point_button)
                     ) {
-                        viewModel.getNewPoint()
+                        onGetNewPointClick()
                     }
                     ButtonWithText(
                         modifier = Modifier
@@ -211,7 +217,7 @@ fun OneCityScreenContent(
                         width = halfScreenDp - (paddingBetweenButtons / 2) - paddingStartEnd,
                         text = stringResource(R.string.done_button)
                     ) {
-                        viewModel.exitScreen()
+                        onDoneClick()
                     }
                 }
             }
@@ -256,22 +262,10 @@ fun ButtonWithText(
 fun TextFieldCity(
     modifier: Modifier = Modifier,
     label: String,
-    textIn: String? = "",
+    textIn: String = "",
     isError: Boolean,
-    needCallbackIn: StateFlow<Boolean>,
     textResult: (String) -> Unit
 ) {
-
-    val needCallback = needCallbackIn.collectAsState()
-
-    var text by remember(textIn) { mutableStateOf(textIn ?: "") }
-    var errorState by remember(isError) {
-        mutableStateOf(isError)
-    }
-
-    if (needCallback.value) {
-        textResult(text)
-    }
 
     OutlinedTextField(
         modifier = modifier
@@ -280,22 +274,13 @@ fun TextFieldCity(
                 start = 8.dp,
                 end = 8.dp
             ),
-        isError = errorState,
+        isError = isError,
         label = { Text(text = label) },
-        value = text,
+        value = textIn,
         onValueChange = {
-            errorState = false
-            text = it
+            textResult(it)
         },
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            unfocusedBorderColor = Color.LightGray,
-            unfocusedLabelColor = Color.LightGray,
-            backgroundColor = Color.White,
-            textColor = Color.Black,
-            focusedBorderColor = Color.Black,
-            focusedLabelColor = Color.Black,
-            cursorColor = Color.Gray
-        ),
+        colors = getOutlinedColors(),
         shape = MaterialTheme.shapes.small.copy(CornerSize(10.dp))
     )
 }

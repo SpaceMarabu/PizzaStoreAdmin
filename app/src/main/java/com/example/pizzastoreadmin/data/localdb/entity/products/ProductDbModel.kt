@@ -1,12 +1,12 @@
 package com.example.pizzastoreadmin.data.localdb.entity.products
 
-import android.os.Parcelable
 import androidx.room.Entity
-import kotlinx.parcelize.Parcelize
+import androidx.room.PrimaryKey
 
 
-@Entity
+@Entity(tableName = "products")
 data class ProductDbModel(
+    @PrimaryKey
     val id: Int = -1,
     val type: String = "0",
     val name: String = "",

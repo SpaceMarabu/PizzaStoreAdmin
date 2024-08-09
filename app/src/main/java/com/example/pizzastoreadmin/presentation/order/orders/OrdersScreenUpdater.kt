@@ -10,23 +10,25 @@ import com.example.pizzastoreadmin.presentation.order.utils.LabelEvents
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class OrdersScreenUDFVM @Inject constructor(
+class OrdersScreenUpdater @Inject constructor(
     storeFactory: OrderListStoreFactory,
 ) : ViewModel() {
 
     private val store = storeFactory.create()
 
-    val labelEvents = MutableSharedFlow<LabelEvents>()
+    private val _labelEvents = MutableSharedFlow<LabelEvents>()
+    val labelEvents = _labelEvents.asSharedFlow()
 
     init {
         viewModelScope.launch {
             store.labels.collect {
                 when (it) {
                     OrderListStore.Label.LeaveToOrder -> {
-                        labelEvents.emit(LabelEvents.LeaveScreen)
+                        _labelEvents.emit(LabelEvents.LeaveScreen)
                     }
                 }
             }

@@ -1,6 +1,6 @@
 package com.example.pizzastoreadmin.presentation.city.cities
 
-import android.widget.Toast
+import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,19 +12,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material.FloatingActionButton
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,11 +34,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pizzastore.R
 import com.example.pizzastoreadmin.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.City
-import com.example.pizzastoreadmin.presentation.city.cities.states.CitiesScreenState
-import com.example.pizzastoreadmin.presentation.city.cities.states.CurrentStates
-import com.example.pizzastoreadmin.presentation.city.cities.states.WarningState
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 import com.example.pizzastoreadmin.presentation.funs.DividerList
+import com.example.pizzastoreadmin.presentation.funs.showToastWarn
 
 @Composable
 fun CitiesScreen(
@@ -50,96 +45,71 @@ fun CitiesScreen(
 ) {
 
     val component = getApplicationComponent()
-    val viewModel: CitiesScreenViewModel = viewModel(factory = component.getViewModelFactory())
+    val updater: CitiesScreenUpdater = viewModel(factory = component.getViewModelFactory())
 
-    val screenState = viewModel.state.collectAsState()
+    val screenState by updater.model.collectAsState()
 
+    val currentContext = LocalContext.current
+    val deletingSuccessText = stringResource(R.string.success_deleting)
+    val deletingFailedText = stringResource(R.string.failed)
 
-    when (screenState.value) {
+    LaunchedEffect(key1 = Unit) {
+        updater.labelEvents.collect {
+            when (it) {
+                LabelEvents.DeleteComplete -> {
+                    showToastWarn(currentContext, deletingSuccessText)
+                }
 
-        is CitiesScreenState.Initial -> {}
+                LabelEvents.DeleteFailed -> {
+                    showToastWarn(currentContext, deletingFailedText)
+                }
 
-        is CitiesScreenState.Content -> {
-            val currentScreenState = screenState.value as CitiesScreenState.Content
-            ListCitiesScreen(
-                cities = currentScreenState.cities,
-                viewModel = viewModel,
-                paddingValues = paddingValues
-            ) {
-                onAddOrCityClicked()
+                LabelEvents.AddOrEditCity -> {
+                    onAddOrCityClicked()
+                }
             }
         }
+    }
 
-        CitiesScreenState.Loading -> {
+
+    when (val currentScreenState = screenState.contentState) {
+
+        is CitiesStore.State.ContentState.Content -> {
+            ListCitiesScreen(
+                cities = currentScreenState.cities,
+                selectedCitiesList = screenState.selectedCities,
+                buttonState = screenState.buttonState,
+                paddingValues = paddingValues,
+                onButtonClick = { updater.buttonClick() },
+                onSelectCity = { updater.selectCity(it) },
+                onUnselectCity = { updater.unselectCity(it) },
+                onCityClick = { updater.cityClick(it) }
+            )
+        }
+
+        CitiesStore.State.ContentState.Error -> {}
+        CitiesStore.State.ContentState.Initial -> {}
+        CitiesStore.State.ContentState.Loading -> {
             CircularLoading()
         }
     }
 }
 
+
+
 //<editor-fold desc="Экран со списком городов">
-@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ListCitiesScreen(
     cities: List<City>,
-    viewModel: CitiesScreenViewModel,
+    selectedCitiesList: List<City>,
+    buttonState: CitiesStore.State.ButtonState,
     paddingValues: PaddingValues,
-    onAddOrCityClicked: () -> Unit
+    onButtonClick: () -> Unit,
+    onSelectCity: (City) -> Unit,
+    onUnselectCity: (City) -> Unit,
+    onCityClick: (City) -> Unit
 ) {
-
-    val warningState = viewModel.warningState.collectAsState()
-
-    val stateHolder = remember {
-        mutableStateOf(
-            CurrentStates(
-                citiesToDelete = mutableSetOf(),
-                isCitiesToDeleteEmpty = true,
-                isButtonClicked = false,
-                isItemClicked = false,
-                currentCity = null
-            )
-        )
-
-    }
-    val currentStateValue = stateHolder.value
-
-    if (currentStateValue.isButtonClicked) {
-        if (!currentStateValue.isCitiesToDeleteEmpty) {
-            SideEffect {
-                viewModel.deleteCity(currentStateValue.citiesToDelete.toList())
-            }
-        } else {
-            SideEffect {
-                viewModel.setCurrentCity()
-            }
-            onAddOrCityClicked()
-        }
-        stateHolder.value = currentStateValue.copy(isButtonClicked = false)
-    }
-    if (currentStateValue.isItemClicked) {
-        SideEffect {
-            viewModel.setCurrentCity(currentStateValue.currentCity)
-        }
-        onAddOrCityClicked()
-        stateHolder.value = currentStateValue.copy(isItemClicked = false)
-    }
-
-    when (val currentWarningStateValue = warningState.value) {
-        is WarningState.DeleteComplete -> {
-            ShowToast(text = currentWarningStateValue.description)
-            viewModel.warningCollected()
-            stateHolder.value = currentStateValue.copy(
-                citiesToDelete = mutableSetOf(),
-                isCitiesToDeleteEmpty = true
-            )
-        }
-
-        is WarningState.DeleteIncomplete -> {
-            ShowToast(text = currentWarningStateValue.description)
-            viewModel.warningCollected()
-        }
-
-        WarningState.Nothing -> {}
-    }
 
     Scaffold(
         modifier = Modifier
@@ -153,14 +123,20 @@ fun ListCitiesScreen(
                         shape = RoundedCornerShape(10.dp)
                     ),
                 shape = RoundedCornerShape(10.dp),
+                containerColor = MaterialTheme.colorScheme.primary,
                 onClick = {
-                    stateHolder.value = currentStateValue.copy(isButtonClicked = true)
-                }) {
+                    onButtonClick()
+                }
+            ) {
                 Text(
-                    text = if (currentStateValue.isCitiesToDeleteEmpty) {
-                        stringResource(R.string.add_button)
-                    } else {
-                        stringResource(R.string.delete_button)
+                    text = when (buttonState) {
+                        CitiesStore.State.ButtonState.Add -> {
+                            stringResource(R.string.add_button)
+                        }
+
+                        CitiesStore.State.ButtonState.Delete -> {
+                            stringResource(R.string.delete_button)
+                        }
                     },
                     fontSize = 24.sp
                 )
@@ -171,70 +147,53 @@ fun ListCitiesScreen(
             items(items = cities, key = { it.id }) { city ->
                 CityRow(
                     city = city,
-                    onClick = {
-                        stateHolder.value = currentStateValue
-                            .copy(
-                                isItemClicked = true,
-                                currentCity = city
-                            )
-                    }
-                ) { isBoxChecked ->
-                    if (isBoxChecked) {
-                        currentStateValue.citiesToDelete.add(city)
-                    } else {
-                        currentStateValue.citiesToDelete.removeIf { it.id == city.id }
-                    }
-                    stateHolder.value = currentStateValue
-                        .copy(
-                            citiesToDelete = currentStateValue.citiesToDelete,
-                            isCitiesToDeleteEmpty = currentStateValue.citiesToDelete.size == 0
-                        )
-                }
+                    onCityClick = {
+                        onCityClick(it)
+                    },
+                    onSelectCity = {
+                        onSelectCity(it)
+                    },
+                    onUnselectCity = {
+                        onUnselectCity(it)
+                    },
+                    selectedCitiesList = selectedCitiesList
+                )
                 DividerList()
             }
         }
     }
-
 }
 //</editor-fold>
 
-//<editor-fold desc="ShowToast">
-@Composable
-fun ShowToast(text: String) {
-    Toast.makeText(
-        LocalContext.current,
-        text,
-        Toast.LENGTH_SHORT
-    ).show()
-}
-//</editor-fold>
 
 //<editor-fold desc="Строка с чекбоксом">
 @Composable
 fun CityRow(
     city: City,
-    onClick: () -> Unit,
-    onCheckboxChanged: (Boolean) -> Unit
+    selectedCitiesList: List<City>,
+    onCityClick: (City) -> Unit,
+    onSelectCity: (City) -> Unit,
+    onUnselectCity: (City) -> Unit
 ) {
-    var isCheckedCity by remember {
-        mutableStateOf(false)
-    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                onClick()
+                onCityClick(city)
             },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
-            checked = isCheckedCity,
+            checked = city in selectedCitiesList,
             colors = CheckboxDefaults.colors(
                 checkedColor = colorResource(id = R.color.orange)
             ),
-            onCheckedChange = {
-                isCheckedCity = it
-                onCheckboxChanged(isCheckedCity)
+            onCheckedChange = { state ->
+                if (state) {
+                    onSelectCity(city)
+                } else {
+                    onUnselectCity(city)
+                }
             }
         )
         Text(
