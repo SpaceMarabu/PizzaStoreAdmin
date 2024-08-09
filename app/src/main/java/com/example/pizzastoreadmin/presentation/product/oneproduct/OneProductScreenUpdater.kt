@@ -58,4 +58,6 @@ class OneProductScreenUpdater @Inject constructor(
         store.accept(OneProductStore.Intent.DescriptionChange(desc))
 
     fun doneClick() = store.accept(OneProductStore.Intent.DoneClick)
+
+    fun screenClick() = store.accept(OneProductStore.Intent.ScreenClick)
 }

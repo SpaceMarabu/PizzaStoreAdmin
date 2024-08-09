@@ -12,7 +12,6 @@ import com.example.pizzastoreadmin.domain.usecases.business.AddOrEditProductUseC
 import com.example.pizzastoreadmin.domain.usecases.service.GetCurrentProductUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.GetDbResponseUseCase
 import com.example.pizzastoreadmin.domain.usecases.service.SetCurrentProductUseCase
-import com.example.pizzastoreadmin.presentation.funs.dropdown.DropDownMenuStates
 import com.example.pizzastoreadmin.presentation.product.oneproduct.OneProductStore.Intent
 import com.example.pizzastoreadmin.presentation.product.oneproduct.OneProductStore.Label
 import com.example.pizzastoreadmin.presentation.product.oneproduct.OneProductStore.State
@@ -36,6 +35,8 @@ interface OneProductStore : Store<Intent, State, Label> {
         data object DoneClick : Intent
 
         data object DropDownClick : Intent
+
+        data object ScreenClick : Intent
     }
 
     data class State(
@@ -116,6 +117,8 @@ class OneProductStoreFactory @Inject constructor(
         data class ProductLoaded(val product: Product) : Msg
 
         data object DropDownClick : Msg
+
+        data object ScreenClick : Msg
     }
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
@@ -185,6 +188,10 @@ class OneProductStoreFactory @Inject constructor(
                 Intent.DropDownClick -> {
                     dispatch(Msg.DropDownClick)
                 }
+
+                Intent.ScreenClick -> {
+                    dispatch(Msg.ScreenClick)
+                }
             }
         }
 
@@ -238,7 +245,9 @@ class OneProductStoreFactory @Inject constructor(
                 }
 
                 is Msg.TypeClick -> {
-                    this.changeContentState(productType = msg.type)
+                    this.changeContentState(productType = msg.type).copy(
+                        isDropDownExpanded = false
+                    )
                 }
 
                 is Msg.ProductNameChange -> {
@@ -248,6 +257,12 @@ class OneProductStoreFactory @Inject constructor(
                 Msg.DropDownClick -> {
                     this.copy(
                         isDropDownExpanded = !this.isDropDownExpanded
+                    )
+                }
+
+                Msg.ScreenClick -> {
+                    this.copy(
+                        isDropDownExpanded = false
                     )
                 }
             }

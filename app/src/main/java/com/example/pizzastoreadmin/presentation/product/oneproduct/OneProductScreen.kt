@@ -109,7 +109,8 @@ fun OneProductScreen(
                 onProductTypeSelected = { updater.clickType(it) },
                 onNameChange = { updater.changeProductName(it) },
                 onPriceChange = { updater.changeProductPrice(it) },
-                onDescriptionChange = { updater.changeDescription(it) }
+                onDescriptionChange = { updater.changeDescription(it) },
+                onScreenClick = { updater.screenClick() }
             )
         }
 
@@ -136,7 +137,8 @@ fun OneProductScreenContent(
     onProductTypeSelected: (ProductType) -> Unit,
     onNameChange: (String) -> Unit,
     onPriceChange: (String) -> Unit,
-    onDescriptionChange: (String) -> Unit
+    onDescriptionChange: (String) -> Unit,
+    onScreenClick: () -> Unit
 ) {
 
     val screenWidthDp = getScreenWidthDp()
@@ -180,7 +182,9 @@ fun OneProductScreenContent(
                 shape = RoundedCornerShape(10.dp),
                 onClick = {
                     onDoneClick()
-                }) {
+                },
+                containerColor = MaterialTheme.colorScheme.primary
+            ) {
                 Text(
                     text = stringResource(id = R.string.done_button),
                     fontSize = 24.sp
@@ -221,13 +225,13 @@ fun OneProductScreenContent(
                 options = listProductTypes,
                 selectedOption = product.type,
                 onOptionClicked = { onProductTypeSelected(it as ProductType) },
-                onDropDownClicked = { onDropDownClick() }
+                onDropDownClicked = { onDropDownClick() },
+                onScreenClicked = { onScreenClick() }
             )
 
             TextFieldProduct(
                 label = "Name",
-                textIn = product.name,
-//                isError = !currentProductState.isNameValid
+                textIn = product.name
             ) {
                 onNameChange(it)
             }
@@ -235,7 +239,6 @@ fun OneProductScreenContent(
             TextFieldProduct(
                 label = "Price",
                 textIn = product.price.toString(),
-//                isError = !currentProductState.isPriceValid,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             ) {
                 onPriceChange(it)

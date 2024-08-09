@@ -1,6 +1,5 @@
 package com.example.pizzastoreadmin.presentation.funs.dropdown
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CornerSize
@@ -13,15 +12,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.pizzastoreadmin.domain.entity.ObjectWithType
 import com.example.pizzastoreadmin.presentation.funs.getOutlinedColors
-import com.example.pizzastoreadmin.presentation.funs.getOutlinedTextFieldColors
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,30 +25,24 @@ fun DropDownTextFieldNew(
     isDropDownExpanded: Boolean,
     options: List<ObjectWithType>,
     onOptionClicked: (ObjectWithType) -> Unit,
-    onDropDownClicked: () -> Unit
+    onDropDownClicked: () -> Unit,
+    onScreenClicked: () -> Unit
 ) {
 
-    var state by remember {
-        mutableStateOf(false)
-    }
-
     ExposedDropdownMenuBox(
-        expanded = state,
+        modifier = Modifier.padding(
+            start = 8.dp,
+            top = 8.dp,
+            end = 8.dp),
+        expanded = isDropDownExpanded,
         onExpandedChange = {
-//            onDropDownClicked()
+            onDropDownClicked()
         }
     ) {
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    start = 8.dp,
-                    top = 8.dp,
-                    end = 8.dp
-                )
-                .clickable {
-                    state = !state
-                },
+                .menuAnchor(),
             shape = MaterialTheme.shapes.small.copy(CornerSize(10.dp)),
             readOnly = true,
             value = selectedOption.type,
@@ -62,25 +50,26 @@ fun DropDownTextFieldNew(
             label = { Text("Type") },
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(
-                    expanded = state
+                    expanded = isDropDownExpanded
                 )
             },
             colors = getOutlinedColors()
         )
         DropdownMenu(
-            expanded = state,
+            modifier = Modifier
+                .exposedDropdownSize(true),
+            expanded = isDropDownExpanded,
             onDismissRequest = {
-                state = !state
+                onScreenClicked()
             }
         ) {
-            options.forEach { selectionOption ->
+            options.filter { it != selectedOption }.forEach { selectionOption ->
                 DropdownMenuItem(
                     onClick = {
                         onOptionClicked(selectionOption)
                     },
                     text = {
                         Text(text = selectionOption.type)
-
                     }
                 )
             }
