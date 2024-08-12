@@ -27,11 +27,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -67,27 +67,39 @@ fun ImagesScreen(
 ) {
 
     val component = getApplicationComponent()
-    val viewModel: ImagesScreenViewModel = viewModel(factory = component.getViewModelFactory())
+    val updater: ImagesScreenUpdater = viewModel(factory = component.getViewModelFactory())
 
-    val screenState by viewModel.state.collectAsState()
+    val model by updater.model.collectAsState()
 
-    when (screenState) {
+    LaunchedEffect(key1 = Unit) {
+        updater.labelEvents.collect {
+            when (it) {
 
-        ImagesScreenState.Initial -> {}
+                LabelEvent.AddClick -> {
+                    addImageClicked()
+                }
 
-        is ImagesScreenState.Content -> {
+                is LabelEvent.PictureChosen -> {
+                    exitScreen(it.uriString)
+                }
+            }
+        }
+    }
+
+    when (val currentContentState = model.contentState) {
+        is PicturesStore.State.ContentState.Content -> {
             ImagesScreenContent(
-                viewModel = viewModel,
+                viewModel = updater,
                 paddingValues = paddingValues,
                 addImageClicked = {
                     addImageClicked()
                 }
-            ) { uriString ->
-                exitScreen(uriString)
-            }
+            )
         }
 
-        ImagesScreenState.Loading -> {
+        PicturesStore.State.ContentState.Error -> {}
+        PicturesStore.State.ContentState.Initial -> {}
+        PicturesStore.State.ContentState.Loading -> {
             CircularLoading()
         }
     }
@@ -95,31 +107,19 @@ fun ImagesScreen(
 
 //<editor-fold desc="ImagesScreenContent">
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ImagesScreenContent(
-    viewModel: ImagesScreenViewModel,
     paddingValues: PaddingValues,
-    addImageClicked: () -> Unit,
-    exitScreen: (uriString: String) -> Unit
+    listTypes: List<PictureType>,
+    currentClickedType: PictureType,
+    currentButtonState: PicturesStore.State.ButtonState,
+    listPictures: List<Uri>,
+    deletingList: List<Int>,
+    pictureClick: (uriString: String) -> Unit,
+    pictureLongClick: (index: Int) -> Unit,
+    buttonClick: () -> Unit,
+    typeClick: (PictureType) -> Unit
 ) {
-
-    val listTypes = viewModel.getAllPictureTypes()
-    val screenWidthDp = getScreenWidthDp()
-    val startEndPadding = 8.dp
-    val contentLazyGridWidth = (screenWidthDp - (startEndPadding * 2)) / 3
-
-    val listPictures by viewModel.listPicturesUriState.collectAsState()
-    val isLoadingContentState by viewModel.isLoadingContent.collectAsState()
-
-    val listImagesToDelete: MutableState<List<Int>> = remember {
-        mutableStateOf(listOf())
-    }
-    val currentListToDelete = listImagesToDelete.value
-
-    var clickedType: PictureType by remember {
-        mutableStateOf(PictureType.PIZZA)
-    }
 
     val imageState: MutableState<AsyncImagePainter.State> = remember {
         mutableStateOf(AsyncImagePainter.State.Loading(null))
@@ -139,23 +139,18 @@ fun ImagesScreenContent(
                 containerColor = MaterialTheme.colorScheme.primary,
                 shape = RoundedCornerShape(10.dp),
                 onClick = {
-                    if (currentListToDelete.isEmpty()) {
-                        addImageClicked()
-                    } else {
-                        val listUriToDelete = mutableListOf<Uri>()
-                        currentListToDelete.forEach {
-                            listUriToDelete.add(listPictures[it])
-                        }
-                        viewModel.deleteImages(listUriToDelete)
-                        listImagesToDelete.value = listOf()
-                    }
+                    buttonClick()
                 }
             ) {
                 Text(
-                    text = if (currentListToDelete.isEmpty()) {
-                        stringResource(R.string.add_button)
-                    } else {
-                        stringResource(R.string.delete_button)
+                    text = when (currentButtonState) {
+                        PicturesStore.State.ButtonState.Add -> {
+                            stringResource(R.string.add_button)
+                        }
+
+                        PicturesStore.State.ButtonState.Delete -> {
+                            stringResource(R.string.delete_button)
+                        }
                     },
                     fontSize = 24.sp
                 )
@@ -176,14 +171,12 @@ fun ImagesScreenContent(
                             .width(150.dp)
                             .height(40.dp)
                             .background(
-                                if (clickedType == pictureType)
+                                if (currentClickedType == pictureType)
                                     Color.LightGray
                                 else Color.LightGray.copy(alpha = 0.3f)
                             )
                             .clickable {
-                                clickedType = pictureType
-                                viewModel.changeImagesType(pictureType)
-                                listImagesToDelete.value = listOf()
+                                typeClick(pictureType)
                             },
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
@@ -197,22 +190,22 @@ fun ImagesScreenContent(
                 }
             }
 
-            if (isLoadingContentState) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        CircularLoading()
-                    }
-                }
-            } else {
+//            if (isLoadingContentState) {
+//                Column(
+//                    modifier = Modifier
+//                        .fillMaxSize(),
+//                    horizontalAlignment = Alignment.CenterHorizontally
+//                ) {
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxSize(),
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        horizontalArrangement = Arrangement.Center
+//                    ) {
+//                        CircularLoading()
+//                    }
+//                }
+//            } else {
                 LazyVerticalGrid(
                     modifier = Modifier
                         .fillMaxSize()
@@ -251,7 +244,7 @@ fun ImagesScreenContent(
                                                     currentListToDelete + index
                                             }
                                         } else {
-                                            exitScreen(imageUri.toString())
+                                            pictureClick(imageUri.toString())
                                         }
                                     }
                                 )
@@ -306,7 +299,7 @@ fun ImagesScreenContent(
                 }
             }
         }
-    }
+//    }
 }
 //</editor-fold>
 
