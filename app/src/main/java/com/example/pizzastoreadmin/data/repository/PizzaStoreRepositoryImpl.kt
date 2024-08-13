@@ -44,7 +44,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     private val dbResponseFlow: MutableStateFlow<DBResponse> =
         MutableStateFlow(DBResponse.Processing)
 
-    private val typeFlow: MutableStateFlow<PictureType?> = MutableStateFlow(null)
+    private val typeFlow: MutableStateFlow<PictureType?> = MutableStateFlow(PictureType.PIZZA)
     private val currentPictureUriFlow: MutableStateFlow<Uri?> = MutableStateFlow(null)
 
     init {
@@ -108,7 +108,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
 //</editor-fold>
 
     //<editor-fold desc="getListImagesUseCase">
-    override suspend fun getListImagesUseCase() = firebaseService.getListUriFlow()
+    override suspend fun getListPicturesUseCase() = firebaseService.getListUriFlow()
     //</editor-fold>
 
     //<editor-fold desc="getCitiesUseCase">

@@ -89,12 +89,17 @@ fun ImagesScreen(
     when (val currentContentState = model.contentState) {
         is PicturesStore.State.ContentState.Content -> {
             ImagesScreenContent(
-                viewModel = updater,
                 paddingValues = paddingValues,
-                addImageClicked = {
-                    addImageClicked()
-                }
-            )
+                listTypes = model.picturesTypes,
+                currentClickedType = model.currentClickedType,
+                currentButtonState = model.buttonState,
+                listPictures = currentContentState.listPicturesUri,
+                deletingList = model.deletingList,
+                pictureClick = { uriString, index ->  updater.pictureClick(uriString, index) },
+                pictureLongClick = { updater.pictureLongClick(it)},
+                buttonClick = { updater.buttonClick()},
+                typeClick = { updater.typeClick(it)}
+                )
         }
 
         PicturesStore.State.ContentState.Error -> {}
@@ -106,6 +111,7 @@ fun ImagesScreen(
 }
 
 //<editor-fold desc="ImagesScreenContent">
+@OptIn(ExperimentalFoundationApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ImagesScreenContent(
@@ -115,7 +121,7 @@ fun ImagesScreenContent(
     currentButtonState: PicturesStore.State.ButtonState,
     listPictures: List<Uri>,
     deletingList: List<Int>,
-    pictureClick: (uriString: String) -> Unit,
+    pictureClick: (uriString: String, index: Int) -> Unit,
     pictureLongClick: (index: Int) -> Unit,
     buttonClick: () -> Unit,
     typeClick: (PictureType) -> Unit
@@ -124,6 +130,10 @@ fun ImagesScreenContent(
     val imageState: MutableState<AsyncImagePainter.State> = remember {
         mutableStateOf(AsyncImagePainter.State.Loading(null))
     }
+
+    val screenWidthDp = getScreenWidthDp()
+    val startEndPadding = 8.dp
+    val contentLazyGridWidth = (screenWidthDp - (startEndPadding * 2)) / 3
 
     Scaffold(
         modifier = Modifier
@@ -206,99 +216,83 @@ fun ImagesScreenContent(
 //                    }
 //                }
 //            } else {
-                LazyVerticalGrid(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(
-                            start = 8.dp,
-                            top = 16.dp,
-                            end = 8.dp
-                        ),
-                    columns = GridCells.Fixed(3)
-                ) {
-                    itemsIndexed(items = listPictures) { index, imageUri ->
-                        Box(
-                            modifier = Modifier
-                                .size(contentLazyGridWidth)
-                                .border(
-                                    border = BorderStroke(1.dp, Color.Black),
-                                    shape = RoundedCornerShape(10.dp)
-                                )
-                                .combinedClickable(
-                                    onLongClick = {
-                                        if (index in currentListToDelete) {
-                                            listImagesToDelete.value =
-                                                currentListToDelete - index
-                                        } else {
-                                            listImagesToDelete.value =
-                                                currentListToDelete + index
-                                        }
-                                    },
-                                    onClick = {
-                                        if (currentListToDelete.isNotEmpty()) {
-                                            if (index in currentListToDelete) {
-                                                listImagesToDelete.value =
-                                                    currentListToDelete - index
-                                            } else {
-                                                listImagesToDelete.value =
-                                                    currentListToDelete + index
-                                            }
-                                        } else {
-                                            pictureClick(imageUri.toString())
-                                        }
-                                    }
-                                )
-                        ) {
-
-                            val request = ImageRequest
-                                .Builder(LocalContext.current)
-                                .data(imageUri)
-                                .size(coil.size.Size.ORIGINAL)
-                                .build()
-
-                            val painter = rememberAsyncImagePainter(
-                                model = request,
-                                onState = {
-                                    imageState.value = it
+            LazyVerticalGrid(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        start = 8.dp,
+                        top = 16.dp,
+                        end = 8.dp
+                    ),
+                columns = GridCells.Fixed(3)
+            ) {
+                itemsIndexed(items = listPictures) { index, imageUri ->
+                    Box(
+                        modifier = Modifier
+                            .size(contentLazyGridWidth)
+                            .border(
+                                border = BorderStroke(1.dp, Color.Black),
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                            .combinedClickable(
+                                onLongClick = {
+                                    pictureLongClick(index)
+                                },
+                                onClick = {
+                                    pictureClick(imageUri.toString(), index)
                                 }
                             )
+                    ) {
 
-                            if (imageState.value is AsyncImagePainter.State.Loading) {
-                                CircularLoading()
-                            } else {
-                                Box {
-                                    if (index in currentListToDelete) {
-                                        Column(
-                                            modifier = Modifier
-                                                .fillMaxSize(),
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.Center
-                                        ) {
-                                            Icon(
-                                                modifier = Modifier
-                                                    .size(50.dp),
-                                                imageVector = ImageVector.vectorResource(
-                                                    id = R.drawable.ic_cross
-                                                ),
-                                                contentDescription = null
-                                            )
-                                        }
-                                    }
-                                    Image(
+                        val request = ImageRequest
+                            .Builder(LocalContext.current)
+                            .data(imageUri)
+                            .size(coil.size.Size.ORIGINAL)
+                            .build()
+
+                        val painter = rememberAsyncImagePainter(
+                            model = request,
+                            onState = {
+                                imageState.value = it
+                            }
+                        )
+
+                        if (imageState.value is AsyncImagePainter.State.Loading) {
+                            CircularLoading()
+                        } else {
+                            Box {
+                                if (index in deletingList) {
+                                    Column(
                                         modifier = Modifier
                                             .fillMaxSize(),
-                                        painter = painter,
-                                        contentDescription = "content_by_uri",
-                                        alpha = if (index in currentListToDelete) 0.2f else 1f
-                                    )
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            modifier = Modifier
+                                                .size(50.dp),
+                                            imageVector = ImageVector.vectorResource(
+                                                id = R.drawable.ic_cross
+                                            ),
+                                            contentDescription = null
+                                        )
+                                    }
                                 }
-
+                                Image(
+                                    modifier = Modifier
+                                        .fillMaxSize(),
+                                    painter = painter,
+                                    contentDescription = "content_by_uri",
+                                    alpha = if (index in deletingList) 0.2f else 1f
+                                )
                             }
+
                         }
                     }
                 }
             }
         }
+    }
 //    }
 }
 //</editor-fold>

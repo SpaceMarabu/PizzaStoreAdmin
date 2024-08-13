@@ -112,6 +112,8 @@ class PicturesStoreFactory @Inject constructor(
         data object LoadingError : Msg
 
         data class ContentLoaded(val listPicturesUri: List<Uri>) : Msg
+
+        data object DeletingFinished: Msg
     }
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
@@ -128,6 +130,10 @@ class PicturesStoreFactory @Inject constructor(
                 }
             } catch (e: Exception) {
                 dispatch(Action.LoadingError)
+            }
+
+            scope.launch {
+                postCurrentPictureTypeUseCase.postType(PictureType.PIZZA)
             }
         }
     }
@@ -149,6 +155,7 @@ class PicturesStoreFactory @Inject constructor(
                                     listUriToDelete.add(currentState.contentState.listPicturesUri[it])
                                 }
                                 deleteImageUriUseCase.deletePictures(listUriToDelete)
+                                dispatch(Msg.DeletingFinished)
                             }
                         }
                     }
@@ -219,7 +226,7 @@ class PicturesStoreFactory @Inject constructor(
                     }
                     this.copy(
                         deletingList = currentListToDelete,
-                        deletingListNotEmpty = currentListToDelete.isEmpty(),
+                        deletingListNotEmpty = currentListToDelete.isNotEmpty(),
                         buttonState = currentListToDelete.getButtonState()
                     )
                 }
@@ -233,13 +240,21 @@ class PicturesStoreFactory @Inject constructor(
                     }
                     this.copy(
                         deletingList = currentListToDelete,
-                        deletingListNotEmpty = currentListToDelete.isEmpty(),
+                        deletingListNotEmpty = currentListToDelete.isNotEmpty(),
                         buttonState = currentListToDelete.getButtonState()
                     )
                 }
 
                 is Msg.TypeClick -> {
                     this.copy(currentClickedType = msg.type)
+                }
+
+                Msg.DeletingFinished -> {
+                    this.copy(
+                        deletingList = listOf(),
+                        deletingListNotEmpty = false,
+                        buttonState = listOf<Int>().getButtonState()
+                    )
                 }
             }
     }

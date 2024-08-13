@@ -10,6 +10,6 @@ class GetListPicturesUseCase  @Inject constructor(
 ) {
 
     suspend fun getListPictures(): Flow<List<Uri>> {
-        return repository.getListImagesUseCase()
+        return repository.getListPicturesUseCase()
     }
 }
