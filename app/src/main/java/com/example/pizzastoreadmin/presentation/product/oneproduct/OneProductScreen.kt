@@ -20,17 +20,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -44,18 +39,14 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.pizzastore.R
 import com.example.pizzastoreadmin.di.getApplicationComponent
-import com.example.pizzastoreadmin.domain.entity.ObjectWithType
 import com.example.pizzastoreadmin.domain.entity.Product
 import com.example.pizzastoreadmin.domain.entity.ProductType
 import com.example.pizzastoreadmin.navigation.Screen
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
-import com.example.pizzastoreadmin.presentation.funs.dropdown.DropDownMenuStates
-import com.example.pizzastoreadmin.presentation.funs.dropdown.DropDownTextField
-import com.example.pizzastoreadmin.presentation.funs.dropdown.DropDownTextFieldNew
+import com.example.pizzastoreadmin.presentation.funs.DropDownTextField
 import com.example.pizzastoreadmin.presentation.funs.getOutlinedColors
 import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
 import com.example.pizzastoreadmin.presentation.funs.showToastWarn
-import com.example.pizzastoreadmin.presentation.product.oneproduct.states.EditType
 
 @Composable
 fun OneProductScreen(
@@ -220,7 +211,7 @@ fun OneProductScreenContent(
                 )
             }
 
-            DropDownTextFieldNew(
+            DropDownTextField(
                 isDropDownExpanded = isDropDownExpanded,
                 options = listProductTypes,
                 selectedOption = product.type,

@@ -1,4 +1,4 @@
-package com.example.pizzastoreadmin.presentation.funs.dropdown
+package com.example.pizzastoreadmin.presentation.funs
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,12 +15,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.pizzastoreadmin.domain.entity.ObjectWithType
-import com.example.pizzastoreadmin.presentation.funs.getOutlinedColors
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownTextFieldNew(
+fun DropDownTextField(
     selectedOption: ObjectWithType,
     isDropDownExpanded: Boolean,
     options: List<ObjectWithType>,

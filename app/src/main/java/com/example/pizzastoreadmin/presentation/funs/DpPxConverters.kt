@@ -1,4 +1,4 @@
-package com.example.pizzastore.presentation.funs
+package com.example.pizzastoreadmin.presentation.funs
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalDensity

@@ -4,10 +4,8 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -24,13 +22,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.pizzastore.presentation.funs.dpToPx
+import com.example.pizzastoreadmin.presentation.funs.dpToPx
 import com.example.pizzastoreadmin.navigation.AppNavGraph
 import com.example.pizzastoreadmin.navigation.NavigationItem
 import com.example.pizzastoreadmin.navigation.Screen
@@ -39,7 +36,7 @@ import com.example.pizzastoreadmin.presentation.city.cities.CitiesScreen
 import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreen
 import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
 import com.example.pizzastoreadmin.presentation.images.images.ImagesScreen
-import com.example.pizzastoreadmin.presentation.images.oneimage.OneImageScreen
+import com.example.pizzastoreadmin.presentation.images.oneimage.OnePictureScreen
 import com.example.pizzastoreadmin.presentation.order.oneorder.OneOrderScreen
 import com.example.pizzastoreadmin.presentation.order.orders.OrdersScreen
 import com.example.pizzastoreadmin.presentation.product.oneproduct.OneProductScreen
@@ -137,7 +134,7 @@ fun MainScreen() {
                 }
             },
             oneImageScreenContent = {
-                OneImageScreen(paddingValues) {
+                OnePictureScreen(paddingValues) {
                     navigationState.navigateTo(Screen.ROUTE_IMAGES)
                 }
             },

@@ -37,7 +37,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -67,7 +66,7 @@ fun ImagesScreen(
 ) {
 
     val component = getApplicationComponent()
-    val updater: ImagesScreenUpdater = viewModel(factory = component.getViewModelFactory())
+    val updater: PicturesScreenUpdater = viewModel(factory = component.getViewModelFactory())
 
     val model by updater.model.collectAsState()
 

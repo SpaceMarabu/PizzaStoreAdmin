@@ -5,8 +5,8 @@ import com.example.pizzastore.di.ViewModelKey
 import com.example.pizzastore.presentation.start.StartScreenViewModel
 import com.example.pizzastoreadmin.presentation.city.cities.CitiesScreenUpdater
 import com.example.pizzastoreadmin.presentation.city.onecity.OneCityScreenUpdater
-import com.example.pizzastoreadmin.presentation.images.images.ImagesScreenUpdater
-import com.example.pizzastoreadmin.presentation.images.oneimage.OneImageScreenViewModel
+import com.example.pizzastoreadmin.presentation.images.images.PicturesScreenUpdater
+import com.example.pizzastoreadmin.presentation.images.oneimage.OnePictureUpdater
 import com.example.pizzastoreadmin.presentation.order.oneorder.OneOrderScreenUpdater
 import com.example.pizzastoreadmin.presentation.order.orders.OrdersScreenUpdater
 import com.example.pizzastoreadmin.presentation.product.oneproduct.OneProductScreenUpdater
@@ -34,14 +34,14 @@ interface ViewModelModule {
     fun bindOneCityScreenViewModel(viewModel: OneCityScreenUpdater): ViewModel
 
     @IntoMap
-    @ViewModelKey(OneImageScreenViewModel::class)
+    @ViewModelKey(OnePictureUpdater::class)
     @Binds
-    fun bindOneImageScreenViewModel(viewModel: OneImageScreenViewModel): ViewModel
+    fun bindOneImageScreenViewModel(viewModel: OnePictureUpdater): ViewModel
 
     @IntoMap
-    @ViewModelKey(ImagesScreenUpdater::class)
+    @ViewModelKey(PicturesScreenUpdater::class)
     @Binds
-    fun bindImagesScreenViewModel(viewModel: ImagesScreenUpdater): ViewModel
+    fun bindImagesScreenViewModel(viewModel: PicturesScreenUpdater): ViewModel
 
     @IntoMap
     @ViewModelKey(OneProductScreenUpdater::class)
