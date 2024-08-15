@@ -48,7 +48,6 @@ import com.example.pizzastoreadmin.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading
 import com.example.pizzastoreadmin.presentation.funs.getOutlinedColors
-import com.example.pizzastoreadmin.presentation.funs.getOutlinedTextFieldColors
 import com.example.pizzastoreadmin.presentation.funs.getScreenWidthDp
 import com.example.pizzastoreadmin.presentation.funs.showToastWarn
 
