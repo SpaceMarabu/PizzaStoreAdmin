@@ -16,7 +16,12 @@ fun showToastWarn(context: Context, text: String) {
     Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
 }
 
-fun Modifier.oneSidedBorder(borderWidth: Dp, leftPoint: Offset, rightPoint: Offset, color: Color): Modifier = this.then(
+fun Modifier.oneSidedBorder(
+    borderWidth: Dp,
+    leftPoint: Offset,
+    rightPoint: Offset,
+    color: Color
+): Modifier = this.then(
     Modifier.drawBehind {
         val width = size.width
         val height = size.height

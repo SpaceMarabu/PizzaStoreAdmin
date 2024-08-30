@@ -22,6 +22,12 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val webClientId = property("web_client_id")?.toString() ?: error(
+            "You should set webClientId"
+        )
+
+        buildConfigField("String", "WEB_CLIENT_ID", "\"$webClientId\"")
     }
 
     buildTypes {
@@ -88,17 +94,18 @@ dependencies {
     implementation(libs.mvikotlin.coroutines)
 
     implementation(libs.androidx.appcompat)
-    implementation(libs.firebase.auth.ktx)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.database.ktx)
     implementation(libs.firebase.storage)
+    implementation(libs.firebase.auth)
 
-//    implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.androidx.credentialsx)
     implementation(libs.googleid)
+    implementation(libs.identity)
 
     implementation(libs.google.services)
-    implementation(libs.play.services.auth)
+    implementation(libs.play.auth)
 
     implementation(libs.jet.nav)
     implementation(libs.androidx.runtime.livedata)
@@ -112,8 +119,6 @@ dependencies {
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp.log)
-
-//    annotationProcessor(libs.compiler)
 
     implementation(libs.androidx.room.runtime)
     implementation(libs.room.core)

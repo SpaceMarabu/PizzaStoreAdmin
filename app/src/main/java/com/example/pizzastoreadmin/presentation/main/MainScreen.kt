@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -52,21 +53,10 @@ fun MainScreen() {
 
     val navBackStackEntry by navigationState.navHostController.currentBackStackEntryAsState()
 
-    val screenWidthPx = getScreenWidthDp().dpToPx()
-    val customBorderColor = MaterialTheme.colorScheme.onPrimary
-
     Scaffold(
         bottomBar = {
             NavigationBar(
-                modifier = Modifier
-                    .drawBehind {
-                        drawLine(
-                            color = customBorderColor,
-                            start = Offset(0f, 0f),
-                            end = Offset(screenWidthPx, 0f),
-                            strokeWidth = 2.dp.toPx()
-                        )
-                    }
+                modifier = Modifier.shadow(elevation = 8.dp)
             ) {
 
                 val items = listOf(
