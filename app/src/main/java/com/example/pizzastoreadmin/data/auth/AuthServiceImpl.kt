@@ -1,5 +1,6 @@
 package com.example.pizzastoreadmin.data.auth
 
+import android.app.Application
 import android.util.Log
 import androidx.credentials.CreatePasswordRequest
 import androidx.credentials.Credential
@@ -11,29 +12,36 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import com.example.pizzastore.BuildConfig
-import com.example.pizzastoreadmin.di.PizzaStoreAdminApplication
 import com.google.android.gms.tasks.Task
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
 import java.security.MessageDigest
 import java.util.UUID
 
 class AuthServiceImpl(
-    val application: PizzaStoreAdminApplication
+    val application: Application
 ) : AuthService {
 
     private val credentialManager = CredentialManager.create(application)
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
-    private val _authFlow = MutableStateFlow<AuthResponse>(AuthResponse.WaitingRequest)
-    override val authFlow: StateFlow<AuthResponse>
-        get() = _authFlow.asStateFlow()
+    private val savingCredentialContext = CoroutineScope(Dispatchers.Main)
+    private val authContext = CoroutineScope(Dispatchers.Main)
+
+    private val _authFlow = MutableSharedFlow<AuthResponse>()
+    override val authFlow: SharedFlow<AuthResponse>
+        get() = _authFlow.asSharedFlow()
 
     private val webClientId = BuildConfig.WEB_CLIENT_ID
     private val rawNonce = UUID.randomUUID().toString()
@@ -48,16 +56,10 @@ class AuthServiceImpl(
         .setNonce(hashedNonce)
         .build()
 
-    override fun createUser(email: String, password: String): AuthResponse {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun signInWithEmail(email: String, password: String): AuthResponse {
-
-
+    override suspend fun signInWithEmail(email: String, password: String) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
-                getFirebaseAuthWithSaveCredentials(task)
+                getFirebaseAuthWithSaveCredentials(task, PasswordCredential(email, password))
             }
     }
 
@@ -120,30 +122,38 @@ class AuthServiceImpl(
 
     }
 
-    private suspend fun getFirebaseAuthWithSaveCredentials(
+    private fun getFirebaseAuthWithSaveCredentials(
         task: Task<AuthResult>,
         credential: Credential
     ) {
-        if (getFirebaseAuthResponse(task) && credential is PasswordCredential) {
-            credentialManager.createCredential(
-                request = CreatePasswordRequest(credential.id, credential.password),
-                context = application
-            )
+        savingCredentialContext.launch {
+            if (getFirebaseAuthResponse(task) && credential is PasswordCredential) {
+                credentialManager.createCredential(
+                    request = CreatePasswordRequest(credential.id, credential.password),
+                    context = application
+                )
+            }
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getFirebaseAuthResponse(task: Task<AuthResult>): Boolean {
-        if (task.isSuccessful) {
-            val firebaseUser = auth.currentUser
-            if (firebaseUser != null) {
-                _authFlow.value = AuthResponse.Success(firebaseUser)
-                return true
+        val deferred = CompletableDeferred<Boolean>()
+        authContext.launch {
+            if (task.isSuccessful) {
+                val firebaseUser = auth.currentUser
+                if (firebaseUser != null) {
+                    _authFlow.emit(AuthResponse.Success(firebaseUser))
+                    deferred.complete(true)
+                }
+                deferred.complete(false)
+            } else {
+                _authFlow.emit(AuthResponse.Failed(AuthResponse.Failed.FailReason.ErrorAuth))
+                deferred.complete(false)
             }
-        } else {
-            _authFlow.value =
-                AuthResponse.Failed(AuthResponse.Failed.FailReason.ErrorAuth)
-            return false
+            deferred.await()
         }
+        return deferred.getCompleted()
     }
 
     private suspend fun getCredential(): SignInResponse {

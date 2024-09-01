@@ -7,10 +7,11 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.pizzastoreadmin.data.localdb.entity.orders.OrderDbModel
 import com.example.pizzastoreadmin.data.localdb.entity.products.ProductDbModel
+import com.example.pizzastoreadmin.data.localdb.entity.user.UserDbModel
 
 @Database(
-    entities = [OrderDbModel::class, ProductDbModel::class],
-    version = 3,
+    entities = [OrderDbModel::class, ProductDbModel::class, UserDbModel::class],
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

@@ -3,11 +3,14 @@ package com.example.pizzastoreadmin.data.mappers
 import com.example.pizzastoreadmin.data.localdb.entity.orders.BucketDbModel
 import com.example.pizzastoreadmin.data.localdb.entity.orders.OrderDbModel
 import com.example.pizzastoreadmin.data.localdb.entity.products.ProductDbModel
+import com.example.pizzastoreadmin.data.localdb.entity.user.UserDbModel
 import com.example.pizzastoreadmin.domain.entity.Order
 import com.example.pizzastoreadmin.domain.entity.Bucket
 import com.example.pizzastoreadmin.domain.entity.OrderStatus
 import com.example.pizzastoreadmin.domain.entity.Product
 import com.example.pizzastoreadmin.domain.entity.ProductType
+import com.example.pizzastoreadmin.domain.entity.User
+import com.example.pizzastoreadmin.domain.entity.UserAccess
 import javax.inject.Inject
 
 class LocalMapper @Inject constructor() {
@@ -91,5 +94,22 @@ class LocalMapper @Inject constructor() {
             description = productDbModel.description
         )
     }
+    //</editor-fold>
+
+    //<editor-fold desc="mapUserToDbModel">
+    fun mapUserToDbModel(user: User) = UserDbModel(
+        id = user.id,
+        access = user.access.ordinal
+    )
+    //</editor-fold>
+
+    //<editor-fold desc="mapDbModelToUser">
+    fun mapDbModelToUser(model: UserDbModel) = User(
+        id = model.id,
+        access = when (model.access) {
+            1 -> UserAccess.GRANTED
+            else -> UserAccess.DENIED
+        }
+    )
     //</editor-fold>
 }

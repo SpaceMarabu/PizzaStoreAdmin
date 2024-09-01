@@ -4,8 +4,6 @@ import com.google.firebase.auth.FirebaseUser
 
 sealed interface AuthResponse {
 
-    data object WaitingRequest: AuthResponse
-
     data class Success(val user: FirebaseUser): AuthResponse
 
     data class Failed(val failReason: FailReason): AuthResponse {

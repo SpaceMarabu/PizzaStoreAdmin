@@ -6,6 +6,8 @@ import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.entity.Product
+import com.example.pizzastoreadmin.domain.entity.SignInEvents
+import com.example.pizzastoreadmin.domain.entity.User
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,6 +36,12 @@ interface PizzaStoreRepository {
 
     fun editOrderUseCase(order: Order)
 
+    fun getUserUseCase(): StateFlow<User?>
+
+    suspend fun signInWithEmail(email: String, password: String)
+
+    suspend fun signInWithSavedAccounts()
+
 
     //<editor-fold desc="service UC">
     fun getDbResponse(): StateFlow<DBResponse>
@@ -53,6 +61,8 @@ interface PizzaStoreRepository {
     fun setCurrentOrderUseCase(order: Order)
 
     fun getCurrentOrderUseCase(): StateFlow<Order>
+
+    val signInEvents: SharedFlow<SignInEvents>
     //</editor-fold>
 
 }

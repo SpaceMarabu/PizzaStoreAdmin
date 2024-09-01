@@ -2,6 +2,7 @@ package com.example.pizzastoreadmin.data.remotedb
 
 import android.net.Uri
 import com.example.pizzastoreadmin.data.remotedb.entity.OrderDto
+import com.example.pizzastoreadmin.data.remotedb.entity.UserDto
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.domain.entity.Product
@@ -35,4 +36,8 @@ interface FirebaseService {
     suspend fun getListOrdersOneTime(): List<OrderDto>
 
     suspend fun editOrder(orderDto: OrderDto): DBResponse
+
+    suspend fun getUsers(): List<UserDto>
+
+    suspend fun addUser(userDto: UserDto): DBResponse
 }

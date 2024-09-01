@@ -3,6 +3,8 @@ package com.example.pizzastoreadmin.data.repository
 import android.net.Uri
 import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkManager
+import com.example.pizzastoreadmin.data.auth.AuthResponse
+import com.example.pizzastoreadmin.data.auth.AuthService
 import com.example.pizzastoreadmin.data.localdb.PizzaDao
 import com.example.pizzastoreadmin.data.localdb.entity.orders.OrderDbModel
 import com.example.pizzastoreadmin.data.localdb.entity.products.ProductDbModel
@@ -16,14 +18,20 @@ import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.domain.entity.Order
 import com.example.pizzastoreadmin.domain.entity.PictureType
 import com.example.pizzastoreadmin.domain.entity.Product
+import com.example.pizzastoreadmin.domain.entity.SignInEvents
+import com.example.pizzastoreadmin.domain.entity.User
 import com.example.pizzastoreadmin.domain.repository.PizzaStoreRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -32,6 +40,7 @@ import javax.inject.Inject
 class PizzaStoreRepositoryImpl @Inject constructor(
     private val application: PizzaStoreAdminApplication,
     private val firebaseService: FirebaseService,
+    private val authService: AuthService,
     private val pizzaDao: PizzaDao,
     private val remoteMapper: RemoteMapper,
     private val localMapper: LocalMapper
@@ -40,6 +49,7 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     private val currentProduct = MutableStateFlow(Product())
     private val currentCity = MutableStateFlow(City())
     private val currentOrder = MutableStateFlow(Order())
+    private val currentUser = MutableStateFlow<User?>(null)
 
     private val dbResponseFlow: MutableStateFlow<DBResponse> =
         MutableStateFlow(DBResponse.Processing)
@@ -47,12 +57,22 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     private val typeFlow: MutableStateFlow<PictureType?> = MutableStateFlow(PictureType.PIZZA)
     private val currentPictureUriFlow: MutableStateFlow<Uri?> = MutableStateFlow(null)
 
+    private val _signInEvents = MutableSharedFlow<SignInEvents>()
+    override val signInEvents: SharedFlow<SignInEvents>
+        get() = _signInEvents.asSharedFlow()
+
     init {
         CoroutineScope(Dispatchers.IO).launch {
             subscribePicturesTypeFlow()
         }
         CoroutineScope(Dispatchers.IO).launch {
             subscribeListProducts()
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            initUserFlow()
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            subscribeAuthFlow()
         }
         subscribeOrdersUpdates()
     }
@@ -283,4 +303,73 @@ class PizzaStoreRepositoryImpl @Inject constructor(
         )
     }
     //</editor-fold>
+
+    //<editor-fold desc="initUserFlow">
+    private suspend fun initUserFlow() {
+        val userFromLocalDb = pizzaDao.getUser()
+        if (userFromLocalDb != null) {
+            val currentUsersBase = firebaseService.getUsers()
+            val currentUserFromBase = currentUsersBase.first {
+                it.id == userFromLocalDb.id
+            }
+            val userDtoToEntity = remoteMapper.mapUserDtoToEntity(currentUserFromBase)
+            val userModelToEntity = localMapper.mapDbModelToUser(userFromLocalDb)
+            if (userModelToEntity != userDtoToEntity) {
+                pizzaDao.putUser(localMapper.mapUserToDbModel(userDtoToEntity))
+            }
+            currentUser.value = localMapper.mapDbModelToUser(userFromLocalDb)
+            return
+        }
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="subscribeAuthFlow">
+    private suspend fun subscribeAuthFlow() {
+        authService.authFlow.collect {
+            when (it) {
+                is AuthResponse.Failed -> {
+                    when (it.failReason) {
+                        AuthResponse.Failed.FailReason.ErrorAuth -> {
+                            _signInEvents.emit(
+                                SignInEvents.Failed(
+                                    failReason = SignInEvents.Failed.FailReason.ErrorSignIn
+                                )
+                            )
+                        }
+
+                        AuthResponse.Failed.FailReason.NoCredentials -> {
+                            _signInEvents.emit(
+                                SignInEvents.Failed(
+                                    failReason = SignInEvents.Failed.FailReason.NoCredentials
+                                )
+                            )
+                        }
+
+                        AuthResponse.Failed.FailReason.UserCancelled -> {
+                            _signInEvents.emit(
+                                SignInEvents.Failed(
+                                    failReason = SignInEvents.Failed.FailReason.UserCancelled
+                                )
+                            )
+                        }
+                    }
+                }
+
+                is AuthResponse.Success -> {
+                    _signInEvents.emit(
+                        SignInEvents.Success
+                    )
+                }
+            }
+        }
+    }
+    //</editor-fold>
+
+    override fun getUserUseCase() = currentUser.asStateFlow()
+
+    override suspend fun signInWithEmail(email: String, password: String) =
+        authService.signInWithEmail(email, password)
+
+    override suspend fun signInWithSavedAccounts() =
+        authService.signInWithSavedAccounts()
 }

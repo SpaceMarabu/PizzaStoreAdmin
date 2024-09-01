@@ -3,9 +3,12 @@ package com.example.pizzastoreadmin.data.mappers
 import com.example.pizzastoreadmin.domain.entity.Order
 import com.example.pizzastoreadmin.data.remotedb.entity.BucketDto
 import com.example.pizzastoreadmin.data.remotedb.entity.OrderDto
+import com.example.pizzastoreadmin.data.remotedb.entity.UserDto
 import com.example.pizzastoreadmin.domain.entity.Bucket
 import com.example.pizzastoreadmin.domain.entity.OrderStatus
 import com.example.pizzastoreadmin.domain.entity.Product
+import com.example.pizzastoreadmin.domain.entity.User
+import com.example.pizzastoreadmin.domain.entity.UserAccess
 import javax.inject.Inject
 
 class RemoteMapper @Inject constructor() {
@@ -62,6 +65,23 @@ class RemoteMapper @Inject constructor() {
         id = order.id,
         status = order.status.ordinal.toString(),
         bucket = mapBucketToBucketDto(order.bucket)
+    )
+    //</editor-fold>
+
+    //<editor-fold desc="mapUserDtoToEntity">
+    fun mapUserDtoToEntity(userDto: UserDto) = User(
+        id = userDto.id,
+        access = when(userDto.access) {
+            1 -> UserAccess.DENIED
+            else -> UserAccess.DENIED
+        }
+    )
+    //</editor-fold>
+
+    //<editor-fold desc="mapUserEntityToDto">
+    fun mapUserEntityToDto(user: User) = UserDto(
+        id = user.id,
+        access = user.access.ordinal
     )
     //</editor-fold>
 }

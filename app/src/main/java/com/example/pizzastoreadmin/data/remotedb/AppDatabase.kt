@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import com.example.pizzastoreadmin.data.remotedb.entity.BucketDto
 import com.example.pizzastoreadmin.data.remotedb.entity.OrderDto
+import com.example.pizzastoreadmin.data.remotedb.entity.UserDto
 import com.example.pizzastoreadmin.data.repository.states.DBResponse
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.domain.entity.Product
@@ -20,7 +21,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -34,6 +34,7 @@ class AppDatabase : FirebaseService {
     private val dRefCities = firebaseDatabase.getReference(CITIES_REFERENCE)
     private val dRefProduct = firebaseDatabase.getReference(PRODUCT_REFERENCE)
     private val dRefOrder = firebaseDatabase.getReference(ORDER_REFERENCE)
+    private val dRefUser = firebaseDatabase.getReference(USER_REFERENCE)
 
     private val firebaseStorage = Firebase.storage(STORAGE_REFERENCE)
     private val storageRef = firebaseStorage.reference.child(PRODUCT_REFERENCE)
@@ -108,7 +109,6 @@ class AppDatabase : FirebaseService {
                 val listCities = mutableListOf<City>()
                 maxCityIdFlow.value = -1
                 for (dataFromChildren in dataSnapshot.children) {
-                    dataFromChildren.key
                     val key: Int = dataFromChildren.key?.toInt() ?: continue
                     if (maxCityIdFlow.value < key) {
                         maxCityIdFlow.value = key
@@ -214,9 +214,7 @@ class AppDatabase : FirebaseService {
     }
     //</editor-fold>
 
-    //<editor-fold desc="getListProductsFlow">
-    override fun getListProductsFlow(): Flow<List<Product>> = listProductsFlow
-    //</editor-fold>
+    override fun getListProductsFlow() = listProductsFlow
 
     //<editor-fold desc="addOrEditProduct">
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -276,9 +274,7 @@ class AppDatabase : FirebaseService {
     }
     //</editor-fold>
 
-    //<editor-fold desc="getListCitiesFlow">
-    override fun getListCitiesFlow(): Flow<List<City>> = listCitiesFlow
-    //</editor-fold>
+    override fun getListCitiesFlow() = listCitiesFlow
 
     //<editor-fold desc="addOrEditCity">
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -434,9 +430,7 @@ class AppDatabase : FirebaseService {
     }
     //</editor-fold>
 
-    //<editor-fold desc="getListUriFlow">
     override fun getListUriFlow() = listPicturesUriFlow.asSharedFlow()
-    //</editor-fold>
 
     //<editor-fold desc="deletePictures">
     override suspend fun deletePictures(listToDelete: List<Uri>): Boolean {
@@ -479,10 +473,56 @@ class AppDatabase : FirebaseService {
     }
     //</editor-fold>
 
+    //<editor-fold desc="getUsers">
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override suspend fun getUsers(): List<UserDto> {
+        val deferred = CompletableDeferred<List<UserDto>>()
+        withContext(Dispatchers.IO) {
+            dRefUser.get().addOnSuccessListener { dataSnapshot ->
+                val listUsers = mutableListOf<UserDto>()
+                for (dataFromChildren in dataSnapshot.children) {
+                    val value = dataFromChildren.getValue(UserDto::class.java) ?: continue
+                    listUsers.add(
+                        UserDto(
+                            id = value.id,
+                            access = value.access
+                        )
+                    )
+                }
+                deferred.complete(listUsers.toList())
+            }
+            deferred.await()
+        }
+        return deferred.getCompleted()
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="addUser">
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override suspend fun addUser(userDto: UserDto): DBResponse {
+        val deferred = CompletableDeferred<DBResponse>()
+        withContext(Dispatchers.IO) {
+            dRefUser
+                .setValue(userDto)
+                .addOnSuccessListener {
+                    deferred.complete(DBResponse.Complete)
+                }
+                .addOnFailureListener { e ->
+                    deferred.complete(
+                        DBResponse.Error("Не удалось изменить данные. $e")
+                    )
+                }
+            deferred.await()
+        }
+        return deferred.getCompleted()
+    }
+    //</editor-fold>
+
     companion object {
         private const val CITIES_REFERENCE = "cities"
         private const val PRODUCT_REFERENCE = "product"
         private const val ORDER_REFERENCE = "order"
+        private const val USER_REFERENCE = "user"
         private const val STORAGE_REFERENCE = "gs://pizzastore-b379f.appspot.com"
     }
 
