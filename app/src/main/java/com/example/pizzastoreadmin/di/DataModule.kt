@@ -2,7 +2,7 @@ package com.example.pizzastoreadmin.di
 
 import android.app.Application
 import com.example.pizzastoreadmin.data.localdb.PizzaDao
-import com.example.pizzastore.di.ApplicationScope
+import com.example.pizzastoreadmin.di.ApplicationScope
 import com.example.pizzastoreadmin.data.auth.AuthService
 import com.example.pizzastoreadmin.data.auth.AuthServiceImpl
 import com.example.pizzastoreadmin.data.localdb.LocalDatabase

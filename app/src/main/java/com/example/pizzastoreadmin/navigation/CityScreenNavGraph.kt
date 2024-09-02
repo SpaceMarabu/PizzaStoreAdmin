@@ -1,4 +1,4 @@
-package com.example.pizzastore.navigation
+package com.example.pizzastoreadmin.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavGraphBuilder

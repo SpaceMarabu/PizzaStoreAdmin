@@ -1,4 +1,4 @@
-package com.example.pizzastore.presentation.start
+package com.example.pizzastoreadmin.presentation.start
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

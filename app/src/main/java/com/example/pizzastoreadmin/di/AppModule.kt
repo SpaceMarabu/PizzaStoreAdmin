@@ -1,7 +1,7 @@
 package com.example.pizzastoreadmin.di
 
 import android.app.Application
-import com.example.pizzastore.di.ApplicationScope
+import com.example.pizzastoreadmin.di.ApplicationScope
 import dagger.Module
 import dagger.Provides
 

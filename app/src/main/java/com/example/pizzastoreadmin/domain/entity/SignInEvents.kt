@@ -10,7 +10,7 @@ sealed interface SignInEvents {
 
         sealed interface FailReason {
 
-            data object UserCancelled: FailReason
+//            data object UserCancelled: FailReason
 
             data object NoCredentials: FailReason
 

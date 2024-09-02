@@ -41,8 +41,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.pizzastore.R
-import com.example.pizzastore.domain.entity.Point
+import com.example.pizzastoreadmin.R
+import com.example.pizzastoreadmin.domain.entity.Point
 import com.example.pizzastoreadmin.di.getApplicationComponent
 import com.example.pizzastoreadmin.domain.entity.City
 import com.example.pizzastoreadmin.presentation.funs.CircularLoading

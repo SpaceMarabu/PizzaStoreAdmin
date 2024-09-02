@@ -1,4 +1,4 @@
-package com.example.pizzastore.di
+package com.example.pizzastoreadmin.di
 
 import androidx.lifecycle.ViewModel
 import dagger.MapKey

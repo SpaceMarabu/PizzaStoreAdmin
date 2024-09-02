@@ -1,4 +1,4 @@
-package com.example.pizzastore.presentation.home
+package com.example.pizzastoreadmin.presentation.home
 
 sealed class MainScreenState() {
 

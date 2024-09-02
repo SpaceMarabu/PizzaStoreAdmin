@@ -1,4 +1,4 @@
-package com.example.pizzastore.domain.entity
+package com.example.pizzastoreadmin.domain.entity
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize

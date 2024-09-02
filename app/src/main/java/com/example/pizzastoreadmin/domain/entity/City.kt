@@ -1,7 +1,7 @@
 package com.example.pizzastoreadmin.domain.entity
 
 import android.os.Parcelable
-import com.example.pizzastore.domain.entity.Point
+import com.example.pizzastoreadmin.domain.entity.Point
 import kotlinx.parcelize.Parcelize
 
 

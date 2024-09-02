@@ -21,5 +21,9 @@ class SignInUseCase @Inject constructor(
         repository.signInWithSavedAccounts()
     }
 
-    val sigInEvents = repository.signInEvents
+    val signInEvents = repository.signInEvents
+
+    fun signOut() {
+        return repository.signOut()
+    }
 }

@@ -3,8 +3,8 @@ package com.example.pizzastoreadmin.navigation
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import com.example.pizzastore.navigation.cityScreenNavGraph
-import com.example.pizzastore.navigation.imageScreenNavGraph
+import com.example.pizzastoreadmin.navigation.cityScreenNavGraph
+import com.example.pizzastoreadmin.navigation.imageScreenNavGraph
 
 @Composable
 fun AppNavGraph(

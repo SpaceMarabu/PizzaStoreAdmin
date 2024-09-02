@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.pizzastore"
+    namespace = "com.example.pizzastoreadmin"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.pizzastore"
+        applicationId = "com.example.pizzastoreadmin"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

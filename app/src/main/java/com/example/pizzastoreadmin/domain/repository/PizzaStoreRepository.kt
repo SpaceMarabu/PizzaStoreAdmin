@@ -42,6 +42,8 @@ interface PizzaStoreRepository {
 
     suspend fun signInWithSavedAccounts()
 
+    fun signOut()
+
 
     //<editor-fold desc="service UC">
     fun getDbResponse(): StateFlow<DBResponse>

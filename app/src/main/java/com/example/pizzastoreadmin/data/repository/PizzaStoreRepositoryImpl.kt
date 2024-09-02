@@ -346,11 +346,11 @@ class PizzaStoreRepositoryImpl @Inject constructor(
                         }
 
                         AuthResponse.Failed.FailReason.UserCancelled -> {
-                            _signInEvents.emit(
-                                SignInEvents.Failed(
-                                    failReason = SignInEvents.Failed.FailReason.UserCancelled
-                                )
-                            )
+//                            _signInEvents.emit(
+//                                SignInEvents.Failed(
+//                                    failReason = SignInEvents.Failed.FailReason.UserCancelled
+//                                )
+//                            )
                         }
                     }
                 }
@@ -366,6 +366,12 @@ class PizzaStoreRepositoryImpl @Inject constructor(
     //</editor-fold>
 
     override fun getUserUseCase() = currentUser.asStateFlow()
+
+    //<editor-fold desc="logOut">
+    override fun signOut() {
+        currentUser.value = null
+    }
+    //</editor-fold>
 
     override suspend fun signInWithEmail(email: String, password: String) =
         authService.signInWithEmail(email, password)

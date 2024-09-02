@@ -10,8 +10,8 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.PasswordCredential
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pizzastoreadmin.di.getApplicationComponent
-import com.example.pizzastore.presentation.start.StartScreenState
-import com.example.pizzastore.presentation.start.StartScreenViewModel
+import com.example.pizzastoreadmin.presentation.start.StartScreenState
+import com.example.pizzastoreadmin.presentation.start.StartScreenViewModel
 import com.example.pizzastoreadmin.presentation.login.LoginScreen
 import com.example.pizzastoreadmin.presentation.main.MainScreen
 import com.example.pizzastoreadmin.ui.theme.PizzaStoreAdminTheme
@@ -46,7 +46,9 @@ class StartActivity : ComponentActivity() {
 //                }
 //            }
 
-            LoginScreen()
+            LoginScreen() {
+                
+            }
 
         }
     }

@@ -10,7 +10,7 @@ import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkerParameters
-import com.example.pizzastore.R
+import com.example.pizzastoreadmin.R
 import com.example.pizzastoreadmin.data.localdb.PizzaDao
 import com.example.pizzastoreadmin.data.remotedb.FirebaseService
 import kotlinx.coroutines.delay

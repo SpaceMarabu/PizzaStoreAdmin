@@ -1,6 +1,6 @@
 package com.example.pizzastoreadmin.navigation
 
-import com.example.pizzastore.R
+import com.example.pizzastoreadmin.R
 
 sealed class NavigationItem(
     val screen: Screen,
