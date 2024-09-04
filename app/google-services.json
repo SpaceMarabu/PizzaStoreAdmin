@@ -1,34 +1,34 @@
 {
   "project_info": {
-    "project_number": "340178925189",
-    "firebase_url": "https://pizzastore-b379f-default-rtdb.europe-west1.firebasedatabase.app",
-    "project_id": "pizzastore-b379f",
-    "storage_bucket": "pizzastore-b379f.appspot.com"
+    "project_number": "306743262414",
+    "firebase_url": "https://notional-radio-411718-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "notional-radio-411718",
+    "storage_bucket": "notional-radio-411718.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:340178925189:android:6db07ddce1c8ee45569bec",
+        "mobilesdk_app_id": "1:306743262414:android:55a8b094976bfdcd8fa49f",
         "android_client_info": {
-          "package_name": "com.example.pizzastore"
+          "package_name": "com.example.pizzastoreadmin"
         }
       },
       "oauth_client": [
         {
-          "client_id": "340178925189-kek2f2a6l13175c2msgpo9m7g0pvfsqi.apps.googleusercontent.com",
+          "client_id": "306743262414-e244qpuplhd2t2butsv1tl27sp8mon9n.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyD2HtIIG7e9GrYceyPeM5_8WLoUjRlz5IY"
+          "current_key": "AIzaSyA4P4W3C9uLzaxqw1cmzm_-RdukSiCPetw"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "340178925189-kek2f2a6l13175c2msgpo9m7g0pvfsqi.apps.googleusercontent.com",
+              "client_id": "306743262414-e244qpuplhd2t2butsv1tl27sp8mon9n.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
@@ -37,35 +37,72 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:340178925189:android:69ff42216465d3bb569bec",
+        "mobilesdk_app_id": "1:306743262414:android:8398ad0bbd86ba758fa49f",
         "android_client_info": {
-          "package_name": "com.example.pizzastoreadmin"
+          "package_name": "com.example.pizzastoreadmint"
         }
       },
       "oauth_client": [
         {
-          "client_id": "340178925189-kg3kafv7kj44s2dcd93qbmrac3amapt6.apps.googleusercontent.com",
+          "client_id": "306743262414-v0832k5f70kilpmr8jksggnm4qkukjvm.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.pizzastoreadmin",
+            "package_name": "com.example.pizzastoreadmint",
             "certificate_hash": "6b0187e2d8fe9db0f9b953d43d988e4c52bfd8e2"
           }
         },
         {
-          "client_id": "340178925189-kek2f2a6l13175c2msgpo9m7g0pvfsqi.apps.googleusercontent.com",
+          "client_id": "306743262414-e244qpuplhd2t2butsv1tl27sp8mon9n.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyD2HtIIG7e9GrYceyPeM5_8WLoUjRlz5IY"
+          "current_key": "AIzaSyA4P4W3C9uLzaxqw1cmzm_-RdukSiCPetw"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "340178925189-kek2f2a6l13175c2msgpo9m7g0pvfsqi.apps.googleusercontent.com",
+              "client_id": "306743262414-e244qpuplhd2t2butsv1tl27sp8mon9n.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:306743262414:android:0a8a3818c436c9578fa49f",
+        "android_client_info": {
+          "package_name": "com.example.testauthfb"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "306743262414-ss0c3qrih3lq7orfol1j40m1hmun4hh6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.testauthfb",
+            "certificate_hash": "6b0187e2d8fe9db0f9b953d43d988e4c52bfd8e2"
+          }
+        },
+        {
+          "client_id": "306743262414-e244qpuplhd2t2butsv1tl27sp8mon9n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4P4W3C9uLzaxqw1cmzm_-RdukSiCPetw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "306743262414-e244qpuplhd2t2butsv1tl27sp8mon9n.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
