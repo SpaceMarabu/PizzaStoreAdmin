@@ -72,7 +72,7 @@ class RemoteMapper @Inject constructor() {
     fun mapUserDtoToEntity(userDto: UserDto) = User(
         id = userDto.id,
         access = when(userDto.access) {
-            1 -> UserAccess.DENIED
+            1 -> UserAccess.GRANTED
             else -> UserAccess.DENIED
         }
     )

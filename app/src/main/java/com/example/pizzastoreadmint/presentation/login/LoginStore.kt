@@ -136,7 +136,11 @@ class LoginStoreFactory @Inject constructor(
                 Intent.ClickLogin -> {
                     val currentState = getState()
                     scope.launch {
-                        signInUseCase.signInWithEmail(currentState.email, currentState.password)
+                        if (currentState.email.isNotBlank() && currentState.password.isNotBlank()) {
+                            signInUseCase.signInWithEmail(currentState.email, currentState.password)
+                        } else {
+                            publish(Label.ErrorSignIn("Поля не могут быть пустыми"))
+                        }
                     }
                 }
 

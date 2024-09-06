@@ -310,15 +310,22 @@ class PizzaStoreRepositoryImpl @Inject constructor(
         val userFromLocalDb = pizzaDao.getUser()
         if (userFromLocalDb != null) {
             val currentUsersBase = firebaseService.getUsers()
-            val currentUserFromBase = currentUsersBase.first {
+            if (currentUsersBase.isEmpty()) {
+                pizzaDao.deleteUser(userFromLocalDb)
+                currentUser.value = null
+                return
+            }
+            val currentUserFromBase = currentUsersBase.filter {
                 it.id == userFromLocalDb.id
             }
-            val userDtoToEntity = remoteMapper.mapUserDtoToEntity(currentUserFromBase)
-            val userModelToEntity = localMapper.mapDbModelToUser(userFromLocalDb)
-            if (userModelToEntity != userDtoToEntity) {
-                pizzaDao.putUser(localMapper.mapUserToDbModel(userDtoToEntity))
+            if (currentUsersBase.isNotEmpty()) {
+                val userDtoToEntity = remoteMapper.mapUserDtoToEntity(currentUserFromBase.first())
+                val userModelToEntity = localMapper.mapDbModelToUser(userFromLocalDb)
+                if (userModelToEntity.access != userDtoToEntity.access) {
+                    pizzaDao.putUser(localMapper.mapUserToDbModel(userDtoToEntity))
+                }
+                currentUser.value = userDtoToEntity
             }
-            currentUser.value = localMapper.mapDbModelToUser(userFromLocalDb)
             return
         }
     }
